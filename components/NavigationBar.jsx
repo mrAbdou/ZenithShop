@@ -193,6 +193,7 @@ export default function NavigationBar() {
                 </ul>
 
                 {/* Footer */}
+                <Link href="/control-panel">
                 <div className="mt-6 pt-6 border-t border-slate-700">
                     <div className="flex items-center gap-3 px-4 py-3 bg-slate-800 rounded-xl">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
@@ -205,6 +206,7 @@ export default function NavigationBar() {
                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     </div>
                 </div>
+                </Link>
             </nav>
         </>
     );

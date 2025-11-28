@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 export default function ControlPanelForm() {
 
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, formState: { errors, isValid } } = useForm();
     const onSubmit = (data) => {
         console.log(data);
     };
@@ -12,6 +12,7 @@ export default function ControlPanelForm() {
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Field */}
+            {isValid && <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg" role="alert"/>}
             <div>
                 <label
                     htmlFor="email"
@@ -91,8 +92,9 @@ export default function ControlPanelForm() {
 
             {/* Submit Button */}
             <button
+            
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 Sign In
             </button>

@@ -14,15 +14,13 @@ async function getProducts() {
       }),
       cache: "no-store",
     });
-    console.log('response : ', response);
     const json = await response.json();
-    console.log('JSON: ', json);
+    // console.log('JSON: ', json); // Removed debug log
 
     if (json.errors) {
       console.error("GraphQL Errors:", json.errors);
       return [];
     }
-    console.log('Products Data: ', json?.data.products);
     return json.data?.products || [];
   } catch (error) {
     console.error("Failed to fetch products:", error);

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { createYoga, createSchema } from "graphql-yoga";
 import { createServer } from "node:http";
-import { getSession } from "better-auth/next-js";
+import { auth } from "../../lib/auth.js";
 import prisma from "../../lib/prisma.js";
 import typeDefs from "./TypeDefinitions.js";
 import resolvers from "./resolvers.js";
@@ -17,7 +17,7 @@ const yoga = createYoga({
     context: async ({ req }) => {
         let session = null;
         try {
-            session = await getSession({ req });
+            session = await auth.api.getSession({ req });
         } catch (error) {
             console.log("Session error:", error);
         }

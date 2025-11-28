@@ -1,9 +1,9 @@
 # ZenithShop 🚀🛒
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat&logo=next.js)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat&logo=next.js)](https://nextjs.org)
 [![Prisma](https://img.shields.io/badge/Prisma-5-0C7CBF?style=flat&logo=prisma)](https://prisma.io)
 [![GraphQL](https://img.shields.io/badge/GraphQL-Yoga-E10098?style=flat&logo=graphql)](https://the-guild.dev/graphql/yoga-server)
-[![Auth](https://img.shields.io/badge/Better%20Auth-2-000000?style=flat&logo=data:image/svg+xml;base64,...](https://better-auth.com) <!-- Placeholder badge -->
+[![Auth](https://img.shields.io/badge/Better%20Auth-1-000000?style=flat)](https://better-auth.com)
 
 **ZenithShop** is a blazing-fast, full-stack e-commerce platform built with the latest web technologies. Inspired by the iconic Zenith in Constantine, Algeria—aiming to elevate local and global shopping to new heights!
 
@@ -14,17 +14,17 @@
 - **Admin Control Panel**: Manage products/orders (`/control-panel`).
 - **GraphQL API**: Powered by Yoga Server for flexible queries/mutations.
 - **Responsive UI**: Next.js App Router, Tailwind CSS, modern components.
-- **Database**: Prisma ORM with PostgreSQL/SQLite support (seedable).
+- **Database**: Prisma ORM with PostgreSQL support.
 - **Coming Soon**: TanStack React Query for advanced caching & optimistic updates.
 
 ## 🛠️ Tech Stack
 | Frontend | Backend/API | Data | Auth | Other |
 |----------|-------------|------|------|-------|
-| Next.js 14 (App Router) | GraphQL Yoga | Prisma ORM | Better Auth | Tailwind CSS, TypeScript |
+| Next.js 15 (App Router) | GraphQL Yoga | Prisma ORM | Better Auth | Tailwind CSS, JavaScript |
 
 ## 🚀 Quick Start
 ```bash
-git clone https://github.com/yourusername/zenithshop.git
+git clone https://github.com/mrAbdou/ZenithShop.git
 cd zenithshop
 npm install
 cp .env.example .env  # Add DB_URL, AUTH_SECRET, etc.

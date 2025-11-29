@@ -91,21 +91,23 @@ const resolvers = {
         }
     },
     Mutation: {
+        // TODO: still confusing between keeing this so user can be created and stored by prisma , or the better auth package will take care of it
         registerUser: (parent, args, context) => {
             const { user } = args;
             return context.prisma.user.create({ data: user });
         },
-        //TODO: needs to be implemented properly according to auth system
-        loginUser: (parent, args, context) => {
-            const { loginUser } = args;
-            return context.prisma.user.findUnique({ where: { email: loginUser.email } });
-        },
-        //TODO: needs to be implemented properly according to auth system
-        logoutUser: (parent, args, context) => {
-            if (!context.session) throw new Error("Unauthorized");
-            return true;
+        //TODO: i have to remove this because i switched to better-auth package that handles login functionality out of the box
+        // loginUser: async (parent, args, context) => {
+        //     const { loginUser } = args;
+        //     const user = await context.prisma.user.findUnique({ where: { email: loginUser.email }, select: { email, hashedPassword, role } });
 
-        },
+        // },
+        //TODO: i have to remove this because i switched to better-auth package that handles logout functionality out of the box
+        // logoutUser: (parent, args, context) => {
+        //     if (!context.session) throw new Error("Unauthorized");
+        //     return true;
+
+        // },
         //TODO: do i have really need to let the user to update his profile information, the is e-commerce website not a social media place?
         updateUserProfile: (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");

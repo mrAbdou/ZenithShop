@@ -1,4 +1,4 @@
-const typeDefs =`
+const typeDefs = `
 #################################################
 #            Defining DateTime Scalar           #
 #################################################
@@ -82,8 +82,8 @@ type OrderItem {
 type Mutation {
     # Auth ###################################
     registerUser(newUser: UserInput!): User!
-    loginUser(loginUser: LoginInput!): User!
-    logoutUser: Boolean!
+    #loginUser(loginUser: LoginInput!): User! # better-auth package handles it
+    #logoutUser: Boolean! # better-auth package handles it
 
     # User Profile ###########################
     updateUserProfile(updatedUser: UpdateUserInput!): User!

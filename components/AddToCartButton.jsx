@@ -68,6 +68,7 @@ export default function AddToCartButton({ productId }) {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -84,7 +85,7 @@ export default function AddToCartButton({ productId }) {
 
         {/* Badge de cantidad */}
         {isInCart && (
-          <span className="absolute -top-1 -right-1 bg-white text-emerald-600 text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-bounce">
+          <span className="absolute -top-1 -right-1 bg-white text-emerald-600 text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md">
             {productQte}
           </span>
         )}

@@ -1,18 +1,58 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { authClient } from "@/lib/auth-client"; // use client auth
+// zod schema for form validation of admin login 
+const schema = z.object({
+    email: z
+        .string()
+        .min(1, "Email is required")
+        .email("Invalid email address"),
+    password: z
+        .string()
+        .min(6, "Password must be at least 6 characters long")
+});
 export default function ControlPanelForm() {
+    //errors returned from the better-auth/client package goes in here
+    const [error, setError] = useState(null);
+    /// react-hook-form setup for login admin form with zod validation
+    const { register, handleSubmit, formState: { errors } } = useForm({
+        resolver: zodResolver(schema),
+        mode: "onChange",
+    });
+    const onSubmit = async (formData) => {
+        try {
+            // use the signIn with email password method from better-auth client
+            const { data, error } = await authClient.signIn.email({
+                email: formData.email, 
+                password: formData.password, 
+            });
 
-    const { register, handleSubmit, formState: { errors, isValid } } = useForm();
-    const onSubmit = (data) => {
-        console.log(data);
+            if (error) {
+                setError(error.message || error.statusText || 'Login failed');
+            } else {
+                // Successful login - you can redirect or update UI here
+                //TODO : redirect to control panel dashboard
+                console.log('Login successful!', data);
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError(err?.message || 'An unexpected error occurred');
+        }
     };
 
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+                <p className="text-red-500 text-sm mt-2">
+                    {typeof error === 'string' ? error : (error?.message || String(error))}
+                </p>
+            )}
             {/* Email Field */}
-            {isValid && <div className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg" role="alert"/>}
             <div>
                 <label
                     htmlFor="email"
@@ -92,7 +132,7 @@ export default function ControlPanelForm() {
 
             {/* Submit Button */}
             <button
-            
+                disabled={Object.keys(errors).length > 0}
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >

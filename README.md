@@ -12,15 +12,16 @@
 - **Shopping Cart**: Add items, view cart (`/cart`), seamless checkout (`/checkout`).
 - **Secure Authentication**: Better Auth with sessions, providers (Google, etc.).
 - **Admin Control Panel**: Manage products/orders (`/control-panel`).
-- **GraphQL API**: Powered by Yoga Server for flexible queries/mutations.
+- **Live Dashboard**: Real-time admin metrics (products, orders, users).
+- **GraphQL API**: Powered by Yoga Server with session-protected routes.
+- **Advanced Caching**: TanStack React Query for optimal data fetching.
 - **Responsive UI**: Next.js App Router, Tailwind CSS, modern components.
 - **Database**: Prisma ORM with PostgreSQL support.
-- **Coming Soon**: TanStack React Query for advanced caching & optimistic updates.
 
 ## 🛠️ Tech Stack
 | Frontend | Backend/API | Data | Auth | Other |
 |----------|-------------|------|------|-------|
-| Next.js 15 (App Router) | GraphQL Yoga | Prisma ORM | Better Auth | Tailwind CSS, JavaScript |
+| Next.js 15 (App Router)<br>TanStack Query | GraphQL Yoga | Prisma ORM | Better Auth | Tailwind CSS, JavaScript |
 
 ## 🚀 Quick Start
 ```bash

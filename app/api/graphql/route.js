@@ -1,27 +1,36 @@
 import { createYoga, createSchema } from "graphql-yoga";
 import prisma from "../../../lib/prisma.js";
+import { auth } from "@/lib/auth.js";
 import typeDefs from "../../graphql/TypeDefinitions.js";
 import resolvers from "../../graphql/resolvers.js";
 
 // Create schema ONCE (not per request)
 const schema = createSchema({
-  typeDefs,
-  resolvers,
+    typeDefs,
+    resolvers,
 });
 
 // Create Yoga instance ONCE (not per request)
-const yoga = createYoga({
-  schema,
-  context: () => ({
-    prisma,
-  }),
+const {handleRequest} = createYoga({
+    schema,
+    context: async ({ request }) => {
+        let session = null;
+        try {
+            session = await auth.api.getSession({
+                headers: request.headers
+            });
+            console.log('from app/api/graphql/route.js file session is : ', session);
+        } catch (error) {
+            console.error("Error getting session in GraphQL context:", error);
+            // Session is optional for some queries, so continue with null session
+        }
+        return {
+            prisma,
+            session,
+        };
+    },
+    graphqlEndpoint: 'api/graphql',
+    fetchAPI: { Response }
 });
 
-// This is the clean way - same Yoga handles all requests!
-export async function GET(request) {
-  return yoga.handleRequest(request);
-}
-
-export async function POST(request) {
-  return yoga.handleRequest(request);
-}
+export {handleRequest as GET, handleRequest as POST, handleRequest as OPTIONS}

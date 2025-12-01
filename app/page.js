@@ -1,8 +1,7 @@
 import Product from "../components/Product";
 async function getProducts() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/graphql`, {
+    const response = await fetch(process.env.NEXT_PUBLIC_GQL_URL, {
       method: "POST",
       headers: {
         "accept": "application/json",
@@ -22,7 +21,7 @@ async function getProducts() {
       }),
       cache: "no-store",
     });
-
+    console.log(response);
     const json = await response.json();
     if (json.errors) {
       console.error("GraphQL Errors:", json.errors);

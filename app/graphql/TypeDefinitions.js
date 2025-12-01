@@ -153,11 +153,19 @@ input OrderItemInput {
 type Query {
     users: [User!]!
     user(id: ID!): User
+    customersCount: Int!
+    allUsersCount: Int!
+
     orders: [Order!]!
     myOrders: [Order!]!
     order(id: ID!): Order
-    products: [Product]
+    activeOrdersCount: Int!
+    
+    products: [Product!]!
     product(id: ID!): Product
+    productsCount: Int!
+    availableProductsCount: Int!
+
     orderItems: [OrderItem!]!
     orderItem(id: ID!): OrderItem
 }

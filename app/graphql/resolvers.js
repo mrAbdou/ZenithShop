@@ -1,3 +1,5 @@
+import { OrderStatus, Role } from "@prisma/client";
+
 const resolvers = {
     Query: {
         users: (parent, args, context) => {
@@ -14,16 +16,26 @@ const resolvers = {
                 }
             });
         },
-        myOrders: (parent, args, context) => {
+        customersCount: async (parent, args, context) => {
+            if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            return await context.prisma.user.count({
+                where: {
+                    role: {
+                        equals: Role.CUSTOMER
+                    }
+                }
+            });
+        },
+        myOrders: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
-            return context.prisma.order.findMany({
+            return await context.prisma.order.findMany({
                 where: { userId: context.session.user.id },
                 include: { items: { include: { product: true } } }
             });
         },
-        user: (parent, args, context) => {
-            if (!context.session) throw new Error("Unauthorized");
-            return context.prisma.user.findUnique({
+        user: async (parent, args, context) => {
+            if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            return await context.prisma.user.findUnique({
                 where: { id: parseInt(args.id) },
                 include: {
                     orders: {
@@ -36,15 +48,19 @@ const resolvers = {
                 }
             });
         },
-        orders: (parent, args, context) => {
-            if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
-            return context.prisma.order.findMany({
+        allUsersCount: async (parent, args, context) => {
+            if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw Error('unauthorized');
+            return await context.prisma.user.count();
+        },
+        orders: async (parent, args, context) => {
+            if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            return await context.prisma.order.findMany({
                 include: { user: true, items: true }
             });
         },
-        order: (parent, args, context) => {
+        order: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
-            return context.prisma.order.findUnique({
+            return await context.prisma.order.findUnique({
                 where: { id: parseInt(args.id) },
                 include: { user: true, items: true }
             });
@@ -62,6 +78,21 @@ const resolvers = {
                 }
             });
         },
+        // this is for the products that sill in stock
+        availableProductsCount: async (parent, args, context) => {
+            return await context.prisma.product.count({
+                where: {
+                    qteInStock: {
+                        gt: 0
+                    }
+                }
+            });
+        },
+        // this is for all the products even onces that are out of stock
+        productsCount: async (parent, args, context) => {
+            if (!context.session || !(context.session.user.role === Role.ADMIN)) throw Error('unauthorized');
+            return await context.prisma.product.count();
+        },
         product: async (parent, args, context) => {
             return await context.prisma.product.findUnique({
                 where: { id: parseInt(args.id) },
@@ -76,85 +107,82 @@ const resolvers = {
                 }
             });
         },
-        orderItems: (parent, args, context) => {
-            if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
-            return context.prisma.orderItem.findMany({
+        orderItems: async (parent, args, context) => {
+            if (!(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            return await context.prisma.orderItem.findMany({
                 include: { order: true, product: true }
             });
         },
-        orderItem: (parent, args, context) => {
+        orderItem: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
-            return context.prisma.orderItem.findUnique({
+            return await context.prisma.orderItem.findUnique({
                 where: { id: parseInt(args.id) },
                 include: { order: true, product: true }
+            });
+        },
+        activeOrdersCount: async (parent, args, context) => {
+            if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            return await context.prisma.order.count({
+                where: {
+                    status: {
+                        notIn: [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.RETURNED]
+                    }
+                }
             });
         }
     },
     Mutation: {
         // TODO: still confusing between keeing this so user can be created and stored by prisma , or the better auth package will take care of it
-        registerUser: (parent, args, context) => {
+        registerUser: async (parent, args, context) => {
             const { user } = args;
-            return context.prisma.user.create({ data: user });
+            return await context.prisma.user.create({ data: user });
         },
-        //TODO: i have to remove this because i switched to better-auth package that handles login functionality out of the box
-        // loginUser: async (parent, args, context) => {
-        //     const { loginUser } = args;
-        //     const user = await context.prisma.user.findUnique({ where: { email: loginUser.email }, select: { email, hashedPassword, role } });
-
-        // },
-        //TODO: i have to remove this because i switched to better-auth package that handles logout functionality out of the box
-        // logoutUser: (parent, args, context) => {
-        //     if (!context.session) throw new Error("Unauthorized");
-        //     return true;
-
-        // },
         //TODO: do i have really need to let the user to update his profile information, the is e-commerce website not a social media place?
-        updateUserProfile: (parent, args, context) => {
+        updateUserProfile: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
             const { updatedUser } = args;
-            return context.prisma.user.update({ where: { id: parseInt(updatedUser.id) }, data: updatedUser });
-
+            return await context.prisma.user.update({ where: { id: parseInt(updatedUser.id) }, data: updatedUser });
         },
-        deleteUserProfile: (parent, args, context) => {
+        deleteUserProfile: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
             const { userId } = args;
-            return context.prisma.user.delete({ where: { id: parseInt(userId) } });
+            return await context.prisma.user.delete({ where: { id: parseInt(userId) } });
 
         },
-        addNewProduct: (parent, args, context) => {
+        addNewProduct: async (parent, args, context) => {
             if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
             const { newProduct } = args;
-            return context.prisma.product.create({ data: newProduct });
+            return await context.prisma.product.create({ data: newProduct });
 
         },
-        updateProduct: (parent, args, context) => {
+        updateProduct: async (parent, args, context) => {
             if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
             const { updatedProduct } = args;
-            return context.prisma.product.update({ where: { id: parseInt(updatedProduct.id) }, data: updatedProduct });
+            return await context.prisma.product.update({ where: { id: parseInt(updatedProduct.id) }, data: updatedProduct });
 
         },
-        deleteProduct: (parent, args, context) => {
+        deleteProduct: async (parent, args, context) => {
             if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
             const { productId } = args;
-            return context.prisma.product.delete({ where: { id: parseInt(productId) } });
+            return await context.prisma.product.delete({ where: { id: parseInt(productId) } });
 
         },
-        makeAnOrder: (parent, args, context) => {
+        makeAnOrder: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
             const { order } = args;
-            return context.prisma.order.create({ data: order });
+            return await context.prisma.order.create({ data: order });
 
         },
         //TODO: i need to remove addProductToCart mutations and handle the cart only on client side
-        addProductToCart: (parent, args, context) => {
+        addProductToCart: async (parent, args, context) => {
             const { orderItem } = args;
-            return context.prisma.orderItem.create({ data: orderItem });
+            return await context.prisma.orderItem.create({ data: orderItem });
 
         },
         //TODO: i need to remove removeProductFromCart mutations and handle the cart only on client side
-        removeProductFromCart: (parent, args, context) => {
+        removeProductFromCart: async (parent, args, context) => {
             const { orderItemId } = args;
-            return context.prisma.orderItem.delete({ where: { id: parseInt(orderItemId) } });
+            return await context.prisma.orderItem.delete({ where: { id: parseInt(orderItemId) } });
 
         },
 

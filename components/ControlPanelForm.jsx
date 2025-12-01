@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client"; // use client auth
 // zod schema for form validation of admin login 
 const schema = z.object({
@@ -23,20 +24,20 @@ export default function ControlPanelForm() {
         resolver: zodResolver(schema),
         mode: "onChange",
     });
+    const router = useRouter();
     const onSubmit = async (formData) => {
         try {
             // use the signIn with email password method from better-auth client
             const { data, error } = await authClient.signIn.email({
                 email: formData.email, 
-                password: formData.password, 
+                password: formData.password,
             });
 
             if (error) {
                 setError(error.message || error.statusText || 'Login failed');
             } else {
-                // Successful login - you can redirect or update UI here
-                //TODO : redirect to control panel dashboard
                 console.log('Login successful!', data);
+                router.push("./control-panel/dashboard")
             }
         } catch (err) {
             console.error('Login error:', err);

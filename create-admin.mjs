@@ -1,7 +1,7 @@
 // Script to create an admin user using Better Auth's signUp API, then promote to admin
+import "dotenv/config";
 import { createAuthClient } from "better-auth/client";
 import prisma from './lib/prisma.js';
-import { date } from "zod";
 
 const authClient = createAuthClient({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -18,9 +18,7 @@ async function createAdminUser(email = 'admin@yourapp.com', password = 'secureAd
     // 1. Use Better Auth's signUp API to create the user
     const { data, error } = await authClient.signUp.email({
       name: "Admin User",
-      phoneNumber: "+1234567890",
-      address: "Admin Headquarters",
-      emailVerified: new Date("2025-11-29T21:36:30.421Z"),
+      emailVerified: true,
       email: email,
       password: password,
       // callbackURL is optional for redirect after signup
@@ -30,7 +28,6 @@ async function createAdminUser(email = 'admin@yourapp.com', password = 'secureAd
       console.error('❌ Better Auth signUp failed:', error);
       throw new Error(`SignUp failed: ${error.message || error}`);
     }
-
     console.log('✅ User created successfully via Better Auth');
 
     // 2. Update the user record to set role to ADMIN
@@ -52,7 +49,7 @@ async function createAdminUser(email = 'admin@yourapp.com', password = 'secureAd
     console.log(`Role: ADMIN`);
     console.log(`SignUp Response:`, data);
 
-    return { user: updatedUser, signUpData: data };
+    // return { user: updatedUser, signUpData: data };
   } catch (err) {
     console.error('❌ Error creating admin user:', err.message);
     throw err;

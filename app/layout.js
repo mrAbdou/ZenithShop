@@ -1,6 +1,6 @@
 import "./globals.css";
 import NavigationBar from "../components/NavigationBar";
-
+import Provider from "../components/RQProvider";
 export const metadata = {
   title: "Home Page",
   description: "displays the recent added products",
@@ -12,12 +12,14 @@ export default function RootLayout({ children }) {
       <body
         className={`antialiased`}
       >
-        <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
-          <NavigationBar />
-          <div className="flex-1 h-full overflow-y-auto bg-white">
-            {children}
+        <Provider>
+          <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
+            <NavigationBar />
+            <div className="flex-1 h-full overflow-y-auto bg-white">
+              {children}
+            </div>
           </div>
-        </div>
+        </Provider>
       </body>
     </html>
   );

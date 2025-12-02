@@ -107,6 +107,12 @@ const resolvers = {
                 }
             });
         },
+        productsInCart: async (parent, args, context) => {
+            const ids = args.cart.map(id => parseInt(id));
+            return await context.prisma.product.findMany({
+                where: { id: { in: ids } }
+            });
+        },
         orderItems: async (parent, args, context) => {
             if (!(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
             return await context.prisma.orderItem.findMany({

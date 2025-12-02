@@ -1,129 +1,68 @@
 'use client';
 import { useState, useEffect } from "react";
 import Link from "next/link";
-async function fetchProductById(productId) {
-    try {
-        const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-        const response = await fetch(`${BASE_URL}/api/graphql`, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            cache: "no-store",
-            body: JSON.stringify({
-                query: `query getProduct {
-                    product(id: ${productId}) {
-                        id
-                        name
-                        description
-                        price
-                    }
-                }`
-            })
-        }); // end of response
-        console.log('product response : ', response);
-        const json = await response.json();
-        console.log('product JSON: ', json);
-        if (json.errors) {
-            console.error("GraphQL Errors:", json.errors);
-            return null;
-        }
-        console.log('product data: ', json?.data.product);
-        return json?.data.product || null;
-    } catch (error) {
-        console.error("Failed to fetch product:", error);
-        return null;
-    }
-}
+import { useProductsInCart } from '@/lib/tanStackHooks/products';
+import { useQuery } from "@tanstack/react-query";
 
 export default function CartProductsDisplay() {
     const [cart, setCart] = useState([]);
-    const [fetchedProducts, setFetchedProducts] = useState({});
 
-    // تحميل السلة عند بدء التشغيل
+    // Load cart from localStorage only on mount
     useEffect(() => {
-        updateCartDisplay();
+        const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+        setCart(storedCart);
     }, []);
 
-    // دالة لتحديث العرض من localStorage مع ذاكرة تخزين مؤقتة للأداء
-    const updateCartDisplay = async () => {
-        const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    // Sync cart state to localStorage whenever cart changes
+    useEffect(() => {
+        localStorage.setItem("cart", JSON.stringify(cart));
+    }, [cart]);
 
-        // احسب المنتجات التي تحتاج جلب (غير موجودة في الذاكرة المؤقتة)
-        const productsToFetch = storedCart.filter(item => !fetchedProducts[item.id]);
-        let currentFetchedProducts = { ...fetchedProducts };
+    // Extract IDs from cart for fetching
+    const cartIds = cart.map(item => item.id);
 
-        // جلب المنتجات الجديدة فقط
-        if (productsToFetch.length > 0) {
-            const fetchPromises = productsToFetch.map(async (item) => {
-                const productData = await fetchProductById(item.id);
-                return [item.id, productData];
-            });
+    // Fetch products by their IDs (bulk fetch instead of individual)
+    const { data: fetchedProducts = [] } = useQuery({
+        queryKey: ["productsByIds", cartIds.sort()], // sort IDs for consistent caching
+        queryFn: () => useProductsInCart(cartIds),
+        enabled: cartIds.length > 0
+    });
 
-            const fetchResults = await Promise.all(fetchPromises);
-            const newFetchedProducts = Object.fromEntries(fetchResults);
-
-            // تحديث الذاكرة المؤقتة
-            currentFetchedProducts = { ...fetchedProducts, ...newFetchedProducts };
-            setFetchedProducts(currentFetchedProducts);
-        }
-
-        // بناء cart النهائي من localStorage + البيانات المخزنة
-        const updatedCart = storedCart.map(item => ({
-            id: item.id,
-            qte: item.qte,
-            ...currentFetchedProducts[item.id]
-        }));
-
-        setCart(updatedCart);
-    };
+    // Merge cart quantities with fetched product data
+    const cartWithProducts = cart.map(cartItem => {
+        const product = fetchedProducts.find(p => p.id === cartItem.id);
+        return product ? { ...product, qte: cartItem.qte } : null;
+    }).filter(Boolean); // Remove null items if product not found
 
     const add = (productId) => {
-        // ← نقرأ من localStorage مباشرة
-        const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
-
-        const foundIndex = currentCart.findIndex((item) => item.id === productId);
+        const newCart = [...cart];
+        const foundIndex = newCart.findIndex(item => item.id === productId);
 
         if (foundIndex !== -1) {
-            // المنتج موجود - نزيد الكمية
-            currentCart[foundIndex] = {
-                ...currentCart[foundIndex],
-                qte: currentCart[foundIndex].qte + 1
-            };
+            newCart[foundIndex].qte += 1;
         } else {
-            // المنتج غير موجود - نضيفه
-            currentCart.push({ id: productId, qte: 1 });
+            newCart.push({ id: productId, qte: 1 });
         }
 
-        localStorage.setItem("cart", JSON.stringify(currentCart));
-        updateCartDisplay();
+        setCart(newCart);
     };
 
     const remove = (productId) => {
-        // ← نقرأ من localStorage مباشرة
-        const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
-
-        const foundIndex = currentCart.findIndex((item) => item.id === productId);
+        const newCart = [...cart];
+        const foundIndex = newCart.findIndex(item => item.id === productId);
 
         if (foundIndex !== -1) {
-            if (currentCart[foundIndex].qte > 1) {
-                // تقليل الكمية
-                currentCart[foundIndex] = {
-                    ...currentCart[foundIndex],
-                    qte: currentCart[foundIndex].qte - 1
-                };
+            if (newCart[foundIndex].qte > 1) {
+                newCart[foundIndex].qte -= 1;
             } else {
-                // حذف المنتج من السلة
-                currentCart.splice(foundIndex, 1);
+                newCart.splice(foundIndex, 1);
             }
         }
 
-        localStorage.setItem("cart", JSON.stringify(currentCart));
-        updateCartDisplay();
+        setCart(newCart);
     };
 
-    if (cart.length === 0) {
+    if (cartWithProducts.length === 0) {
         return (
             <div className="max-w-md mx-auto p-8">
                 <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-3xl shadow-xl overflow-hidden">
@@ -161,7 +100,7 @@ export default function CartProductsDisplay() {
             {/* Cart Items */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
                 <div className="divide-y divide-gray-200">
-                    {cart.map((item) => (
+                    {cartWithProducts.map((item) => (
                         <div
                             key={item.id}
                             className="p-6 hover:bg-gray-50 transition-colors"
@@ -184,7 +123,7 @@ export default function CartProductsDisplay() {
                                         <p className="text-gray-600 text-sm">
                                             {item.description}
                                         </p>
-                                        {/* Mock Price */}
+                                        {/* Product Price */}
                                         <p className="text-blue-600 font-bold mt-1">${item.price}</p>
                                     </div>
                                 </div>
@@ -231,11 +170,11 @@ export default function CartProductsDisplay() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             <span className="text-gray-600">Total Items:</span>
-                            <span className="font-semibold text-gray-800">{cart.reduce((sum, item) => sum + item.qte, 0)}</span>
+                            <span className="font-semibold text-gray-800">{cartWithProducts.reduce((sum, item) => sum + item.qte, 0)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-semibold text-gray-800">${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
+                            <span className="font-semibold text-gray-800">${cartWithProducts.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-600">Shipping:</span>
@@ -243,7 +182,7 @@ export default function CartProductsDisplay() {
                         </div>
                         <div className="flex justify-between items-center border-t border-gray-300 pt-4">
                             <span className="text-lg font-semibold text-gray-800">Total:</span>
-                            <span className="text-2xl font-bold text-blue-600">${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
+                            <span className="text-2xl font-bold text-blue-600">${cartWithProducts.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                         </div>
                     </div>
 

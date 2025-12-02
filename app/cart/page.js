@@ -1,4 +1,5 @@
 import CartProductsDisplay from "../../components/CartProductsDisplay";
+
 export default function CartPage() {
     return (
         <div className="min-h-screen p-6">

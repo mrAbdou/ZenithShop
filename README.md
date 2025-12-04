@@ -12,9 +12,12 @@
 - **Shopping Cart**: Add items, view cart (`/cart`), seamless checkout (`/checkout`).
 - **Secure Authentication**: Better Auth with sessions, providers (Google, etc.).
 - **Admin Control Panel**: Manage products/orders (`/control-panel`).
+- **Add Product Feature**: Admins can create new products via the `addProduct` form.
 - **Live Dashboard**: Real-time admin metrics (products, orders, users).
-- **GraphQL API**: Powered by Yoga Server with session-protected routes.
-- **Advanced Caching**: TanStack React Query for optimal data fetching.
+- **GraphQL API**: Powered by Yoga Server with session‑protected routes.
+- **Advanced Caching**: TanStack React Query with infinite queries, load‑more button, mutations, cache updates and `invalidateQueries` for data consistency.
+- **Cart Sync**: `CartContext` now persists cart state to `localStorage` for session continuity.
+- **SEO Ready**: Pages include dynamic metadata (title, description, Open Graph) for better search engine visibility.
 - **Responsive UI**: Next.js App Router, Tailwind CSS, modern components.
 - **Database**: Prisma ORM with PostgreSQL support.
 
@@ -31,3 +34,4 @@ npm install
 cp .env.example .env  # Add DB_URL, AUTH_SECRET, etc.
 npx prisma db push
 npm run dev
+```

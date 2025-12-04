@@ -1,3 +1,7 @@
+export const metadata = {
+  title: "About Us",
+  description: "About Us",
+}
 export default function AboutPage() {
   return (
     <div className="min-h-screen p-6">

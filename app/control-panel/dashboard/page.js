@@ -7,87 +7,28 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import DashboardMetrics from "@/components/DashboardMetrics";
-
-const getAllProductsCount = async () => {
-    const productsData = await graphqlFetch(`query { productsCount }`);
-    const productsCount = productsData?.productsCount ?? 0;
-    return productsCount;
+import { useAvailableProductsCount, useProductsCount } from "@/lib/tanStackHooks/products.js";
+import { useActiveOrdersCount } from "@/lib/tanStackHooks/orders";
+import { useCustomersCount, useUsersCount } from "@/lib/tanStackHooks/users";
+export const metadata = {
+    title: "Dashboard",
+    description: "Dashboard",
 }
-
-const getActiveOrdersCount = async () => {
-    const ordersData = await graphqlFetch(`query { activeOrdersCount }`);
-    const activeOrdersCount = ordersData?.activeOrdersCount ?? 0;
-    return activeOrdersCount;
-}
-
-const getAvailableProductsCount = async () => {
-    const productsData = await graphqlFetch(`query { availableProductsCount }`);
-    const availableProductsCount = productsData?.allProductsCount ?? 0;
-    return availableProductsCount;
-}
-
-const getAllUsersCount = async () => {
-    const usersData = await graphqlFetch(`query { allUsersCount }`);
-    const allUsersCount = usersData?.allUsersCount ?? 0;
-    return allUsersCount;
-}
-
-const getAllCustomersCount = async () => {
-    const customersData = await graphqlFetch(`query { customersCount }`);
-    const allCustomersCount = customersData?.customersData ?? 0;
-    return allCustomersCount;
-}
-/**
- * Fetch GraphQL data with cookie forwarding to preserve better-auth session.
- */
-const graphqlFetch = async (query) => {
-    try {
-        // Get cookie header from the incoming request
-        const cookieHeader = (await headers()).get("cookie");
-        const response = await fetch(process.env.NEXT_PUBLIC_GQL_URL, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-            },
-            cache: "no-store",
-            body: JSON.stringify({ query }),
-        });
-
-        if (!response.ok) {
-            console.error(`GraphQL fetch failed with status ${response.status}`);
-            return null;
-        }
-        const json = await response.json();
-        if (json.errors) {
-            console.error("GraphQL errors:", json.errors);
-            return null;
-        }
-        return json.data;
-    } catch (error) {
-        console.error("GraphQL fetch error:", error);
-        return null;
-    }
-};
-
 export default async function ControlPanelDashboardPage() {
     // Get session from better-auth
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session?.user?.role !== Role.ADMIN) {
         redirect("/");
-        return null; // safety
+        return null;
     }
 
     // Fetch metrics
-
-    const productsCount = await getAllProductsCount();
-    const activeOrdersCount = await getActiveOrdersCount();
-    const availableProductsCount = await getAvailableProductsCount();
-    const allUsersCount = await getAllUsersCount();
-    const allCustomersCount = await getAllCustomersCount();
-
+    const { productsCount } = await useProductsCount();
+    const activeOrdersCount = await useActiveOrdersCount();
+    const availableProductsCount = await useAvailableProductsCount();
+    const allUsersCount = await useUsersCount();
+    const allCustomersCount = await useCustomersCount();
+    console.log({ productsCount, activeOrdersCount, availableProductsCount, allUsersCount, allCustomersCount })
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}
@@ -113,9 +54,9 @@ export default async function ControlPanelDashboardPage() {
             </div>
 
             <DashboardMetrics
-                availableProductsCount={productsCount}
+                productsCount={productsCount}
+                availableProductsCount={availableProductsCount}
                 activeOrdersCount={activeOrdersCount}
-                productsCount={availableProductsCount}
                 usersCount={allUsersCount}
                 customersCount={allCustomersCount}
             />

@@ -1,7 +1,7 @@
 "use client";
-import { useAvailableProductsCount, useProductsCount } from "@/lib/tanstackQueries/products";
-import { useUsersCount, useCustomersCount } from "@/lib/tanstackQueries/users";
-import { useActiveOrdersCount } from "@/lib/tanstackQueries/orders";
+import { useAvailableProductsCount, useProductsCount } from "@/lib/tanStackHooks/products.js";
+import { useUsersCount, useCustomersCount } from "@/lib/tanStackHooks/users";
+import { useActiveOrdersCount } from "@/lib/tanStackHooks/orders";
 import { useQuery } from "@tanstack/react-query";
 export default function DashboardMetrics({
     availableProductsCount,

@@ -1,38 +1,18 @@
-// In Next.js 15+, params is now a Promise and must be awaited
 import Link from "next/link";
 import AddToCartButton from "../../../components/AddToCartButton";
-
+import { useProduct } from "@/lib/tanStackHooks/products";
 export async function generateMetadata({ params }) {
-  // This runs on the server and improves SEO
   const { productId } = await params;
-
   return {
-    title: `Product ${productId} details - E-Commerce`,
+    title: `Product ${productId} details`,
     description: `Detailed information about product ${productId}`,
   };
 }
 
 export default async function ProductDetailsPage({ params }) {
   const { productId } = await params;
-
-  // Mock product data - in real app this would be fetched from API
-  const mockProduct = {
-    id: productId,
-    name: `Premium Product ${productId}`,
-    price: 99.99,
-    description: "This is a high-quality premium product with exceptional features and benefits. Made with the finest materials and built to last.",
-    longDescription: `Discover the ultimate in quality and performance with our Premium Product ${productId}. Crafted with precision and attention to detail, this product offers superior functionality and durability.\n\nFeatures include:\n• Advanced design for optimal performance\n• Premium materials for lasting quality\n• Easy to use and maintain\n• 2-year warranty included\n• Satisfaction guaranteed`,
-    images: [
-      '/next.svg',
-      '/vercel.svg',
-      '/window.svg'
-    ],
-    inStock: true,
-    rating: 4.8,
-    reviews: 124,
-    category: "Premium Products"
-  };
-
+  const product = await useProduct(productId);
+  console.log('from app/products/[productId]/page.js product : ', product);
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Breadcrumb */}
@@ -41,7 +21,7 @@ export default async function ProductDetailsPage({ params }) {
         <span className="mx-2">→</span>
         <Link href="/products" className="hover:text-blue-600">Products</Link>
         <span className="mx-2">→</span>
-        <span className="text-gray-800">{mockProduct.name}</span>
+        <span className="text-gray-800">{product.name}</span>
       </nav>
 
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
@@ -50,18 +30,18 @@ export default async function ProductDetailsPage({ params }) {
           <div className="relative p-8 bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="aspect-square bg-white rounded-2xl shadow-lg p-12 flex items-center justify-center">
               <img
-                src={mockProduct.images[0]}
-                alt={mockProduct.name}
+                src={'./file.svg'}
+                alt={product?.name}
                 className="w-full h-full object-contain rounded-lg"
               />
             </div>
             <div className="flex gap-3 mt-6 justify-center">
-              {mockProduct.images.map((image, index) => (
+              {product?.images?.map((image, index) => (
                 <div
                   key={index}
                   className="w-16 h-16 bg-white rounded-lg border-2 border-gray-200 cursor-pointer hover:border-blue-500 transition-colors p-2"
                 >
-                  <img src={image} alt={`View ${index + 1}`} className="w-full h-full object-contain" />
+                  <img src={'./file.svg'} alt={`View ${index + 1}`} className="w-full h-full object-contain" />
                 </div>
               ))}
             </div>
@@ -74,15 +54,15 @@ export default async function ProductDetailsPage({ params }) {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full mb-3">
-                    {mockProduct.category}
+                    {product.category}
                   </span>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">{mockProduct.name}</h1>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.name}</h1>
                   <div className="flex items-center gap-4 mb-4">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <svg
                           key={i}
-                          className={`w-4 h-4 ${i < Math.floor(mockProduct.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                          className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -90,32 +70,30 @@ export default async function ProductDetailsPage({ params }) {
                         </svg>
                       ))}
                       <span className="text-sm text-gray-600 ml-2">
-                        {mockProduct.rating} ({mockProduct.reviews} reviews)
+                        {product.rating} ({product.reviews} reviews)
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  mockProduct.inStock
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {mockProduct.inStock ? 'In Stock' : 'Out of Stock'}
+                <div className={`px-3 py-1 rounded-full text-sm font-semibold ${product.qteInStock > 0
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+                  }`}>
+                  {product.qteInStock > 0 ? 'In Stock' : 'Out of Stock'}
                 </div>
               </div>
 
               {/* Price */}
               <div className="mb-6">
-                <span className="text-4xl font-bold text-blue-600">${mockProduct.price.toFixed(2)}</span>
+                <span className="text-4xl font-bold text-blue-600">${product.price.toFixed(2)}</span>
               </div>
 
               {/* Description */}
               <div className="mb-8">
-                <p className="text-gray-600 leading-relaxed mb-4">{mockProduct.description}</p>
                 <div className="bg-gray-50 rounded-xl p-6">
                   <h3 className="font-semibold text-gray-800 mb-3">Product Details</h3>
                   <div className="prose prose-sm max-w-none text-gray-600 whitespace-pre-line">
-                    {mockProduct.longDescription}
+                    {product.description}
                   </div>
                 </div>
               </div>

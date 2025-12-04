@@ -80,18 +80,13 @@ type OrderItem {
 #                     Mutation                  #
 #################################################
 type Mutation {
-    # Auth ###################################
-    registerUser(newUser: UserInput!): User!
-    #loginUser(loginUser: LoginInput!): User! # better-auth package handles it
-    #logoutUser: Boolean! # better-auth package handles it
-
     # User Profile ###########################
     updateUserProfile(updatedUser: UpdateUserInput!): User!
     deleteUserProfile(userId: ID!): Boolean!
     
     # Product Management (Admin) #############
-    addNewProduct(newProduct: ProductInput!): Product!
-    updateProduct(id: ID!, updatedProduct: UpdateProductInput!): Product!
+    addNewProduct(product: ProductInput!): Product!
+    updateProduct(id: ID!, product: ProductInput!): Product!
     deleteProduct(productId: ID!): Boolean!
     
     # Order & Cart Management ################
@@ -117,7 +112,7 @@ input UpdateProductInput {
 
 input ProductInput {
     name: String!
-    description: String!
+    description: String
     price: Float!
     qteInStock: Int!
 }
@@ -154,18 +149,19 @@ type Query {
     users: [User!]!
     user(id: ID!): User
     customersCount: Int!
-    allUsersCount: Int!
+    usersCount: Int!
 
     orders: [Order!]!
     myOrders: [Order!]!
     order(id: ID!): Order
     activeOrdersCount: Int!
     
-    products: [Product!]!
+    products(limit: Int!, offset: Int!): [Product!]!
     product(id: ID!): Product
     productsCount: Int!
     availableProductsCount: Int!
-
+    productsInCart(cart: [ID!]!): [Product!]!
+    
     orderItems: [OrderItem!]!
     orderItem(id: ID!): OrderItem
 }

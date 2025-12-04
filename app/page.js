@@ -1,41 +1,10 @@
-import Product from "../components/Product";
-async function getProducts() {
-  try {
-    const response = await fetch(process.env.NEXT_PUBLIC_GQL_URL, {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        query: `
-        query getProducts {
-          products {
-            id
-            name
-            description
-            price
-          }
-        }
-      `,
-      }),
-      cache: "no-store",
-    });
-    console.log(response);
-    const json = await response.json();
-    if (json.errors) {
-      console.error("GraphQL Errors:", json.errors);
-      return [];
-    }
-    return json?.data.products;
-  }
-  catch (error) {
-    console.error("Failed to fetch products:", error);
-    return [];
-  }
+import ProductsListing from "@/components/ProductsListing";
+
+export const metadata = {
+  title: "Home",
+  description: "Home",
 }
-export default async function Home() {
-  const products = await getProducts();
+export default function Home() {
   return (
     <div className="min-h-screen p-6">
       {/* Hero Section */}
@@ -76,12 +45,7 @@ export default async function Home() {
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Featured Products</h2>
         <p className="text-center text-gray-600 text-lg mb-12">Check out our most popular items</p>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {products.map((product) => (
-          <Product key={product.id} product={product} />
-        ))}
-      </div>
+      <ProductsListing />
     </div>
   );
 }

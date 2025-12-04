@@ -1,3 +1,7 @@
+export const metadata = {
+  title: "Checkout",
+  description: "Checkout",
+}
 export default function CheckoutPage() {
   return (
     <div>

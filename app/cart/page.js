@@ -1,5 +1,8 @@
 import CartProductsDisplay from "../../components/CartProductsDisplay";
-
+export const metadata = {
+    title: "Cart",
+    description: "Cart",
+}
 export default function CartPage() {
     return (
         <div className="min-h-screen p-6">

@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 export default function LogoutButton() {
     const disconnectFromSession = async () => {
-        authClient.logout().then(() => {
+        authClient.signOut().catch((e) => {
+            console.error('logout error: ', e);
+        }).then((r) => {
+            console.log('logout response: ', r);
             redirect('/');
         });
 

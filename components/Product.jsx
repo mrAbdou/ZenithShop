@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link";
 import AddToCartButton from "./AddToCartButton";
 
@@ -12,7 +13,7 @@ export default function Product({ product }) {
 
             {/* Product Image Placeholder */}
             <div className="relative w-full h-48 mb-4 rounded-xl overflow-hidden bg-gray-100">
-                <img 
+                <img
                     src={`https://placehold.co/600x400/e2e8f0/475569?text=${encodeURIComponent(product.name)}`}
                     alt={product.name}
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"

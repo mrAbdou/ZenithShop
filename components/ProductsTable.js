@@ -1,17 +1,27 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
-import { useProducts } from "../lib/tanstackQueries/products";
-export default function ProductsTable({ products }) {
-
-    const { data: prods } = useQuery({
-        queryKey: ["products"],
-        initialData: products,
-        queryFn: () => useProducts(),
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useProducts } from "@/lib/tanStackHooks/products.js";
+import { useRouter } from "next/navigation";
+import { LIMIT } from "@/lib/tanStackHooks/constants.js";
+export default function ProductsTable({ limit = LIMIT, offset = 0 } = {}) {
+    const router = useRouter();
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+        queryKey: ["products", limit, offset],
+        queryFn: ({ pageParam = 0 }) => useProducts(limit = LIMIT, offset = pageParam),
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length === limit ? allPages.length * limit : undefined;
+        },
+        initialPageParam: 0,
     });
+    const products = data?.pages?.flat() || [];
+    console.log('from products table : ', products);
+    const navigateToAddProductPage = () => {
+        router.push("/control-panel/products/add-product");
+    };
     return (
         <>
             {
-                prods.length > 0 && (
+                products?.length > 0 && (
                     <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 mb-8">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div className="flex-1 max-w-md">
@@ -29,7 +39,7 @@ export default function ProductsTable({ products }) {
                                 </div>
                             </div>
                             <div className="flex gap-3">
-                                <button className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-green-700 hover:to-green-800 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2">
+                                <button onClick={navigateToAddProductPage} className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-green-700 hover:to-green-800 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
@@ -42,7 +52,7 @@ export default function ProductsTable({ products }) {
             }
             {/* Products Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {prods?.map(product => (
+                {products?.map(product => (
                     <div key={product.id} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group">
                         <div className="flex flex-col h-full">
                             {/* Product Info */}
@@ -70,9 +80,38 @@ export default function ProductsTable({ products }) {
                     </div>
                 ))}
             </div>
+            {products.length > 0 && (
+                <div className="text-center mt-8">
+                    {hasNextPage ? (
+                        <button
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                        >
+                            {isFetchingNextPage ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Loading...
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    Load More Products
+                                </>
+                            )}
+                        </button>
+                    ) : (
+                        <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100 inline-block">
+                            <p className="text-gray-600 font-medium">All products have been loaded</p>
+                        </div>
+                    )}
+                </div>
+            )}
             {/* Empty State */}
             {
-                prods?.length === 0 && (
+                products?.length === 0 && (
                     <div className="text-center py-16">
                         <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +120,7 @@ export default function ProductsTable({ products }) {
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">No products found</h3>
                         <p className="text-gray-600 mb-6">Start building your product catalog by adding your first product.</p>
-                        <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 inline-flex items-center gap-2">
+                        <button onClick={navigateToAddProductPage} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 inline-flex items-center gap-2">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
@@ -91,7 +130,7 @@ export default function ProductsTable({ products }) {
                 )
             }
             {/* Footer Stats */}
-            {prods.length > 0 && (
+            {products.length > 0 && (
                 <div className="mt-12 bg-white rounded-2xl p-8 shadow-md border border-gray-100">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div className="text-center">

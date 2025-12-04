@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useProductsInCart } from '@/lib/tanStackHooks/products';
+import { useProductsInCart } from '@/lib/tanStackHooks/products.js';
 import { useQuery } from "@tanstack/react-query";
 
 export default function CartProductsDisplay() {
@@ -13,10 +13,6 @@ export default function CartProductsDisplay() {
         setCart(storedCart);
     }, []);
 
-    // Sync cart state to localStorage whenever cart changes
-    useEffect(() => {
-        localStorage.setItem("cart", JSON.stringify(cart));
-    }, [cart]);
 
     // Extract IDs from cart for fetching
     const cartIds = cart.map(item => item.id);
@@ -25,9 +21,9 @@ export default function CartProductsDisplay() {
     const { data: fetchedProducts = [] } = useQuery({
         queryKey: ["productsByIds", cartIds.sort()], // sort IDs for consistent caching
         queryFn: () => useProductsInCart(cartIds),
-        enabled: cartIds.length > 0
+        enabled: cartIds.length > 0,
     });
-
+    console.log('fetchedProducts', fetchedProducts);
     // Merge cart quantities with fetched product data
     const cartWithProducts = cart.map(cartItem => {
         const product = fetchedProducts.find(p => p.id === cartItem.id);
@@ -45,6 +41,7 @@ export default function CartProductsDisplay() {
         }
 
         setCart(newCart);
+        localStorage.setItem("cart", JSON.stringify(newCart));
     };
 
     const remove = (productId) => {
@@ -60,6 +57,7 @@ export default function CartProductsDisplay() {
         }
 
         setCart(newCart);
+        localStorage.setItem('cart', JSON.stringify(newCart));
     };
 
     if (cartWithProducts.length === 0) {

@@ -2,12 +2,14 @@ import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import ProductsTable from "@/components/ProductsTable";
+import AddProductForm from "@/components/AddProductForm";
+
 export const metadata = {
-    title: "Products Management",
-    description: "Products Management",
-}
-export default async function ProductsManagementPage() {
+    title: "Add Product",
+    description: "Add Product",
+};
+
+export default async function AddProduct() {
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -22,22 +24,20 @@ export default async function ProductsManagementPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Products Management
+                                Add New Product
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                Manage your product catalog efficiently
+                                Expand your product catalog
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Here you can view, add, update, and delete products in your store. Each change is tracked and synchronized across your e-commerce platform.
+                                Create a new product for your store. Fill in the details below to add it to your catalog.
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
-                                    {/* this total products cound is going to be break for little bit until my infinite query is ready then i'll come back to fix it */}
-                                    {/* <p className="text-3xl font-bold text-white mb-1">{products?.length || 0}</p> */}
-                                    <p className="text-3xl font-bold text-white mb-1">{0}</p>
-                                    <p className="text-blue-100 text-sm">Total Products</p>
+                                    <p className="text-3xl font-bold text-white mb-1">+1</p>
+                                    <p className="text-blue-100 text-sm">New Product</p>
                                 </div>
                             </div>
                         </div>
@@ -45,9 +45,10 @@ export default async function ProductsManagementPage() {
                 </div>
             </div>
 
-            {/* <ProductsTable products={products || []} /> */}
-            <ProductsTable />
-
+            {/* Form Container */}
+            <div className="max-w-4xl mx-auto">
+                <AddProductForm />
+            </div>
         </div>
-    )
+    );
 }

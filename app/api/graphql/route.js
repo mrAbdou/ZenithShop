@@ -11,7 +11,7 @@ const schema = createSchema({
 });
 
 // Create Yoga instance ONCE (not per request)
-const {handleRequest} = createYoga({
+const { handleRequest } = createYoga({
     schema,
     context: async ({ request }) => {
         let session = null;
@@ -19,7 +19,6 @@ const {handleRequest} = createYoga({
             session = await auth.api.getSession({
                 headers: request.headers
             });
-            console.log('from app/api/graphql/route.js file session is : ', session);
         } catch (error) {
             console.error("Error getting session in GraphQL context:", error);
             // Session is optional for some queries, so continue with null session
@@ -33,4 +32,4 @@ const {handleRequest} = createYoga({
     fetchAPI: { Response }
 });
 
-export {handleRequest as GET, handleRequest as POST, handleRequest as OPTIONS}
+export { handleRequest as GET, handleRequest as POST, handleRequest as OPTIONS }

@@ -3,23 +3,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import { Role } from "@prisma/client";
+import { authClient } from "@/lib/auth-client";
 export default function NavigationBar() {
     const [isOpen, setIsOpen] = useState(false);
-    const [session, setSession] = useState(null);
     const currentPath = usePathname();
-    useEffect(() => {
-        const getSession = async () => {
-            try {
-                const session = await authClient.getSession();
-                setSession(session);
-            } catch (error) {
-                console.error("Failed to fetch session", error);
-            }
-        }
-        getSession();
-    }, []);
+    const { data: session, isPending } = authClient.useSession();
     const toggleMenu = () => {
         setIsOpen(!isOpen);
     };
@@ -30,8 +19,7 @@ export default function NavigationBar() {
 
     // TODO: i think i need to create another navLinks array for the admin panel
     let navLinks = [];
-
-    if (session?.user?.role === Role.CUSTOMER) {
+    if (isPending || session?.user?.role === Role.Customer) {
         navLinks = [
             {
                 href: "/",
@@ -88,7 +76,7 @@ export default function NavigationBar() {
                 )
             }
         ]
-    } else {
+    } else if (session?.user?.role === Role.ADMIN) {
         navLinks = [
             {
                 href: "/control-panel/dashboard",
@@ -265,9 +253,9 @@ export default function NavigationBar() {
                             </div>
                             <div className="flex-1">
                                 <p className="text-white text-sm font-semibold">Admin</p>
-                                <p className="text-gray-400 text-xs">Online</p>
+                                <p className="text-gray-400 text-xs">{session?.user?.role === Role.ADMIN ? "Online" : "Offline"}</p>
                             </div>
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <div className={session?.user?.role === Role.ADMIN ? "w-2 h-2 bg-green-500 rounded-full animate-pulse" : "w-2 h-2 bg-red-500 rounded-full animate-pulse"}></div>
                         </div>
                     </div>
                 </Link>

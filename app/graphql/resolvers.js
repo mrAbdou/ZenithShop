@@ -48,7 +48,7 @@ const resolvers = {
                 }
             });
         },
-        allUsersCount: async (parent, args, context) => {
+        usersCount: async (parent, args, context) => {
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw Error('unauthorized');
             return await context.prisma.user.count();
         },
@@ -66,7 +66,10 @@ const resolvers = {
             });
         },
         products: async (parent, args, context) => {
+            const { limit, offset } = args;
             return await context.prisma.product.findMany({
+                take: limit,
+                skip: offset,
                 include: {
                     orderItems: {
                         include: {
@@ -90,12 +93,12 @@ const resolvers = {
         },
         // this is for all the products even onces that are out of stock
         productsCount: async (parent, args, context) => {
-            if (!context.session || !(context.session.user.role === Role.ADMIN)) throw Error('unauthorized');
             return await context.prisma.product.count();
         },
         product: async (parent, args, context) => {
+            console.log('from app/graphql/resolvers.js args : ', args);
             return await context.prisma.product.findUnique({
-                where: { id: parseInt(args.id) },
+                where: { id: args.id },
                 include: {
                     orderItems: {
                         include: {
@@ -108,7 +111,7 @@ const resolvers = {
             });
         },
         productsInCart: async (parent, args, context) => {
-            const ids = args.cart.map(id => parseInt(id));
+            const ids = args.cart;
             return await context.prisma.product.findMany({
                 where: { id: { in: ids } }
             });
@@ -138,11 +141,6 @@ const resolvers = {
         }
     },
     Mutation: {
-        // TODO: still confusing between keeing this so user can be created and stored by prisma , or the better auth package will take care of it
-        registerUser: async (parent, args, context) => {
-            const { user } = args;
-            return await context.prisma.user.create({ data: user });
-        },
         //TODO: do i have really need to let the user to update his profile information, the is e-commerce website not a social media place?
         updateUserProfile: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");
@@ -157,8 +155,8 @@ const resolvers = {
         },
         addNewProduct: async (parent, args, context) => {
             if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
-            const { newProduct } = args;
-            return await context.prisma.product.create({ data: newProduct });
+            const { product } = args;
+            return await context.prisma.product.create({ data: product });
 
         },
         updateProduct: async (parent, args, context) => {

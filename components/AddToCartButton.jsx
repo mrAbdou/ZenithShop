@@ -19,28 +19,27 @@ export default function AddToCartButton({ productId }) {
   };
 
   const addProductToCart = () => {
-    // ← الحل: نقرأ من localStorage مباشرة في كل مرة!
+    //get the updated state of the cart directly from the source
     const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
-
+    // search using the id of the product in the cart, if found get her index in the cart list
     const foundIndex = currentCart.findIndex((item) => item.id === productId);
 
     let updatedCart;
     if (foundIndex === -1) {
-      // المنتج غير موجود - نضيفه
+      // the product is not in the cart - add it
       updatedCart = [...currentCart, { id: productId, qte: 1 }];
     } else {
-      // المنتج موجود - نزيد الكمية
+
       updatedCart = [...currentCart];
       updatedCart[foundIndex] = {
         ...updatedCart[foundIndex],
         qte: updatedCart[foundIndex].qte + 1
       };
     }
-
-    // حفظ في localStorage
+    // save the updated cart to localStorage
     localStorage.setItem("cart", JSON.stringify(updatedCart));
 
-    // تحديث العرض
+    // update the display
     updateDisplay();
   };
 

@@ -1,4 +1,5 @@
 import ProductsListing from "@/components/ProductsListing";
+import CartFloatingButton from "@/components/CartFloatingButton";
 import { useProductsCount } from "@/lib/tanStackHooks/products";
 export const metadata = {
   title: "Products",
@@ -8,7 +9,7 @@ export default async function ProductsPage() {
   const productsCount = await useProductsCount();
   console.log('from app/products/page.js products count : ', productsCount)
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 relative">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-3xl p-12 mb-12 text-center">
         <div className="max-w-4xl mx-auto">
@@ -30,6 +31,9 @@ export default async function ProductsPage() {
         </div>
       </div>
       <ProductsListing />
+
+      {/* Floating Cart Button */}
+      <CartFloatingButton />
     </div>
   );
 }

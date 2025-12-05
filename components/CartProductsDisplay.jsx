@@ -1,66 +1,15 @@
 'use client';
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useProductsInCart } from '@/lib/tanStackHooks/products.js';
-import { useQuery } from "@tanstack/react-query";
-
+import { useContext } from "react";
+import { CartContext } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
 export default function CartProductsDisplay() {
-    const [cart, setCart] = useState([]);
-
-    // Load cart from localStorage only on mount
-    useEffect(() => {
-        const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
-        setCart(storedCart);
-    }, []);
-
-
-    // Extract IDs from cart for fetching
-    const cartIds = cart.map(item => item.id);
-
-    // Fetch products by their IDs (bulk fetch instead of individual)
-    const { data: fetchedProducts = [] } = useQuery({
-        queryKey: ["productsByIds", cartIds.sort()], // sort IDs for consistent caching
-        queryFn: () => useProductsInCart(cartIds),
-        enabled: cartIds.length > 0,
-    });
-    console.log('fetchedProducts', fetchedProducts);
-    // Merge cart quantities with fetched product data
-    const cartWithProducts = cart.map(cartItem => {
-        const product = fetchedProducts.find(p => p.id === cartItem.id);
-        return product ? { ...product, qte: cartItem.qte } : null;
-    }).filter(Boolean); // Remove null items if product not found
-
-    const add = (productId) => {
-        const newCart = [...cart];
-        const foundIndex = newCart.findIndex(item => item.id === productId);
-
-        if (foundIndex !== -1) {
-            newCart[foundIndex].qte += 1;
-        } else {
-            newCart.push({ id: productId, qte: 1 });
-        }
-
-        setCart(newCart);
-        localStorage.setItem("cart", JSON.stringify(newCart));
-    };
-
-    const remove = (productId) => {
-        const newCart = [...cart];
-        const foundIndex = newCart.findIndex(item => item.id === productId);
-
-        if (foundIndex !== -1) {
-            if (newCart[foundIndex].qte > 1) {
-                newCart[foundIndex].qte -= 1;
-            } else {
-                newCart.splice(foundIndex, 1);
-            }
-        }
-
-        setCart(newCart);
-        localStorage.setItem('cart', JSON.stringify(newCart));
-    };
-
-    if (cartWithProducts.length === 0) {
+    const { cart, addToCart, removeFromCart } = useContext(CartContext);
+    const router = useRouter();
+    const goToCheckoutPage = () => {
+        router.push('/checkout');
+    }
+    if (cart.length === 0) {
         return (
             <div className="max-w-md mx-auto p-8">
                 <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-3xl shadow-xl overflow-hidden">
@@ -98,7 +47,7 @@ export default function CartProductsDisplay() {
             {/* Cart Items */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
                 <div className="divide-y divide-gray-200">
-                    {cartWithProducts.map((item) => (
+                    {cart.map((item) => (
                         <div
                             key={item.id}
                             className="p-6 hover:bg-gray-50 transition-colors"
@@ -132,7 +81,7 @@ export default function CartProductsDisplay() {
                                     <div className="flex items-center bg-gray-100 rounded-xl">
                                         <button
                                             className="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-l-xl transition-colors font-bold text-lg"
-                                            onClick={() => remove(item.id)}
+                                            onClick={() => removeFromCart(item)}
                                             aria-label="Decrease quantity"
                                         >
                                             −
@@ -142,7 +91,7 @@ export default function CartProductsDisplay() {
                                         </span>
                                         <button
                                             className="w-10 h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-r-xl transition-colors font-bold text-lg"
-                                            onClick={() => add(item.id)}
+                                            onClick={() => addToCart(item)}
                                             aria-label="Increase quantity"
                                         >
                                             +
@@ -168,11 +117,11 @@ export default function CartProductsDisplay() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             <span className="text-gray-600">Total Items:</span>
-                            <span className="font-semibold text-gray-800">{cartWithProducts.reduce((sum, item) => sum + item.qte, 0)}</span>
+                            <span className="font-semibold text-gray-800">{cart.reduce((sum, item) => sum + item.qte, 0)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-semibold text-gray-800">${cartWithProducts.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
+                            <span className="font-semibold text-gray-800">${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-600">Shipping:</span>
@@ -180,16 +129,16 @@ export default function CartProductsDisplay() {
                         </div>
                         <div className="flex justify-between items-center border-t border-gray-300 pt-4">
                             <span className="text-lg font-semibold text-gray-800">Total:</span>
-                            <span className="text-2xl font-bold text-blue-600">${cartWithProducts.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
+                            <span className="text-2xl font-bold text-blue-600">${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                         </div>
                     </div>
 
                     {/* Checkout Button */}
                     <div className="flex flex-col justify-center space-y-4">
-                        <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg">
+                        <button onClick={goToCheckoutPage} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg">
                             Proceed to Checkout
                         </button>
-                        <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200">
+                        <button onClick={() => router.push('/products')} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200">
                             Continue Shopping
                         </button>
                     </div>

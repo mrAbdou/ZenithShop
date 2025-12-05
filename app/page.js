@@ -1,12 +1,14 @@
+import CartFloatingButton from "@/components/CartFloatingButton";
 import ProductsListing from "@/components/ProductsListing";
 
 export const metadata = {
   title: "Home",
   description: "Home",
 }
+
 export default function Home() {
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 relative">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-3xl p-12 mb-12 text-center">
         <div className="max-w-4xl mx-auto">
@@ -46,6 +48,9 @@ export default function Home() {
         <p className="text-center text-gray-600 text-lg mb-12">Check out our most popular items</p>
       </div>
       <ProductsListing />
+
+      {/* Floating Cart Button */}
+      <CartFloatingButton />
     </div>
   );
 }

@@ -19,7 +19,7 @@ export default function NavigationBar() {
 
     // TODO: i think i need to create another navLinks array for the admin panel
     let navLinks = [];
-    if (isPending || session?.user?.role === Role.Customer) {
+    if (isPending || session?.user?.role === Role.CUSTOMER) {
         navLinks = [
             {
                 href: "/",

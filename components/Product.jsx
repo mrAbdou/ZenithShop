@@ -38,7 +38,7 @@ export default function Product({ product }) {
 
             {/* Botones de acción */}
             <div className="flex flex-col gap-2 mt-auto">
-                <AddToCartButton productId={product.id} />
+                <AddToCartButton product={product} />
 
                 <Link
                     href={`/products/${product.id}`}

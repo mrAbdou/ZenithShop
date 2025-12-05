@@ -101,7 +101,7 @@ export default async function ProductDetailsPage({ params }) {
 
             {/* Actions */}
             <div className="space-y-4">
-              <AddToCartButton productId={productId} />
+              <AddToCartButton product={product} />
               <div className="grid grid-cols-2 gap-4">
                 <Link
                   href="/products"

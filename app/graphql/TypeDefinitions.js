@@ -9,7 +9,7 @@ scalar DateTime
 #################################################
 type User {
     id: ID!
-    fullName: String!
+    name: String!
     email: String!
     # password removed for security reasons
     address: String!
@@ -79,8 +79,15 @@ type OrderItem {
 #################################################
 #                     Mutation                  #
 #################################################
+type CompleteSignupResult {
+    success: Boolean!
+    user: User!
+    order: Order!
+}
+
 type Mutation {
     # User Profile ###########################
+    completeSignUp(phoneNumber: String!, address: String!, cart: [CartItemInput!]!): CompleteSignupResult!
     updateUserProfile(updatedUser: UpdateUserInput!): User!
     deleteUserProfile(userId: ID!): Boolean!
     
@@ -118,7 +125,7 @@ input ProductInput {
 }
 
 input UpdateUserInput {
-    fullName: String
+    name: String
     email: String
     password: String
     address: String
@@ -126,7 +133,7 @@ input UpdateUserInput {
 }
 
 input UserInput {
-    fullName: String!
+    name: String!
     email: String!
     password: String!
     address: String!
@@ -140,6 +147,16 @@ input OrderInput {
 input OrderItemInput {
     productId: ID!
     qte: Int!
+}
+
+# New input type for the cart items sent during signup
+input CartItemInput {
+    id: ID!          # product ID
+    price: Float!    # price at checkout (client‑side copy)
+    qte: Int!        # quantity
+    name: String     # optional product name (client‑side only)
+    description: String   # optional description
+    qteInStock: Int   # optional stock info
 }
 
 #################################################

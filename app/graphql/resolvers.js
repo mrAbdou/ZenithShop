@@ -1,7 +1,9 @@
+import prisma from "@/lib/prisma";
 import { OrderStatus, Role } from "@prisma/client";
 
 const resolvers = {
     Query: {
+        //users functions ----------------------------------
         users: (parent, args, context) => {
             if (!(context.session?.user?.role === 'ADMIN')) throw new Error("Unauthorized");
             return context.prisma.user.findMany({
@@ -52,6 +54,7 @@ const resolvers = {
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw Error('unauthorized');
             return await context.prisma.user.count();
         },
+        //orders functions ----------------------------------
         orders: async (parent, args, context) => {
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
             return await context.prisma.order.findMany({
@@ -140,7 +143,49 @@ const resolvers = {
             });
         }
     },
+
     Mutation: {
+        completeSignUp: async (parent, args, context) => {
+            if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) {
+                throw new Error("Unauthorized");
+            }
+
+            return await context.prisma.$transaction(async (tx) => {
+                // Calculate total
+                const total = args.cart.reduce((sum, item) => sum + (item.price * item.qte), 0);
+
+                // Create complete order with items in one operation
+                const order = await tx.order.create({
+                    data: {
+                        userId: context.session.user.id, // Prisma handles relation automatically
+                        total: total,
+                        items: {
+                            create: args.cart.map(item => ({
+                                productId: item.id,
+                                qte: item.qte
+                            }))
+                        }
+                    },
+                    include: { items: { include: { product: true } } }
+                });
+
+                // Update user profile
+                const updatedUser = await tx.user.update({
+                    where: { id: context.session.user.id },
+                    data: {
+                        phoneNumber: args.phoneNumber,
+                        address: args.address
+                    },
+                    include: { orders: true }
+                });
+
+                return {
+                    success: true,
+                    user: updatedUser,
+                    order: order
+                };
+            });
+        },
         //TODO: do i have really need to let the user to update his profile information, the is e-commerce website not a social media place?
         updateUserProfile: async (parent, args, context) => {
             if (!context.session) throw new Error("Unauthorized");

@@ -2,9 +2,19 @@ import CartFloatingButton from "@/components/CartFloatingButton";
 import ProductsListing from "@/components/ProductsListing";
 
 export const metadata = {
-  title: "Home",
-  description: "Home",
-}
+  title: "ZenithShop",
+  description: "Shop premium products with fast shipping.",
+  keywords: ["online store", "ecommerce", "premium products", "free shipping"],
+  openGraph: {
+    title: "ZenithShop",
+    description: "Premium ecommerce store",
+    images: ["/og.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og.jpg"],
+  }
+};
 
 export default function Home() {
   return (

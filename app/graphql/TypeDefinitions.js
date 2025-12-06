@@ -97,10 +97,8 @@ type Mutation {
     deleteProduct(productId: ID!): Boolean!
     
     # Order & Cart Management ################
-    makeAnOrder(order: OrderInput!): Order!
-    addProductToCart(productId: ID!, qte: Int!): OrderItem! # needs to me removed from the implementation in here, it's client side functionality
-    removeProductFromCart(orderItemId: ID!): Boolean! # needs to me removed from the implementation in here, it's client side functionality
-}
+    completeOrder(cart: [CartItemInput!]!): Order!
+    }   
 
 #################################################
 #                     Inputs                    #

@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import ProductsTable from "@/components/ProductsTable";
 export const metadata = {
-    title: "Products Management",
-    description: "Products Management",
+    title: "Products Management | ZenithShop Admin",
+    description: "Admin interface for managing ZenithShop product catalog. Add, edit, delete, and organize products efficiently with real-time updates and analytics.",
 }
 export default async function ProductsManagementPage() {
     const session = await auth.api.getSession({
@@ -34,7 +34,7 @@ export default async function ProductsManagementPage() {
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
-                                    {/* this total products cound is going to be break for little bit until my infinite query is ready then i'll come back to fix it */}
+                                    {/* TODO: Replace hardcoded 0 with actual products count. Need to fetch products server-side here and pass as initial data to ProductsTable */}
                                     {/* <p className="text-3xl font-bold text-white mb-1">{products?.length || 0}</p> */}
                                     <p className="text-3xl font-bold text-white mb-1">{0}</p>
                                     <p className="text-blue-100 text-sm">Total Products</p>

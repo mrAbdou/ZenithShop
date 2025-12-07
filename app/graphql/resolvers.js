@@ -1,4 +1,3 @@
-import prisma from "@/lib/prisma";
 import { OrderStatus, Role } from "@prisma/client";
 
 const resolvers = {

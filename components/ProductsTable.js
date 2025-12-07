@@ -2,7 +2,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useProducts } from "@/lib/tanStackHooks/products.js";
 import { useRouter } from "next/navigation";
-import { LIMIT } from "@/lib/tanStackHooks/constants.js";
+import { LIMIT } from "@/lib/constants.js";
 export default function ProductsTable({ limit = LIMIT, offset = 0 } = {}) {
     const router = useRouter();
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
@@ -14,7 +14,6 @@ export default function ProductsTable({ limit = LIMIT, offset = 0 } = {}) {
         initialPageParam: 0,
     });
     const products = data?.pages?.flat() || [];
-    console.log('from products table : ', products);
     const navigateToAddProductPage = () => {
         router.push("/control-panel/products/add-product");
     };

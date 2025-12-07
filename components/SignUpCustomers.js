@@ -6,8 +6,10 @@ import { authClient } from "@/lib/auth-client";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 export default function SignUpCustomers() {
     const { cart } = useContext(CartContext);
+    const router = useRouter();
     const { register, handleSubmit, formState: { errors }, reset } = useForm({
         resolver: zodResolver(SignUpCustomerSchema),
         mode: 'onChange'
@@ -20,6 +22,7 @@ export default function SignUpCustomers() {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
+            credentials: 'include',
             cache: 'no-store',
             body: JSON.stringify({
                 query: `mutation CompleteSignUp($phoneNumber: String!, $address: String!, $cart: [CartItemInput!]!){
@@ -54,22 +57,30 @@ export default function SignUpCustomers() {
                 }
             })
         });
-        if (!response.ok) console.error(response?.errors || response?.error)
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData?.errors?.[0]?.message || `HTTP error! status: ${response.status}`);
+        }
         const json = await response.json();
+        if (json.errors) {
+            throw new Error(json.errors[0].message);
+        }
         return json.data?.completeSignUp;
     };
     const onSubmit = async ({ name, email, password, phoneNumber, address }) => {
         try {
-            //better auth has to de her work first
+            //better auth has to do her work first
             await authClient.signUp.email({ name, email, password });
             // i run update after better auth has done her work, to set my custom fields that i added to user model
             const result = await completeCustomerSignUp(phoneNumber, address, cart);
             if (result.success) {
                 reset();
-                //REDIRECT TO THE ORDER PAGE OR DASHBOARD FOR CUSTOMERS 
+                toast.success('Account created and order completed successfully!');
+                // Redirect to home after successful order
+                router.push('/');
             }
         } catch (error) {
-            console.error(error);
+            toast.error(`Sign up failed: ${error.message}`);
         }
     }
 

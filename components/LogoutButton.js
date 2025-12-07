@@ -1,15 +1,15 @@
 "use client";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 export default function LogoutButton() {
-    const disconnectFromSession = async () => {
-        authClient.signOut().catch((e) => {
-            console.error('logout error: ', e);
-        }).then((r) => {
-            console.log('logout response: ', r);
-            redirect('/');
+    const router = useRouter();
+    const disconnectFromSession = () => {
+        authClient.signOut().then(() => {
+            router.push('/');
+        }).catch((e) => {
+            toast.error(`Logout failed: ${e.message || 'Please try again'}`);
         });
-
     }
     return (
         <button

@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Contact",
-  description: "Contact",
+  title: "Contact Us | ZenithShop",
+  description: "Get in touch with the ZenithShop team. Contact us for support, inquiries, or to share your feedback. We're here to help 24/7.",
 }
 export default function ContactPage() {
   return (

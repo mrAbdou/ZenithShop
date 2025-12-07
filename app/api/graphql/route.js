@@ -1,8 +1,8 @@
 import { createYoga, createSchema } from "graphql-yoga";
-import prisma from "../../../lib/prisma.js";
+import prisma from "@/lib/prisma.js";
 import { auth } from "@/lib/auth.js";
-import typeDefs from "../../graphql/TypeDefinitions.js";
-import resolvers from "../../graphql/resolvers.js";
+import typeDefs from "@/app/graphql/TypeDefinitions.js";
+import resolvers from "@/app/graphql/resolvers.js";
 
 // Create schema ONCE (not per request)
 const schema = createSchema({
@@ -20,8 +20,8 @@ const { handleRequest } = createYoga({
                 headers: request.headers
             });
         } catch (error) {
-            console.error("Error getting session in GraphQL context:", error);
-            // Session is optional for some queries, so continue with null session
+            // Session retrieval failed, continue with null session (optional for public queries)
+            session = null;
         }
         return {
             prisma,

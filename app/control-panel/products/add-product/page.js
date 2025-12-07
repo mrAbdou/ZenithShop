@@ -5,8 +5,8 @@ import { headers } from "next/headers";
 import AddProductForm from "@/components/AddProductForm";
 
 export const metadata = {
-    title: "Add Product",
-    description: "Add Product",
+    title: "Add Product | ZenithShop Admin",
+    description: "Create and add new products to your ZenithShop catalog. Fill in product details, pricing, and inventory information through this admin interface.",
 };
 
 export default async function AddProduct() {

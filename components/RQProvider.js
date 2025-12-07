@@ -1,19 +1,26 @@
 "use client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ApolloProvider } from "@apollo/client/react";
+import client from "@/lib/apollo-client";
+import { useState } from "react";
 export default function RQProvider({ children }) {
-    const queryClient = new QueryClient({
+    // Create QueryClient only once per app lifecycle
+    const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 60 * 60 * 1000, // 1 hour is not invalidated data won't be refetched
-                refetchOnWindowFocus: true,
+                staleTime: 0,
+                refetchOnWindowFocus: false,
+                retry: false,
             },
         },
-    });
+    }));
     return (
-        <QueryClientProvider client={queryClient}>
-            {children}
-            <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        <ApolloProvider client={client}>
+            <QueryClientProvider client={queryClient}>
+                {children}
+                <ReactQueryDevtools initialIsOpen={false} />
+            </QueryClientProvider>
+        </ApolloProvider>
     );
 }

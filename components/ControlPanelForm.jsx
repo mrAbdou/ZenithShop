@@ -29,18 +29,16 @@ export default function ControlPanelForm() {
         try {
             // use the signIn with email password method from better-auth client
             const { data, error } = await authClient.signIn.email({
-                email: formData.email, 
+                email: formData.email,
                 password: formData.password,
             });
 
             if (error) {
                 setError(error.message || error.statusText || 'Login failed');
             } else {
-                console.log('Login successful!', data);
-                router.push("./control-panel/dashboard")
+                router.push("/control-panel/dashboard");
             }
         } catch (err) {
-            console.error('Login error:', err);
             setError(err?.message || 'An unexpected error occurred');
         }
     };
@@ -73,7 +71,7 @@ export default function ControlPanelForm() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                             />
                         </svg>
                     </div>

@@ -1,5 +1,3 @@
-// app/control-panel/dashboard/page.js
-import Image from "next/image";
 import { auth } from "@/lib/auth";
 import DateTimeLive from "@/components/DateTimeLive";
 import LogoutButton from "@/components/LogoutButton";
@@ -7,12 +5,12 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import DashboardMetrics from "@/components/DashboardMetrics";
-import { useAvailableProductsCount, useProductsCount } from "@/lib/tanStackHooks/products.js";
-import { useActiveOrdersCount } from "@/lib/tanStackHooks/orders";
-import { useCustomersCount, useUsersCount } from "@/lib/tanStackHooks/users";
+import { fetchCustomersCount, fetchUsersCount } from "@/services/users";
+import { fetchAvailableProductsCount, fetchProductsCount } from "@/services/products";
+import { fetchActiveOrdersCount } from "@/services/orders";
 export const metadata = {
-    title: "Dashboard",
-    description: "Dashboard",
+    title: "Admin Dashboard | ZenithShop",
+    description: "Admin dashboard for ZenithShop management. Monitor business metrics, products, orders, and customer data in real-time.",
 }
 export default async function ControlPanelDashboardPage() {
     // Get session from better-auth
@@ -23,12 +21,11 @@ export default async function ControlPanelDashboardPage() {
     }
 
     // Fetch metrics
-    const { productsCount } = await useProductsCount();
-    const activeOrdersCount = await useActiveOrdersCount();
-    const availableProductsCount = await useAvailableProductsCount();
-    const allUsersCount = await useUsersCount();
-    const allCustomersCount = await useCustomersCount();
-    console.log({ productsCount, activeOrdersCount, availableProductsCount, allUsersCount, allCustomersCount })
+    const productsCount = await fetchProductsCount();
+    const activeOrdersCount = await fetchActiveOrdersCount();
+    const availableProductsCount = await fetchAvailableProductsCount();
+    const allUsersCount = await fetchUsersCount();
+    const allCustomersCount = await fetchCustomersCount();
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}

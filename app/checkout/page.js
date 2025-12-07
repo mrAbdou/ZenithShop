@@ -1,9 +1,7 @@
 import CheckoutAuth from "@/components/CheckoutAuth";
-import CheckoutCartResume from "@/components/CheckoutCartResume";
-import SignUpCustomers from "@/components/SignUpCustomers";
 export const metadata = {
-  title: "Checkout",
-  description: "Checkout",
+  title: "Checkout | ZenithShop",
+  description: "Secure checkout process for ZenithShop. Complete your purchase with account verification and final order confirmation.",
 }
 export default function CheckoutPage() {
   return (

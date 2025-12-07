@@ -1,18 +1,33 @@
 import Link from "next/link";
-import AddToCartButton from "../../../components/AddToCartButton";
-import { useProduct } from "@/lib/tanStackHooks/products";
+import AddToCartButton from "@/components/AddToCartButton";
+import { fetchProduct } from "@/services/products";
+import { notFound } from "next/navigation";
+
 export async function generateMetadata({ params }) {
   const { productId } = await params;
+  const product = await fetchProduct(productId);
+
+  if (!product) {
+    return {
+      title: "Product Not Found",
+      description: "The requested product could not be found.",
+    };
+  }
+
   return {
-    title: `Product ${productId} details`,
-    description: `Detailed information about product ${productId}`,
+    title: `${product.name} Details | ZenithShop`,
+    description: `Detailed information about ${product.name} - ${product.description?.slice(0, 150)}...`,
   };
 }
 
 export default async function ProductDetailsPage({ params }) {
   const { productId } = await params;
-  const product = await useProduct(productId);
-  console.log('from app/products/[productId]/page.js product : ', product);
+  const product = await fetchProduct(productId);
+
+  // If product not found, show 404
+  if (!product) {
+    notFound();
+  }
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Breadcrumb */}
@@ -57,7 +72,8 @@ export default async function ProductDetailsPage({ params }) {
                     {product.category}
                   </span>
                   <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.name}</h1>
-                  <div className="flex items-center gap-4 mb-4">
+                  {/* TODO: Rating section - Commented out as 5-star rating system is not currently used */}
+                  {/* <div className="flex items-center gap-4 mb-4">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <svg
@@ -73,7 +89,7 @@ export default async function ProductDetailsPage({ params }) {
                         {product.rating} ({product.reviews} reviews)
                       </span>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
                 <div className={`px-3 py-1 rounded-full text-sm font-semibold ${product.qteInStock > 0
                   ? 'bg-green-100 text-green-800'
@@ -112,31 +128,15 @@ export default async function ProductDetailsPage({ params }) {
                   </svg>
                   Back to Products
                 </Link>
-                <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
+                {/* <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                   Add to Wishlist
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Related Products Section */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">You might also like</h2>
-        <div className="grid md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-md p-4 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                <img src={`/next.svg`} alt="Related product" className="w-16 h-16 object-contain" />
-              </div>
-              <h3 className="font-semibold text-gray-800 mb-1 truncate">Related Product {i}</h3>
-              <p className="text-blue-600 font-bold">${(Math.random() * 100).toFixed(2)}</p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

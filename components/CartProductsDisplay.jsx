@@ -90,9 +90,13 @@ export default function CartProductsDisplay() {
                                             {item.qte}
                                         </span>
                                         <button
-                                            className="w-10 h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-r-xl transition-colors font-bold text-lg"
+                                            className={`w-10 h-10 flex items-center justify-center rounded-r-xl transition-colors font-bold text-lg ${item.qte >= item.qteInStock
+                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-green-500 hover:bg-green-600 text-white'
+                                                }`}
                                             onClick={() => addToCart(item)}
-                                            aria-label="Increase quantity"
+                                            aria-label={item.qte >= item.qteInStock ? "Maximum quantity reached" : "Increase quantity"}
+                                            disabled={item.qte >= item.qteInStock}
                                         >
                                             +
                                         </button>

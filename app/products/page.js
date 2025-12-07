@@ -1,13 +1,14 @@
 import ProductsListing from "@/components/ProductsListing";
 import CartFloatingButton from "@/components/CartFloatingButton";
-import { useProductsCount } from "@/lib/tanStackHooks/products";
+import { fetchProductsCount } from "@/services/products";
+import { fetchProducts } from "@/services/products";
 export const metadata = {
-  title: "Products",
-  description: "Products",
+  title: "Products | ZenithShop",
+  description: "Explore our complete collection of premium products at ZenithShop",
 }
 export default async function ProductsPage() {
-  const productsCount = await useProductsCount();
-  console.log('from app/products/page.js products count : ', productsCount)
+  const productsCount = await fetchProductsCount();
+  const products = await fetchProducts();
   return (
     <div className="min-h-screen p-6 relative">
       {/* Header Section */}
@@ -30,7 +31,7 @@ export default async function ProductsPage() {
           </div>
         </div>
       </div>
-      <ProductsListing />
+      <ProductsListing initialData={products} />
 
       {/* Floating Cart Button */}
       <CartFloatingButton />

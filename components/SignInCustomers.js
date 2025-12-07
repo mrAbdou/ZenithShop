@@ -6,8 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
 export default function SignInCustomers() {
     const { cart } = useContext(CartContext);
+    const router = useRouter();
     const { register, handleSubmit, formState: { error } } = useForm({
         defaultValues: {
             email: '',
@@ -17,7 +19,6 @@ export default function SignInCustomers() {
         mode: 'onChange'
     });
     const onSubmit = async ({ email, password }) => {
-        console.log(email, password);
         const { data, error } = await authClient.signIn.email({ email, password });
         if (error) {
             toast.error(`${error.message}`);
@@ -81,7 +82,7 @@ export default function SignInCustomers() {
                 if (result.data?.completeOrder) {
                     toast.success('Order completed successfully!');
                     // Refresh to show new authenticated state
-                    window.location.reload();
+                    router.refresh();
                 }
             } catch (error) {
                 toast.error(`Order creation failed: ${error.message}`);

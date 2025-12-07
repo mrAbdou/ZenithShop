@@ -1,7 +1,7 @@
-import CartProductsDisplay from "../../components/CartProductsDisplay";
+import CartProductsDisplay from "@/components/CartProductsDisplay";
 export const metadata = {
-    title: "Cart",
-    description: "Cart",
+    title: "Shopping Cart | ZenithShop",
+    description: "Review your selected items, adjust quantities, and proceed to secure checkout at ZenithShop. Manage your shopping cart and complete your purchase.",
 }
 export default function CartPage() {
     return (

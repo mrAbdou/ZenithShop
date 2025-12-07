@@ -1,8 +1,7 @@
 "use client";
-import { useAvailableProductsCount, useProductsCount } from "@/lib/tanStackHooks/products.js";
-import { useUsersCount, useCustomersCount } from "@/lib/tanStackHooks/users";
-import { useActiveOrdersCount } from "@/lib/tanStackHooks/orders";
-import { useQuery } from "@tanstack/react-query";
+import { useActiveOrdersCount } from "@/hooks/orders";
+import { useAvailableProductsCount, useProductsCount } from "@/hooks/products";
+import { useUsersCount, useCustomersCount } from "@/hooks/users";
 export default function DashboardMetrics({
     availableProductsCount,
     activeOrdersCount,
@@ -10,31 +9,13 @@ export default function DashboardMetrics({
     usersCount,
     customersCount
 }) {
-    const { data: nbrAvailableProducts } = useQuery({
-        queryKey: ["availableProductsCount"],
-        initialData: availableProductsCount,
-        queryFn: () => useAvailableProductsCount()
-    });
-    const { data: nbrActiveOrders } = useQuery({
-        queryKey: ["activeOrdersCount"],
-        initialData: activeOrdersCount,
-        queryFn: () => useActiveOrdersCount()
-    });
-    const { data: nbrProducts } = useQuery({
-        queryKey: ["productsCount"],
-        initialData: productsCount,
-        queryFn: () => useProductsCount()
-    });
-    const { data: nbrUsers } = useQuery({
-        queryKey: ["usersCount"],
-        initialData: usersCount,
-        queryFn: () => useUsersCount()
-    });
-    const { data: nbrCustomers } = useQuery({
-        queryKey: ["customersCount"],
-        initialData: customersCount,
-        queryFn: () => useCustomersCount()
-    });
+
+    const nbrAvailableProducts = useAvailableProductsCount();
+    const nbrActiveOrders = useActiveOrdersCount();
+    const nbrProducts = useProductsCount();
+    const nbrUsers = useUsersCount();
+    const nbrCustomers = useCustomersCount();
+
     return (
         <>
             {/* Metrics Grid */}

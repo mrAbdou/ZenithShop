@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "About Us",
-  description: "About Us",
+  title: "About Us | ZenithShop",
+  description: "Learn about ZenithShop's journey, values, and commitment to delivering exceptional quality products and unparalleled customer experiences. Discover our story and vision.",
 }
 export default function AboutPage() {
   return (

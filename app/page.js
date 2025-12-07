@@ -1,5 +1,6 @@
 import CartFloatingButton from "@/components/CartFloatingButton";
 import ProductsListing from "@/components/ProductsListing";
+import { fetchProducts } from "@/services/products";
 
 export const metadata = {
   title: "ZenithShop",
@@ -16,7 +17,8 @@ export const metadata = {
   }
 };
 
-export default function Home() {
+export default async function Home() {
+  const products = await fetchProducts();
   return (
     <div className="min-h-screen p-6 relative">
       {/* Hero Section */}
@@ -57,7 +59,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Featured Products</h2>
         <p className="text-center text-gray-600 text-lg mb-12">Check out our most popular items</p>
       </div>
-      <ProductsListing />
+      <ProductsListing initialData={products} />
 
       {/* Floating Cart Button */}
       <CartFloatingButton />

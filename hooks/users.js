@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchCustomersCount, fetchUser, fetchUsers, fetchUsersCount } from "@/services/users";
+import { completeSignUp, fetchCustomersCount, fetchMyOrders, fetchUser, fetchUsers, fetchUsersCount } from "@/services/users";
 export function useUsers(initialData) {
     return useQuery({
         queryKey: ['users'],
@@ -24,4 +24,18 @@ export function useUsersCount() {
         queryKey: ['usersCount'],
         queryFn: fetchUsersCount
     });
+}
+
+export function useCompleteSignUp() {
+    return useMutation({
+        mutationFn: ({ phoneNumber, address, cart }) => completeSignUp(phoneNumber, address, cart),
+    });
+}
+
+export function useMyOrders(initialData = []) {
+    return useQuery({
+        queryKey: ['myOrders'],
+        queryFn: fetchMyOrders,
+        initialData
+    })
 }

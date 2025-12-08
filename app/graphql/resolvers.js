@@ -28,7 +28,8 @@ const resolvers = {
             });
         },
         myOrders: async (parent, args, context) => {
-            if (!context.session) throw new Error("Unauthorized");
+            console.log('myOrders resolver: ', context.session);
+            if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new Error("Unauthorized");
             return await context.prisma.order.findMany({
                 where: { userId: context.session.user.id },
                 include: { items: { include: { product: true } } }

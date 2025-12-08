@@ -7,6 +7,7 @@ import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useCompleteSignUp } from "@/hooks/users";
 export default function SignUpCustomers() {
     const { cart } = useContext(CartContext);
     const router = useRouter();
@@ -14,70 +15,27 @@ export default function SignUpCustomers() {
         resolver: zodResolver(SignUpCustomerSchema),
         mode: 'onChange'
     });
-
-    const completeCustomerSignUp = async (phoneNumber, address, cart) => {
-        const response = await fetch(process.env.NEXT_PUBLIC_GQL_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            credentials: 'include',
-            cache: 'no-store',
-            body: JSON.stringify({
-                query: `mutation CompleteSignUp($phoneNumber: String!, $address: String!, $cart: [CartItemInput!]!){
-                        completeSignUp(phoneNumber: $phoneNumber, address: $address, cart: $cart){
-                            success
-                            user {
-                                id
-                                name
-                                email
-                                phoneNumber
-                                address
-                            }
-                            order {
-                                id
-                                total
-                                status
-                                items {
-                                    id
-                                    qte
-                                    product {
-                                        name
-                                        price
-                                    }
-                                }
-                            }
-                        }
-                }`,
-                variables: {
-                    phoneNumber,
-                    address,
-                    cart,
-                }
-            })
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData?.errors?.[0]?.message || `HTTP error! status: ${response.status}`);
-        }
-        const json = await response.json();
-        if (json.errors) {
-            throw new Error(json.errors[0].message);
-        }
-        return json.data?.completeSignUp;
-    };
+    const { mutateAsync: completeSignUpAsync } = useCompleteSignUp();
     const onSubmit = async ({ name, email, password, phoneNumber, address }) => {
         try {
             //better auth has to do her work first
             await authClient.signUp.email({ name, email, password });
             // i run update after better auth has done her work, to set my custom fields that i added to user model
-            const result = await completeCustomerSignUp(phoneNumber, address, cart);
+            // Remove GraphQL introspection fields from cart items
+            const cleanedCart = cart.map(item => ({
+                id: item.id,
+                price: item.price,
+                qte: item.qte,
+                name: item.name,
+                description: item.description,
+                qteInStock: item.qteInStock
+            }));
+            const result = await completeSignUpAsync({ phoneNumber, address, cart: cleanedCart });
             if (result.success) {
                 reset();
                 toast.success('Account created and order completed successfully!');
-                // Redirect to home after successful order
-                router.push('/');
+                // Redirect to customer dashboard after successful order
+                router.push('/customer-dashboard');
             }
         } catch (error) {
             toast.error(`Sign up failed: ${error.message}`);

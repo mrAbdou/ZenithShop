@@ -7,10 +7,11 @@ import toast from "react-hot-toast";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import { useCompleteOrderForSignedInCustomer } from "@/hooks/orders";
 export default function SignInCustomers() {
     const { cart } = useContext(CartContext);
     const router = useRouter();
-    const { register, handleSubmit, formState: { error } } = useForm({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             email: '',
             password: ''
@@ -18,6 +19,8 @@ export default function SignInCustomers() {
         resolver: zodResolver(SignInCustomerSchema),
         mode: 'onChange'
     });
+
+    const { mutateAsync: completeOrderAsync } = useCompleteOrderForSignedInCustomer();
     const onSubmit = async ({ email, password }) => {
         const { data, error } = await authClient.signIn.email({ email, password });
         if (error) {
@@ -27,63 +30,18 @@ export default function SignInCustomers() {
 
         if (data) {
             try {
-                // Wait for session to be established after sign-in
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                const response = await fetch(process.env.NEXT_PUBLIC_GQL_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        query: `
-                            mutation CompleteOrder($cart: [CartItemInput!]!) {
-                                completeOrder(cart: $cart) {
-                                    id
-                                    status
-                                    createdAt
-                                    total
-                                    user {
-                                        id
-                                        name
-                                        email
-                                    }
-                                    items {
-                                        id
-                                        qte
-                                        product {
-                                            id
-                                            name
-                                            price
-                                        }
-                                    }
-                                }
-                            }
-                        `,
-                        variables: { cart }
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-
-                if (result.errors) {
-                    result.errors.forEach(error => {
-                        toast.error(error.message);
-                    });
-                    return;
-                }
-
-                if (result.data?.completeOrder) {
-                    toast.success('Order completed successfully!');
-                    // Refresh to show new authenticated state
-                    router.refresh();
-                }
+                // Remove GraphQL introspection fields from cart items
+                const cleanedCart = cart.map(item => ({
+                    id: item.id,
+                    price: item.price,
+                    qte: item.qte,
+                    name: item.name,
+                    description: item.description,
+                    qteInStock: item.qteInStock
+                }));
+                await completeOrderAsync(cleanedCart);
+                toast.success('Order completed successfully!');
+                router.push('/customer-dashboard');
             } catch (error) {
                 toast.error(`Order creation failed: ${error.message}`);
             }
@@ -105,13 +63,13 @@ export default function SignInCustomers() {
                     <input
                         type="email"
                         {...register('email')}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${error ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             }`}
                         placeholder="your@email.com"
                     />
                 </div>
-                {error && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{error.message}</p>
+                {errors.email && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.email.message}</p>
                 )}
             </div>
 
@@ -129,13 +87,13 @@ export default function SignInCustomers() {
                     <input
                         type="password"
                         {...register('password')}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${error ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             }`}
                         placeholder="Enter your password"
                     />
                 </div>
-                {error && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{error.message}</p>
+                {errors.password && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.password.message}</p>
                 )}
             </div>
 

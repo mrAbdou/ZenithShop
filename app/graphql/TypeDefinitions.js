@@ -1,8 +1,9 @@
 const typeDefs = `
 #################################################
-#            Defining DateTime Scalar           #
+#            Defining Scalars                  #
 #################################################
 scalar DateTime
+scalar Decimal
 
 #################################################
 #                     User Type                 #
@@ -33,7 +34,7 @@ type Order {
     userId: ID!
     user: User!
     status: OrderStatus!
-    total: Float!
+    total: Decimal!
     createdAt: DateTime!
     updatedAt: DateTime
     items: [OrderItem!]!
@@ -55,7 +56,7 @@ type Product {
     id: ID!
     name: String!
     description: String
-    price: Float!
+    price: Decimal!
     qteInStock: Int!
     createdAt: DateTime!
     updatedAt: DateTime
@@ -79,26 +80,21 @@ type OrderItem {
 #################################################
 #                     Mutation                  #
 #################################################
-type CompleteSignupResult {
-    success: Boolean!
-    user: User!
-    order: Order!
-}
 
 type Mutation {
     # User Profile ###########################
-    completeSignUp(phoneNumber: String!, address: String!, cart: [CartItemInput!]!): CompleteSignupResult!
-    updateUserProfile(updatedUser: UpdateUserInput!): User!
-    deleteUserProfile(userId: ID!): Boolean!
-    
+    updateCustomerProfile(updatedCustomer: UpdateCustomerInput!): User!
+    deleteCustomerProfile(userId: ID!): Boolean!
+    completeSignUp(phoneNumber: String!, address: String!, role: Role!): User!
+
     # Product Management (Admin) #############
     addNewProduct(product: ProductInput!): Product!
     updateProduct(id: ID!, product: ProductInput!): Product!
     deleteProduct(productId: ID!): Boolean!
-    
+
     # Order & Cart Management ################
-    completeOrder(cart: [CartItemInput!]!): Order!
-    }   
+    addOrder(items: [OrderItemInput!]!, total: Decimal!): Order!
+    }
 
 #################################################
 #                     Inputs                    #
@@ -111,21 +107,20 @@ input LoginInput {
 input UpdateProductInput {
     name: String
     description: String
-    price: Float
+    price: Decimal
     qteInStock: Int
 }
 
 input ProductInput {
     name: String!
     description: String
-    price: Float!
+    price: Decimal!
     qteInStock: Int!
 }
 
-input UpdateUserInput {
+input UpdateCustomerInput {
     name: String
     email: String
-    password: String
     address: String
     phoneNumber: String
 }
@@ -139,22 +134,22 @@ input UserInput {
 }
 
 input OrderInput {
+    total: Decimal!
     items: [OrderItemInput!]!
 }
 
 input OrderItemInput {
-    productId: ID!
+    productId: String!
     qte: Int!
 }
 
-# New input type for the cart items sent during signup
 input CartItemInput {
-    id: ID!          # product ID
-    price: Float!    # price at checkout (client‑side copy)
+    id: String!      # product ID
+    price: Decimal!  # price at checkout (client‑side copy)
     qte: Int!        # quantity
     name: String     # optional product name (client‑side only)
     description: String   # optional description
-    qteInStock: Int   # optional stock info
+    qteInStock: Int  # optional stock info (was incomplete)
 }
 
 #################################################
@@ -165,7 +160,6 @@ type Query {
     user(id: ID!): User
     customersCount: Int!
     usersCount: Int!
-
     orders: [Order!]!
     myOrders: [Order!]!
     order(id: ID!): Order

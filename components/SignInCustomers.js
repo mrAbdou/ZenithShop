@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
-import { useCompleteOrderForSignedInCustomer } from "@/hooks/orders";
+
 export default function SignInCustomers() {
     const { cart } = useContext(CartContext);
     const router = useRouter();
@@ -20,7 +20,7 @@ export default function SignInCustomers() {
         mode: 'onChange'
     });
 
-    const { mutateAsync: completeOrderAsync } = useCompleteOrderForSignedInCustomer();
+
     const onSubmit = async ({ email, password }) => {
         const { data, error } = await authClient.signIn.email({ email, password });
         if (error) {
@@ -29,22 +29,8 @@ export default function SignInCustomers() {
         }
 
         if (data) {
-            try {
-                // Remove GraphQL introspection fields from cart items
-                const cleanedCart = cart.map(item => ({
-                    id: item.id,
-                    price: item.price,
-                    qte: item.qte,
-                    name: item.name,
-                    description: item.description,
-                    qteInStock: item.qteInStock
-                }));
-                await completeOrderAsync(cleanedCart);
-                toast.success('Order completed successfully!');
-                router.push('/customer-dashboard');
-            } catch (error) {
-                toast.error(`Order creation failed: ${error.message}`);
-            }
+            toast.success('Signed in successfully!');
+            router.push('/checkout/confirmation');
         }
     }
     return (

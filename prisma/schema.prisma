@@ -120,7 +120,7 @@ model Product {
 }
 
 model OrderItem {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(cuid())
   orderId   String
   order     Order    @relation(fields: [orderId], references: [id])
   productId String

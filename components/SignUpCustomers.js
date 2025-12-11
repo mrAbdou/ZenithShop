@@ -8,6 +8,7 @@ import { CartContext } from "@/context/CartContext";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useCompleteSignUp } from "@/hooks/users";
+import { Role } from "@prisma/client";
 export default function SignUpCustomers() {
     const { cart } = useContext(CartContext);
     const router = useRouter();
@@ -18,25 +19,17 @@ export default function SignUpCustomers() {
     const { mutateAsync: completeSignUpAsync } = useCompleteSignUp();
     const onSubmit = async ({ name, email, password, phoneNumber, address }) => {
         try {
-            //better auth has to do her work first
-            await authClient.signUp.email({ name, email, password });
-            // i run update after better auth has done her work, to set my custom fields that i added to user model
-            // Remove GraphQL introspection fields from cart items
-            const cleanedCart = cart.map(item => ({
-                id: item.id,
-                price: item.price,
-                qte: item.qte,
-                name: item.name,
-                description: item.description,
-                qteInStock: item.qteInStock
-            }));
-            const result = await completeSignUpAsync({ phoneNumber, address, cart: cleanedCart });
-            if (result.success) {
+            let user = await authClient.signUp.email({ name, email, password });
+            user = await completeSignUpAsync({ phoneNumber, address, role: Role.CUSTOMER });
+            if (!!user) {
                 reset();
-                toast.success('Account created and order completed successfully!');
-                // Redirect to customer dashboard after successful order
-                router.push('/customer-dashboard');
+                toast.success('Account created successfully! Please confirm your order.');
+                router.push('/checkout/confirmation');
+            } else {
+                // TODO: bad Error message , needs to be updated
+                throw new Error('Customer completed but failed to set phoneNumber and address');
             }
+
         } catch (error) {
             toast.error(`Sign up failed: ${error.message}`);
         }

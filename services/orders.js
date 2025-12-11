@@ -1,6 +1,7 @@
-import client from '@/lib/apollo-client';
+import client from '@/lib/apollo-client.client';
+import { CreateOrderSchema, safeValidate } from '@/lib/zodSchemas';
 import { gql } from '@apollo/client';
-
+import toast from 'react-hot-toast';
 export const GET_ORDERS = gql`
 query GetOrders {
     orders {
@@ -19,6 +20,15 @@ query GetOrder($id: ID!) {
         updatedAt
     }
 }`;
+export const ADD_ORDER = gql`
+mutation AddOrder($items: [OrderItemInput!]!, $total: Decimal!){
+    addOrder(items: $items, total: $total){
+        id
+        status
+        createdAt
+        updatedAt
+    }
+}`;
 export const GET_ORDERS_COUNT = gql`
 query GetOrdersCount {
     ordersCount
@@ -26,29 +36,6 @@ query GetOrdersCount {
 export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
-}`;
-export const COMPLETE_ORDER_FOR_SIGNED_IN_CUSTOMER = gql`
-mutation OrderCreation($cart: [CartItemInput!]!) {
-    completeOrder(cart: $cart) {
-        id
-        status
-        createdAt
-        total
-        user {
-            id
-            name
-            email
-        }
-        items {
-            id
-            qte
-            product {
-                id
-                name
-                price
-            }
-        }
-    }
 }`;
 export async function fetchOrders() {
     const { data, error } = await client.query({
@@ -90,16 +77,19 @@ export async function fetchActiveOrdersCount() {
     }
     return data?.activeOrdersCount ?? 0;
 }
-export async function completeOrderForSignedInCustomer(cart) {
-    console.log('from completeOrderForSignedInCustomer service :', { cart });
+export async function addOrder(new_order) {
+    console.log('new order from the service addOrder : ', new_order);
+    const validation = safeValidate(CreateOrderSchema, new_order);
+    if (!validation.success) {
+        throw new Error(validation.error.errors.map(error => error.message).join(', '));
+    }
     const { data, error } = await client.mutate({
-        mutation: COMPLETE_ORDER_FOR_SIGNED_IN_CUSTOMER,
-        variables: {
-            cart
-        }
+        mutation: ADD_ORDER,
+        variables: validation.data
     })
     if (error) {
         throw error;
     }
-    return data?.completeOrder ?? null;
+    return data?.addOrder ?? null;
 }
+

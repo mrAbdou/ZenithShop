@@ -3,8 +3,6 @@ import NavigationBar from "@/components/NavigationBar";
 import Provider from "@/components/RQProvider";
 import { Toaster } from "react-hot-toast";
 import ContextProvider from "@/context/CartContext";
-// Remove layout-level metadata - should be page-specific
-// export const metadata = {}; // Removed - not appropriate for layout
 
 export default function RootLayout({ children }) {
 

@@ -1,11 +1,12 @@
+import { CreateOrderSchema, safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
 import { OrderStatus, Role } from "@prisma/client";
 
 const resolvers = {
     Query: {
         //users functions ----------------------------------
-        users: (parent, args, context) => {
+        users: async (parent, args, context) => {
             if (!(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
-            return context.prisma.user.findMany({
+            return await context.prisma.user.findMany({
                 include: {
                     orders: {
                         include: {
@@ -28,8 +29,7 @@ const resolvers = {
             });
         },
         myOrders: async (parent, args, context) => {
-            console.log('myOrders resolver: ', context.session);
-            if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new Error("Unauthorized");
+            if (!context.session?.user?.id) throw new Error("Unauthorized");
             return await context.prisma.order.findMany({
                 where: { userId: context.session.user.id },
                 include: { items: { include: { product: true } } }
@@ -83,21 +83,24 @@ const resolvers = {
             return order;
         },
         products: async (parent, args, context) => {
+            console.log('Products resolver is called');
             const { limit, offset } = args;
+            console.log('args : ', JSON.stringify({
+                limit: limit,
+                limitType: typeof limit,
+                offset: offset,
+                offsetType: typeof offset
+            }, null, 2));
 
-            // ✅ FIXED: Proper validation that allows offset=0 and limit>=1
-            if (limit === undefined || limit === null || typeof limit !== 'number' || limit < 1 || limit > 100) {
-                throw new Error("Invalid limit: must be a number between 1 and 100");
+            if (limit === undefined || limit === null || typeof limit !== 'number' || limit < 1 || limit > 100 || limit % 1 !== 0) {
+                throw new Error("Invalid limit: must be an integer between 1 and 100");
             }
-            if (offset === undefined || offset === null || typeof offset !== 'number' || offset < 0) {
-                throw new Error("Invalid offset: must be a non-negative number");
+            if (offset === undefined || offset === null || typeof offset !== 'number' || offset < 0 || offset % 1 !== 0) {
+                throw new Error("Invalid offset: must be a non-negative integer");
             }
-
-            // ✅ FIXED: Removed problematic deep includes that expose user data
-            // Products query should not include order/orderItem data for privacy
             return await context.prisma.product.findMany({
                 take: limit,
-                skip: offset,
+                skip: offset
             });
         },
         // this is for the products that are still in stock
@@ -176,36 +179,52 @@ const resolvers = {
     },
 
     Mutation: {
-        completeOrder: async (parent, args, context) => {
+        completeSignUp: async (parent, args, context) => {
+            console.log('complete sign up, resolver level (yoga backend server), data passed : ', args);
+            if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new Error('Unauthorized');
+            const { phoneNumber, address, role } = args;
+            if (!phoneNumber || !address || !role) throw new Error('Missing required fields');
+            if (typeof phoneNumber !== 'string' || typeof address !== 'string') throw new Error('Invalid input types');
+            const user = await context.prisma.user.update({
+                where: { id: context.session.user.id },
+                data: {
+                    phoneNumber,
+                    address,
+                    role
+                }
+            });
+            return user;
+        },
+        addOrder: async (parent, args, context) => {
             if (!context.session || !(context?.session?.user?.role === Role.CUSTOMER)) {
                 throw new Error("Unauthorized: Must be logged in as a customer to complete orders");
             }
-
-            const { cart } = args;
-
-            if (!cart || cart.length === 0) {
-                throw new Error("Cart cannot be empty");
+            const userId = context.session.user.id;
+            const { items, total } = args;
+            const validation = safeValidate(CreateOrderSchema, { items, total });
+            if (!validation.success) {
+                const errorMessages = validation.error.errors.map(e => e.message).join(', ');
+                throw new Error(`Validation failed: ${errorMessages}`);
             }
-
             return await context.prisma.$transaction(async (tx) => {
-                const total = cart.reduce((sum, item) => sum + (item.price * item.qte), 0);
-
-                if (total <= 0) {
-                    throw new Error("Order total must be greater than 0");
-                }
-
-                const items = cart.map(item => ({
-                    productId: item.id,
-                    qte: item.qte
-                }));
-
                 const order = await tx.order.create({
                     data: {
-                        userId: context.session.user.id,
+                        user: {
+                            connect: {
+                                id: userId,
+                            }
+                        },
                         total: total,
                         status: OrderStatus.PENDING,
                         items: {
-                            create: items
+                            create: items.map(item => ({
+                                product: {
+                                    connect: {
+                                        id: item.productId,
+                                    }
+                                },
+                                qte: item.qte,
+                            }))
                         },
                     },
                     include: {
@@ -215,9 +234,9 @@ const resolvers = {
                 });
 
                 // Update product stock quantities
-                for (const item of cart) {
+                for (const item of items) {
                     await tx.product.update({
-                        where: { id: item.id },
+                        where: { id: item.productId },
                         data: {
                             qteInStock: {
                                 decrement: item.qte
@@ -229,92 +248,18 @@ const resolvers = {
                 return order;
             });
         },
-        completeSignUp: async (parent, args, context) => {
-            if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) {
-                return {
-                    success: false,
-                    message: "Unauthorized"
-                };
-            }
-            const { cart, phoneNumber, address } = args;
 
-            if (!cart || cart.length === 0) {
-                throw new Error("Cart cannot be empty");
-            }
+        updateCustomerProfile: async (parent, args, context) => {
+            if (!context.session || context.session?.user?.role !== Role.CUSTOMER) throw new Error("Unauthorized");
 
-            if (!phoneNumber || !address) {
-                throw new Error("Phone number and address are required");
-            }
+            const { updatedCustomer } = args;
+            console.log('update customer profile , resolver level (yoga backend server), passed data are : ', updatedCustomer);
+            const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
+            if (!validation.success) throw new Error(validation.error.errors.map(e => e.message).join(', '));
 
-            return await context.prisma.$transaction(async (tx) => {
-                const total = cart.reduce((sum, item) => sum + (item.price * item.qte), 0);
-                const items = cart.map(item => ({
-                    productId: item.id,
-                    qte: item.qte,
-                }))
-                const order = await tx.order.create({
-                    data: {
-                        userId: context.session.user.id,
-                        total: total,
-                        status: OrderStatus.PENDING,
-                        items: {
-                            create: items,
-                        }
-                    },
-                    include: { items: { include: { product: true } } }
-                });
-                // remove the ordered products from the total quantity in stock
-                for (const item of cart) {
-                    await tx.product.update({
-                        where: { id: item.id },
-                        data: {
-                            qteInStock: {
-                                decrement: item.qte
-                            }
-                        }
-                    });
-                }
-
-                const updatedUser = await tx.user.update({
-                    where: { id: context.session.user.id },
-                    data: {
-                        phoneNumber: phoneNumber,
-                        address: address
-                    },
-                    include: { orders: true }
-                });
-
-                return {
-                    success: true,
-                    user: updatedUser,
-                    order: order
-                };
-            });
+            return await context.prisma.user.update({ where: { id: context.session.user.id }, data: validation.data });
         },
-        //TODO: do i have really need to let the user to update his profile information, the is e-commerce website not a social media place?
-        updateUserProfile: async (parent, args, context) => {
-            if (!context.session) throw new Error("Unauthorized");
-            const { updatedUser } = args;
-
-            // ✅ SECURITY: Users can only update their own profile (unless admin)
-            if (updatedUser.id !== context.session.user.id && context.session.user.role !== Role.ADMIN) {
-                throw new Error("Cannot update other users' profiles");
-            }
-
-            if (updatedUser.id && typeof updatedUser.id !== 'string') throw new Error("Invalid user id");
-            if (updatedUser.name && typeof updatedUser.name !== 'string') throw new Error("Invalid user name");
-            if (updatedUser.email && typeof updatedUser.email !== 'string') throw new Error("Invalid user email");
-            if (updatedUser.phoneNumber && typeof updatedUser.phoneNumber !== 'string') throw new Error("Invalid user phone number");
-            if (updatedUser.address && typeof updatedUser.address !== 'string') throw new Error("Invalid user address");
-
-            // Prevent users from changing their own role
-            if (updatedUser.role && updatedUser.role !== context.session.user.role && context.session.user.role !== Role.ADMIN) {
-                throw new Error("Cannot change your own role");
-            }
-
-            return await context.prisma.user.update({ where: { id: updatedUser.id }, data: updatedUser });
-        },
-        deleteUserProfile: async (parent, args, context) => {
+        deleteCustomerProfile: async (parent, args, context) => {
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
             const { userId } = args;
             if (userId && typeof userId !== 'string') throw new Error("Invalid user id");
@@ -365,7 +310,7 @@ const resolvers = {
             return await context.prisma.product.delete({ where: { id: productId } });
 
         },
-    }
+    },
 }
 
 export default resolvers;

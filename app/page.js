@@ -18,7 +18,12 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const products = await fetchProducts();
+  let products = [];
+  try {
+    products = await fetchProducts();
+  } catch (error) {
+    return JSON.stringify(error, null, 2);
+  }
   return (
     <div className="min-h-screen p-6 relative">
       {/* Hero Section */}

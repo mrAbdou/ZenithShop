@@ -1,9 +1,9 @@
 import { createYoga, createSchema } from "graphql-yoga";
 import prisma from "@/lib/prisma.js";
-import { auth } from "@/lib/auth.js";
 import typeDefs from "@/app/graphql/TypeDefinitions.js";
 import resolvers from "@/app/graphql/resolvers.js";
-
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 // Create schema ONCE (not per request)
 const schema = createSchema({
     typeDefs,
@@ -16,12 +16,11 @@ const { handleRequest } = createYoga({
     context: async ({ request }) => {
         let session = null;
         try {
-            session = await auth.api.getSession({
-                headers: request.headers
-            });
+            const nextHeaders = await headers();
+            const cookieHeader = nextHeaders.get('cookie');
+            session = await auth.api.getSession({ headers: { cookie: cookieHeader ?? "" } });
         } catch (error) {
-            // Session retrieval failed, continue with null session (optional for public queries)
-            session = null;
+            console.log('GraphQL context: session error:', error);
         }
         return {
             prisma,

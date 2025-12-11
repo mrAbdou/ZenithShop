@@ -1,13 +1,53 @@
-// prisma/seed.cjs
-const dotenv = require("dotenv");
+// prisma/seed.js
+import { Role } from "@prisma/client";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 async function main() {
-    // Import prisma client via dynamic import (ESM)
     const { default: prisma } = await import('../lib/prisma.js');
+    const { betterAuth } = await import("better-auth");
+    const { prismaAdapter } = await import("better-auth/adapters/prisma");
 
-// ----- Products -----
+    const auth = betterAuth({
+        database: prismaAdapter(prisma, { usePlural: false }),
+        secret: process.env.BETTER_AUTH_SECRET || "P@s5w0rd",
+        emailAndPassword: {
+            enabled: true
+        },
+        user: {
+            additionalFields: {
+                role: { type: "string" },
+                phoneNumber: { type: "string" },
+                address: { type: "string" }
+            }
+        }
+    });
+
+    //-------create an admin for the system to be working
+    try {
+        const { user } = await auth.api.signUpEmail({
+            body: {
+                name: "BOUBIDI Abdesselem Borhane Eddine",
+                email: "abdesselemboubidi@gmail.com",
+                password: "P@ssw0rd",
+                role: Role.ADMIN
+            }
+        })
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                phoneNumber: "0559143626",
+                address: 'Algeria, Constantine, EL-Khroub, city 1600 logements',
+            }
+        });
+        console.log('Admin created successfully');
+    } catch (err) {
+        console.log('Error creating admin ', err);
+    }
+    // ----- Products -----
     const productData = [
         { name: "Gaming Laptop", description: "High-performance gaming laptop with RTX 3080", price: 1500.00, qteInStock: 12 },
         { name: "Smartphone", description: "Latest Android smartphone with 128GB storage", price: 699.99, qteInStock: 25 },
@@ -310,99 +350,17 @@ async function main() {
         { name: "Hair Cap", description: "Shower hair cap", price: 7.99, qteInStock: 120 },
         { name: "Hair Net", description: "Disposable hair nets", price: 4.99, qteInStock: 200 },
         { name: "Hair Brush", description: "Paddle hair brush", price: 12.99, qteInStock: 90 },
-        { name: "Comb", description: "Wide tooth comb", price: 6.99, qteInStock: 130 },
-        { name: "Hair Pick", description: "Afro hair pick", price: 8.99, qteInStock: 100 },
-        { name: "Round Brush", description: "Round styling brush", price: 14.99, qteInStock: 75 },
-        { name: "Vent Brush", description: "Vent hair brush", price: 10.99, qteInStock: 85 },
-        { name: "Teasing Brush", description: "Backcombing teasing brush", price: 12.99, qteInStock: 80 },
-        { name: "Boar Bristle Brush", description: "Boar bristle brush", price: 18.99, qteInStock: 65 },
-        { name: "Detangling Brush", description: "Detangling hair brush", price: 16.99, qteInStock: 70 },
-        { name: "Scalp Brush", description: "Scalp exfoliating brush", price: 14.99, qteInStock: 75 },
-        { name: "Shaving Brush", description: "Badger hair shaving brush", price: 29.99, qteInStock: 40 },
-        { name: "Powder Brush", description: "Face powder brush", price: 22.99, qteInStock: 55 },
-        { name: "Blush Brush", description: "Blush application brush", price: 18.99, qteInStock: 60 },
-        { name: "Foundation Brush", description: "Liquid foundation brush", price: 20.99, qteInStock: 58 },
-        { name: "Concealer Brush", description: "Concealer blending brush", price: 16.99, qteInStock: 62 },
-        { name: "Eyebrow Brush", description: "Eyebrow shaping brush", price: 12.99, qteInStock: 75 },
-        { name: "Eyelash Curler", description: "Eyelash curler tool", price: 15.99, qteInStock: 70 },
-        { name: "Eyebrow Tweezers", description: "Precision eyebrow tweezers", price: 10.99, qteInStock: 85 },
-        { name: "Eyebrow Scissors", description: "Eyebrow trimming scissors", price: 12.99, qteInStock: 80 },
-        { name: "Eyebrow Razor", description: "Eyebrow shaping razor", price: 8.99, qteInStock: 100 },
-        { name: "Eyebrow Pencil", description: "Eyebrow defining pencil", price: 14.99, qteInStock: 75 },
-        { name: "Eyebrow Gel", description: "Eyebrow setting gel", price: 16.99, qteInStock: 65 },
-        { name: "Eyebrow Powder", description: "Eyebrow filling powder", price: 18.99, qteInStock: 60 },
-        { name: "Eyebrow Wax", description: "Eyebrow styling wax", price: 15.99, qteInStock: 70 },
-        { name: "Eyebrow Stencil", description: "Eyebrow shaping stencil", price: 9.99, qteInStock: 90 },
-        { name: "Eyebrow Kit", description: "Complete eyebrow kit", price: 29.99, qteInStock: 45 },
-        { name: "False Eyelashes", description: "False eyelashes strip", price: 12.99, qteInStock: 80 },
-        { name: "Eyelash Glue", description: "Eyelash adhesive glue", price: 8.99, qteInStock: 100 },
-        { name: "Eyelash Serum", description: "Eyelash growth serum", price: 34.99, qteInStock: 50 },
-        { name: "Eyelash Primer", description: "Eyelash primer base", price: 18.99, qteInStock: 65 },
-        { name: "Eyelash Mascara", description: "Waterproof mascara", price: 16.99, qteInStock: 70 },
-        { name: "Eyelash Liner", description: "Eyelash defining liner", price: 14.99, qteInStock: 75 },
-        { name: "Eyelash Tint", description: "Eyelash tinting kit", price: 24.99, qteInStock: 55 },
-        { name: "Eyelash Lift", description: "Eyelash lifting kit", price: 39.99, qteInStock: 35 },
-        { name: "Eyelash Perm", description: "Eyelash perming kit", price: 34.99, qteInStock: 40 },
-        { name: "Eyelash Extensions", description: "Individual eyelash extensions", price: 49.99, qteInStock: 30 },
-        { name: "Eyelash Remover", description: "Eyelash glue remover", price: 12.99, qteInStock: 85 },
-        { name: "Eyelash Curler", description: "Heated eyelash curler", price: 22.99, qteInStock: 60 },
-        { name: "Eyelash Comb", description: "Eyelash separating comb", price: 10.99, qteInStock: 90 },
-        { name: "Eyelash Brush", description: "Eyelash mascara brush", price: 8.99, qteInStock: 110 },
-        { name: "Eyelash Spoolie", description: "Eyelash spoolie brush", price: 6.99, qteInStock: 130 },
-        { name: "Eyelash Tool", description: "Eyelash application tool", price: 9.99, qteInStock: 100 },
-        { name: "Eyelash Case", description: "Eyelash storage case", price: 7.99, qteInStock: 120 },
-        { name: "Eyelash Cleaner", description: "Eyelash cleaning solution", price: 14.99, qteInStock: 75 },
-        { name: "Eyelash Conditioner", description: "Eyelash conditioning treatment", price: 19.99, qteInStock: 65 },
-        { name: "Eyelash Protector", description: "Eyelash protection serum", price: 24.99, qteInStock: 50 },
-        { name: "Eyelash Enhancer", description: "Eyelash enhancing serum", price: 29.99, qteInStock: 45 },
-        { name: "Eyelash Revitalizer", description: "Eyelash revitalizing treatment", price: 34.99, qteInStock: 40 },
-        { name: "Eyelash Restorer", description: "Eyelash restoring serum", price: 39.99, qteInStock: 35 },
-        { name: "Eyelash Rejuvenator", description: "Eyelash rejuvenating cream", price: 44.99, qteInStock: 30 },
-        { name: "Eyelash Stimulator", description: "Eyelash stimulating serum", price: 49.99, qteInStock: 25 },
-        { name: "Eyelash Activator", description: "Eyelash activating treatment", price: 54.99, qteInStock: 20 },
-        { name: "Eyelash Booster", description: "Eyelash boosting serum", price: 59.99, qteInStock: 18 },
-        { name: "Eyelash Fortifier", description: "Eyelash fortifying treatment", price: 64.99, qteInStock: 15 },
-        { name: "Eyelash Strengthener", description: "Eyelash strengthening serum", price: 69.99, qteInStock: 12 },
-        { name: "Eyelash Nourisher", description: "Eyelash nourishing oil", price: 74.99, qteInStock: 10 },
-        { name: "Eyelash Moisturizer", description: "Eyelash moisturizing cream", price: 79.99, qteInStock: 8 },
-        { name: "Eyelash Protector", description: "Eyelash protective coating", price: 84.99, qteInStock: 6 },
-        { name: "Eyelash Shield", description: "Eyelash protective shield", price: 89.99, qteInStock: 5 },
-        { name: "Eyelash Guard", description: "Eyelash protective guard", price: 94.99, qteInStock: 4 },
-        { name: "Eyelash Barrier", description: "Eyelash protective barrier", price: 99.99, qteInStock: 3 },
-        { name: "Eyelash Defense", description: "Eyelash defensive serum", price: 104.99, qteInStock: 2 },
-        { name: "Eyelash Armor", description: "Eyelash protective armor", price: 109.99, qteInStock: 1 }
-    ];
+    ]
 
     const products = await Promise.all(
         productData.map(p => prisma.product.create({ data: p }))
     );
 
-    // ----- Users -----
-    const userData = [
-        { name: "Alice Johnson", email: "alice@example.com", password: "password123", emailVerified: new Date(), address: "123 Main St, Cityville", phoneNumber: "1111111111", role: "CUSTOMER" },
-        { name: "Bob Smith", email: "bob@example.com", password: "password123", emailVerified: new Date(), address: "456 Elm St, Townsville", phoneNumber: "2222222222", role: "CUSTOMER" },
-        { name: "Charlie Brown", email: "charlie@example.com", password: "password123", emailVerified: new Date(), address: "789 Oak Ave, Villagetown", phoneNumber: "3333333333", role: "CUSTOMER" },
-        { name: "Diana Prince", email: "diana@example.com", password: "password123", emailVerified: new Date(), address: "101 Pine Rd, Metropolis", phoneNumber: "4444444444", role: "CUSTOMER" },
-        { name: "Edward Norton", email: "edward@example.com", password: "password123", emailVerified: new Date(), address: "202 Maple Ln, Gotham", phoneNumber: "5555555555", role: "CUSTOMER" },
-        { name: "Fiona Green", email: "fiona@example.com", password: "password123", emailVerified: new Date(), address: "303 Birch Ct, Smallville", phoneNumber: "6666666666", role: "CUSTOMER" },
-        { name: "George White", email: "george@example.com", password: "password123", address: "404 Cedar Dr, Springfield", phoneNumber: "7777777777", role: "CUSTOMER" },
-        { name: "Hannah Black", email: "hannah@example.com", password: "password123", address: "505 Spruce St, Riverside", phoneNumber: "8888888888", role: "CUSTOMER" },
-        { name: "Ian Gray", email: "ian@example.com", password: "password123", address: "606 Willow Way, Hilldale", phoneNumber: "9999999999", role: "CUSTOMER" },
-        { name: "Julia Violet", email: "julia@example.com", password: "password123", address: "707 Aspen Pl, Brookside", phoneNumber: "0000000000", role: "CUSTOMER" },
-        { name: "Kevin Orange", email: "kevin@example.com", password: "password123", address: "808 Redwood Rd, Valleytown", phoneNumber: "1112223333", role: "CUSTOMER" },
-        { name: "Laura Blue", email: "laura@example.com", password: "password123", address: "909 Cypress Ln, Mountainview", phoneNumber: "2223334444", role: "CUSTOMER" },
-        { name: "Michael Red", email: "michael@example.com", password: "password123", emailVerified: new Date(), address: "1001 Sycamore St, Lakeside", phoneNumber: "3334445555", role: "ADMIN" },
-        { name: "Natalie Yellow", email: "natalie@example.com", password: "password123", emailVerified: new Date(), address: "1101 Palm Ave, Desertcity", phoneNumber: "4445556666", role: "ADMIN" },
-        { name: "Oliver Purple", email: "oliver@example.com", password: "password123", address: "1201 Holly Dr, Forestville", phoneNumber: "5556667777", role: "CUSTOMER" },
-    ];
-
-console.log("✅ Database seeded successfully with 100 products!");
+    console.log("✅ Database seeded successfully with 100 products!");
 }
 
-// Run seed
 main()
-    .catch(err => console.error(err))
-    .finally(async () => {
-        const { default: prisma } = await import('../lib/prisma.js');
-        await prisma.$disconnect();
+    .catch((e) => {
+        console.error(e);
+        process.exit(1);
     });

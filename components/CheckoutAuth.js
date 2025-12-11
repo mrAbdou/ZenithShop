@@ -48,7 +48,7 @@ export default function CheckoutAuth() {
 
     //could be removed, there is no need of it in here because of the redirection to the customer page 
     if (isAuthenticated) {
-        redirect('/customer-dashboard');
+        redirect('/checkout/confirmation');
     }
 
     return (

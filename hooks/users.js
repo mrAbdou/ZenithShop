@@ -1,5 +1,14 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { completeSignUp, fetchCustomersCount, fetchMyOrders, fetchUser, fetchUsers, fetchUsersCount } from "@/services/users";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    completeSignUp,
+    fetchCustomersCount,
+    fetchMyOrders,
+    fetchUser,
+    fetchUsers,
+    fetchUsersCount,
+    updateCustomerProfile
+} from "@/services/users.client";
+import { safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
 export function useUsers(initialData) {
     return useQuery({
         queryKey: ['users'],
@@ -28,14 +37,43 @@ export function useUsersCount() {
 
 export function useCompleteSignUp() {
     return useMutation({
-        mutationFn: ({ phoneNumber, address, cart }) => completeSignUp(phoneNumber, address, cart),
+        mutationFn: ({ phoneNumber, address, role }) => {
+            console.log('complete sign up , custom hook level(react-query), passed data are : ', { phoneNumber, address, role });
+            return completeSignUp(phoneNumber, address, role)
+        }
     });
 }
-
 export function useMyOrders(initialData = []) {
     return useQuery({
         queryKey: ['myOrders'],
         queryFn: fetchMyOrders,
         initialData
     })
+}
+import toast from "react-hot-toast";
+export function useUpdateCustomerProfile() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (updatedCustomer) => {
+            console.log('update customer profile , custom hook level(react-query), passed data are : ', updatedCustomer);
+            const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
+            if (!validation.success) throw new Error(validation.error.errors.map(e => e.message).join(', '));
+            return await updateCustomerProfile(validation.data);
+        },
+        onSuccess: (data) => {
+            toast.success('Profile updated successfully');
+            queryClient.setQueryData(['user', data.id], (oldData) => ({
+                ...oldData,
+                ...data
+            }));
+            queryClient.setQueryData(['users'], (oldData) => oldData?.map((user) => user.id === data.id ? { ...user, ...data } : user));
+            queryClient.invalidateQueries({
+                queryKey: ['user', data.id]
+            });
+            queryClient.invalidateQueries({
+                queryKey: ['users']
+            });
+
+        }
+    });
 }

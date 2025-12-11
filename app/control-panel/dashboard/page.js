@@ -5,7 +5,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import DashboardMetrics from "@/components/DashboardMetrics";
-import { fetchCustomersCount, fetchUsersCount } from "@/services/users";
+import { fetchCustomersCount, fetchUsersCount } from "@/services/users.client";
 import { fetchAvailableProductsCount, fetchProductsCount } from "@/services/products";
 import { fetchActiveOrdersCount } from "@/services/orders";
 export const metadata = {

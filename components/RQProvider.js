@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ApolloProvider } from "@apollo/client/react";
-import client from "@/lib/apollo-client";
+import client from "@/lib/apollo-client.client";
 import { useState } from "react";
 export default function RQProvider({ children }) {
     // Create QueryClient only once per app lifecycle

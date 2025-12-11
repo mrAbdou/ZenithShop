@@ -1,10 +1,22 @@
 'use client';
-
 import { useMyOrders } from "@/hooks/users";
 
-export default function OrdersTable() {
-    const { data: orders, isLoading, error } = useMyOrders();
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    const second = date.getSeconds().toString().padStart(2, '0');
+    return `${day}-${month}-${year} ${hour}:${minute}:${second}`;
+};
 
+export default function OrdersTable({ initialData }) {
+    // If initialData is provided and non-empty, use it directly (no client fetch needed)
+    const { data: orders, isLoading, error } = useMyOrders(initialData);
+
+    // Only show loading/error for client fetches when no server data
     if (isLoading) {
         return (
             <div className="bg-white shadow rounded-lg p-6">
@@ -27,6 +39,7 @@ export default function OrdersTable() {
         );
     }
 
+    // Display orders (either from server initialData or client fetch)
     return (
         <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Order History</h2>
@@ -58,7 +71,7 @@ export default function OrdersTable() {
                                     {order.id.slice(-8)} {/* Show last 8 chars */}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {new Date(order.createdAt).toLocaleDateString()}
+                                    {formatDate(order.createdAt)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
@@ -70,7 +83,7 @@ export default function OrdersTable() {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    ${order.total.toFixed(2)}
+                                    ${order.total}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {order.items?.length || 0} items

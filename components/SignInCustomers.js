@@ -8,7 +8,7 @@ import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
-export default function SignInCustomers() {
+export default function SignInCustomers({ redirectTo }) {
     const { cart } = useContext(CartContext);
     const router = useRouter();
     const { register, handleSubmit, formState: { errors } } = useForm({
@@ -30,7 +30,8 @@ export default function SignInCustomers() {
 
         if (data) {
             toast.success('Signed in successfully!');
-            router.push('/checkout/confirmation');
+            const redirectPath = redirectTo ? decodeURIComponent(redirectTo) : '/customer-dashboard';
+            router.push(redirectPath);
         }
     }
     return (

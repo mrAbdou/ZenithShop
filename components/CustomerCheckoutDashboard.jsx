@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { safeValidate, CreateOrderSchema } from '@/lib/zodSchemas';
 
 export default function CustomerCheckoutDashboard() {
-    const { cart } = useContext(CartContext); // here i get what user select to order
+    const { cart, clearCart } = useContext(CartContext); // here i get what user select to order
     const router = useRouter(); // this is used for empty cart, amdin instead of user etc ...
     const { mutateAsync: createOrder } = useAddOrder(); // the custom hook that is going to create the new order
     const { data: session } = authClient.getSession();
@@ -52,6 +52,7 @@ export default function CustomerCheckoutDashboard() {
                     setCompletedOrder(data);
                 },
             });
+            clearCart();
             toast.success('Order placed successfully!');
         } catch (err) {
             toast.error(err.message || 'Failed to place order');

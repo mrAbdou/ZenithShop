@@ -3,11 +3,18 @@ import Link from "next/link";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 export default function CartProductsDisplay() {
     const { cart, addToCart, removeFromCart } = useContext(CartContext);
+    const { session } = authClient.getSession();
     const router = useRouter();
     const goToCheckoutPage = () => {
-        router.push('/checkout');
+        if (!session) {
+            const redirectTo = encodeURIComponent('/checkout/confirmation');
+            router.push(`/auth?redirectTo=${redirectTo}`);
+            return;
+        }
+        router.push('/checkout/confirmation');
     }
     if (cart.length === 0) {
         return (

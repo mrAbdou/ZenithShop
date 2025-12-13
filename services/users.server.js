@@ -1,5 +1,5 @@
-import { getServerApolloClient } from '@/lib/apollo-client.server';
-import { gql } from '@apollo/client';
+import { graphqlServerRequest } from '@/lib/graphql-server';
+import { gql } from 'graphql-request';
 
 export const GET_USERS = gql`
 query GetUsers {
@@ -57,85 +57,45 @@ query MyOrders{
         }
     }
 }`;
-export const UPDATE_CUSTOMER_PROFILE = gql`
-mutation UpdateCustomerProfile($updatedUser: UpdateUserInput!){
-    updateCustomerProfile(updatedUser: $updatedUser){
-        id
-        name
-        email
-        phoneNumber
-        address
-    }
-}`;
-export async function fetchUsers() {
+export async function fetchUsers(cookieHeader = '') {
     try {
-        const client = await getServerApolloClient();
-        const { data, error } = await client.query({
-            query: GET_USERS,
-        });
-        if (error) {
-            throw error;
-        }
+        const data = await graphqlServerRequest(GET_USERS, {}, cookieHeader);
         return data?.users ?? [];
     } catch (err) {
         throw err;
     }
 }
-export async function fetchUser(id) {
+export async function fetchUser(id, cookieHeader = '') {
     try {
-        const client = await getServerApolloClient();
-        const { data, error } = await client.query({
-            query: GET_USER,
-            variables: {
-                id
-            },
-        });
-        if (error) {
-            throw error;
-        }
+        const data = await graphqlServerRequest(GET_USER, { id }, cookieHeader);
         return data?.user ?? null;
     } catch (err) {
         throw err;
     }
 }
-export async function fetchCustomersCount() {
+export async function fetchCustomersCount(cookieHeader = '') {
     try {
-        const client = await getServerApolloClient();
-        const { data, error } = await client.query({
-            query: GET_CUSTOMERS_COUNT,
-        });
-        if (error) {
-            throw error;
-        }
+        const data = await graphqlServerRequest(GET_CUSTOMERS_COUNT, {}, cookieHeader);
         return data?.customersCount ?? 0;
     } catch (err) {
         throw err;
     }
 }
-export async function fetchUsersCount() {
-    const client = await getServerApolloClient();
-    const { data, error } = await client.query({
-        query: GET_USERS_COUNT,
-    });
-    if (error) {
+export async function fetchUsersCount(cookieHeader = '') {
+    try {
+        const data = await graphqlServerRequest(GET_USERS_COUNT, {}, cookieHeader);
+        return data?.usersCount ?? 0;
+    } catch (error) {
         throw error;
     }
-    return data?.usersCount ?? 0;
 }
-export async function completeSignUp(phoneNumber, address, role) {
+export async function completeSignUp(phoneNumber, address, role, cookieHeader = '') {
     try {
-        const client = await getServerApolloClient();
-        const { data, error } = await client.mutate({
-            mutation: COMPLETE_SIGNUP,
-            variables: {
-                phoneNumber,
-                address,
-                role,
-            },
-        });
-        if (error) {
-            throw error;
-        }
+        const data = await graphqlServerRequest(COMPLETE_SIGNUP, {
+            phoneNumber,
+            address,
+            role,
+        }, cookieHeader);
         return data?.completeSignUp ?? null;
     } catch (catchError) {
         throw catchError;
@@ -143,31 +103,8 @@ export async function completeSignUp(phoneNumber, address, role) {
 }
 export async function fetchMyOrders(cookieHeader) {
     try {
-        const client = await getServerApolloClient(cookieHeader);
-        const { data, error } = await client.query({
-            query: MY_ORDERS,
-        });
-        if (error) {
-            throw error;
-        }
+        const data = await graphqlServerRequest(MY_ORDERS, {}, cookieHeader);
         return data?.myOrders ?? [];
-    } catch (err) {
-        throw err;
-    }
-}
-export async function updateCustomerProfile(updatedUser) {
-    try {
-        const client = await getServerApolloClient();
-        const { data, error } = await client.mutate({
-            mutation: UPDATE_CUSTOMER_PROFILE,
-            variables: {
-                updatedUser
-            },
-        });
-        if (error) {
-            throw error;
-        }
-        return data?.updateCustomerProfile ?? null;
     } catch (err) {
         throw err;
     }

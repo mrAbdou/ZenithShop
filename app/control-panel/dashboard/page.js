@@ -5,27 +5,37 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import DashboardMetrics from "@/components/DashboardMetrics";
-import { fetchCustomersCount, fetchUsersCount } from "@/services/users.client";
-import { fetchAvailableProductsCount, fetchProductsCount } from "@/services/products";
-import { fetchActiveOrdersCount } from "@/services/orders";
+import { fetchCustomersCount, fetchUsersCount } from "@/services/users.server";
+import { fetchAvailableProductsCount, fetchProductsCount } from "@/services/products.server";
+import { fetchActiveOrdersCount } from "@/services/orders.server";
 export const metadata = {
     title: "Admin Dashboard | ZenithShop",
     description: "Admin dashboard for ZenithShop management. Monitor business metrics, products, orders, and customer data in real-time.",
 }
 export default async function ControlPanelDashboardPage() {
-    // Get session from better-auth
-    const session = await auth.api.getSession({ headers: await headers() });
+    const h = await headers();
+    const cookieHeader = h.get("cookie");
+    const session = await auth.api.getSession({ headers: h });
     if (!session || session?.user?.role !== Role.ADMIN) {
         redirect("/");
         return null;
     }
 
     // Fetch metrics
-    const productsCount = await fetchProductsCount();
-    const activeOrdersCount = await fetchActiveOrdersCount();
-    const availableProductsCount = await fetchAvailableProductsCount();
-    const allUsersCount = await fetchUsersCount();
-    const allCustomersCount = await fetchCustomersCount();
+    let productsCount = 0;
+    let activeOrdersCount = 0;
+    let availableProductsCount = 0;
+    let allUsersCount = 0;
+    let allCustomersCount = 0;
+    try {
+        productsCount = await fetchProductsCount(cookieHeader);
+        activeOrdersCount = await fetchActiveOrdersCount(cookieHeader);
+        availableProductsCount = await fetchAvailableProductsCount(cookieHeader);
+        allUsersCount = await fetchUsersCount(cookieHeader);
+        allCustomersCount = await fetchCustomersCount(cookieHeader);
+    } catch (error) {
+        console.log(JSON.stringify(error, null, 2));
+    }
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}

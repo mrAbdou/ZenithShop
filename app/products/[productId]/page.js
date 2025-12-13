@@ -1,6 +1,6 @@
 import Link from "next/link";
 import AddToCartButton from "@/components/AddToCartButton";
-import { fetchProduct } from "@/services/products";
+import { fetchProduct } from "@/services/products.client";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {

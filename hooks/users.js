@@ -9,6 +9,8 @@ import {
     updateCustomerProfile
 } from "@/services/users.client";
 import { safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
+import toast from "react-hot-toast";
+
 export function useUsers(initialData) {
     return useQuery({
         queryKey: ['users'],
@@ -22,19 +24,20 @@ export function useUser(id) {
         queryFn: () => fetchUser(id)
     });
 }
-export function useCustomersCount() {
+export function useCustomersCount(initialData) {
     return useQuery({
         queryKey: ['customersCount'],
-        queryFn: fetchCustomersCount
+        queryFn: fetchCustomersCount,
+        initialData
     });
 }
-export function useUsersCount() {
+export function useUsersCount(initialData) {
     return useQuery({
         queryKey: ['usersCount'],
-        queryFn: fetchUsersCount
+        queryFn: fetchUsersCount,
+        initialData
     });
 }
-
 export function useCompleteSignUp() {
     return useMutation({
         mutationFn: ({ phoneNumber, address, role }) => {
@@ -50,7 +53,8 @@ export function useMyOrders(initialData = []) {
         initialData
     })
 }
-import toast from "react-hot-toast";
+import { authClient } from "@/lib/auth-client";
+
 export function useUpdateCustomerProfile() {
     const queryClient = useQueryClient();
     return useMutation({
@@ -73,7 +77,6 @@ export function useUpdateCustomerProfile() {
             queryClient.invalidateQueries({
                 queryKey: ['users']
             });
-
         }
     });
 }

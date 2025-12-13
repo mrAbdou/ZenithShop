@@ -5,10 +5,10 @@ import SignInCustomers from "@/components/SignInCustomers";
 import SignUpCustomers from "@/components/SignUpCustomers";
 import { redirect } from "next/navigation";
 
-export default function CheckoutAuth() {
+export default function CheckoutAuth({ redirectTo }) {
     const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
     const [loading, setLoading] = useState(true);
-    //there is no need for it anymore because we're planning to redirect the customer to customer dashboard directly after sign in or sign up
+    const redirectPath = redirectTo ? decodeURIComponent(redirectTo) : '/customer-dashboard';
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
@@ -48,7 +48,7 @@ export default function CheckoutAuth() {
 
     //could be removed, there is no need of it in here because of the redirection to the customer page 
     if (isAuthenticated) {
-        redirect('/checkout/confirmation');
+        redirect(redirectPath);
     }
 
     return (
@@ -86,7 +86,7 @@ export default function CheckoutAuth() {
                         <h3 className="text-xl font-bold text-gray-800 mb-2">Sign In to Your Account</h3>
                         <p className="text-sm text-gray-600">Welcome back! Sign in to complete your order.</p>
                     </div>
-                    <SignInCustomers />
+                    <SignInCustomers redirectTo={redirectTo} />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">
                             New customer?{' '}
@@ -106,7 +106,7 @@ export default function CheckoutAuth() {
                         <h3 className="text-xl font-bold text-gray-800 mb-2">Create Your Account</h3>
                         <p className="text-sm text-gray-600">Join us! Create an account to complete your first order.</p>
                     </div>
-                    <SignUpCustomers />
+                    <SignUpCustomers redirectTo={redirectTo} />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">
                             Already have an account?{' '}

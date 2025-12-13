@@ -1,6 +1,7 @@
-import client from '@/lib/apollo-client.client';
+import { graphqlRequest } from '@/lib/graphql-client';
 import { LIMIT } from '@/lib/constants';
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-request';
+import { AddProductSchema, safeValidate } from '@/lib/zodSchemas';
 export const GET_PRODUCTS = gql`
 query GetProducts($limit: Int!, $offset: Int!) {
     products(limit: $limit, offset: $offset) {
@@ -50,65 +51,56 @@ mutation addProduct($newProduct: ProductInput!){
     }
 }`;
 export async function fetchProducts(limit = LIMIT, offset = 0) {
-    const { data, error } = await client.query({
-        query: GET_PRODUCTS,
-        variables: {
-            limit,
-            offset
-        },
-    });
-    if (error) {
-        console.log('fetch products service ERRORS:', JSON.stringify(error, null, 2));
-        throw new Error(error.message);
+    try {
+        const data = await graphqlRequest(GET_PRODUCTS, { limit, offset });
+        return data?.products ?? [];
+    } catch (error) {
+        console.log(error);
+        throw error;
     }
-    return data?.products ?? [];
 }
 export async function fetchProduct(id) {
-    const { data, error } = await client.query({
-        query: GET_PRODUCT,
-        variables: {
-            id
-        }
-    });
-    if (error) {
-        throw new Error(error.message);
+    try {
+        const data = await graphqlRequest(GET_PRODUCT, { id });
+        return data?.product ?? null;
+    } catch (error) {
+        throw error;
     }
-    return data?.product ?? null;
 }
 export async function fetchProductsCount() {
-    const { data, error } = await client.query({
-        query: GET_PRODUCTS_COUNT,
-    });
-    if (error) {
-        throw new Error(error.message);
+    try {
+        const data = await graphqlRequest(GET_PRODUCTS_COUNT, {});
+        return data?.productsCount ?? 0;
+    } catch (error) {
+        throw error;
     }
-    return data?.productsCount ?? 0;
 }
 export async function fetchAvailableProductsCount() {
-    const { data, error } = await client.query({
-        query: GET_AVAILABLE_PRODUCTS_COUNT,
-    });
-    return data?.availableProductsCount ?? 0;
+    try {
+        const data = await graphqlRequest(GET_AVAILABLE_PRODUCTS_COUNT, {});
+        return data?.availableProductsCount ?? 0;
+    } catch (error) {
+        throw error;
+    }
 }
 export async function fetchProductsInCart(cart) {
-    const { data, error } = await client.query({
-        query: GET_PRODUCTS_IN_CART,
-        variables: {
-            cart
-        }
-    });
-    if (error) {
+    try {
+        const data = await graphqlRequest(GET_PRODUCTS_IN_CART, { cart });
+        return data?.productsInCart ?? [];
+    } catch (error) {
         console.log('ERRORS:', JSON.stringify(error, null, 2));
-        throw new Error(error.message);
+        throw error;
     }
-    return data?.productsInCart ?? [];
 }
 export async function addProduct(newProduct) {
-    const { data, error } = await client.mutate({
-        mutation: ADD_PRODUCT,
-        variables: {
-            newProduct
+    try {
+        const validation = safeValidate(AddProductSchema, newProduct);
+        if (!validation.success) {
+            throw new Error(validation.error.message);
         }
-    })
-    return data?.addNewProduct ?? null;
+        const data = await graphqlRequest(ADD_PRODUCT, { newProduct: validation.data });
+        return data?.addNewProduct ?? null;
+    } catch (error) {
+        throw error;
+    }
 }

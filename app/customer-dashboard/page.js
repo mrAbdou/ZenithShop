@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { fetchMyOrders } from "@/services/users.server";
 import OrdersTable from "@/components/OrdersTable";
 import UpdateCustomerProfileForm from "@/components/UpdateCustomerProfileForm";
+import { Role } from "@prisma/client";
 
 
 export default async function CustomerDashboard() {
@@ -14,14 +15,16 @@ export default async function CustomerDashboard() {
     const session = await auth.api.getSession({
         headers: h,
     });
-    if (session?.user?.role !== "CUSTOMER") {
+    if (session?.user?.role !== Role.CUSTOMER) {
         // if not redirect to check out, that is going to ask him to sign in or sign up
-        redirect('/checkout')
+        const redirectUrl = encodeURIComponent('/customer-dashboard');
+        redirect(`/auth?redirectTo=${redirectUrl}`);
     }
     // extract the cookie header from the cookies
     const cookieHeader = h.get('cookie') || '';
     // pass this cookie header to the service function so it could be run successfully, because this header is the proof of the user being authorized
     const orders = await fetchMyOrders(cookieHeader);
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}

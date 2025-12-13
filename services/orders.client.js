@@ -1,14 +1,16 @@
-import client from '@/lib/apollo-client.client';
+import { graphqlRequest } from '@/lib/graphql-client';
 import { CreateOrderSchema, safeValidate } from '@/lib/zodSchemas';
-import { gql } from '@apollo/client';
-import toast from 'react-hot-toast';
+import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
 query GetOrders {
     orders {
         id
         status
+        total
+        user {
+            name
+        }
         createdAt
-        updatedAt
     }
 }`;
 export const GET_ORDER = gql`
@@ -37,45 +39,38 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
-export async function fetchOrders() {
-    const { data, error } = await client.query({
-        query: GET_ORDERS,
-    })
-    if (error) {
+export async function fetchOrders(filters = {}) {
+    console.log('filters from the service fetchOrders : ', filters);
+    try {
+        const data = await graphqlRequest(GET_ORDERS, { ...filters });
+        return data?.orders ?? [];
+    } catch (error) {
         throw error;
     }
-    return data?.orders ?? [];
 }
 export async function fetchOrder(id) {
-    const { data, error } = await client.query({
-        query: GET_ORDER,
-        variables: {
-            id
-        }
-    })
-    if (error) {
+    try {
+        const data = await graphqlRequest(GET_ORDER, { id });
+        return data?.order ?? null;
+    } catch (error) {
         throw error;
     }
-    return data?.order ?? null;
 }
 export async function fetchOrdersCount() {
-    const { data, error } = await client.query({
-        query: GET_ORDERS_COUNT,
-        fetchPolicy: 'network-only',
-    })
-    if (error) {
+    try {
+        const data = await graphqlRequest(GET_ORDERS_COUNT, {});
+        return data?.ordersCount ?? 0;
+    } catch (error) {
         throw error;
     }
-    return data?.ordersCount ?? 0;
 }
 export async function fetchActiveOrdersCount() {
-    const { data, error } = await client.query({
-        query: GET_ACTIVE_ORDERS_COUNT,
-    })
-    if (error) {
+    try {
+        const data = await graphqlRequest(GET_ACTIVE_ORDERS_COUNT, {});
+        return data?.activeOrdersCount ?? 0;
+    } catch (error) {
         throw error;
     }
-    return data?.activeOrdersCount ?? 0;
 }
 export async function addOrder(new_order) {
     console.log('new order from the service addOrder : ', new_order);
@@ -83,13 +78,11 @@ export async function addOrder(new_order) {
     if (!validation.success) {
         throw new Error(validation.error.errors.map(error => error.message).join(', '));
     }
-    const { data, error } = await client.mutate({
-        mutation: ADD_ORDER,
-        variables: validation.data
-    })
-    if (error) {
+    try {
+        const data = await graphqlRequest(ADD_ORDER, validation.data);
+        return data?.addOrder ?? null;
+    } catch (error) {
         throw error;
     }
-    return data?.addOrder ?? null;
 }
 

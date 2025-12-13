@@ -1,4 +1,4 @@
-import { CreateOrderSchema, safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
+import { CreateOrderSchema, safeValidate } from "@/lib/zodSchemas";
 import { OrderStatus, Role } from "@prisma/client";
 
 const resolvers = {
@@ -36,7 +36,7 @@ const resolvers = {
             });
         },
         user: async (parent, args, context) => {
-            if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new Error("Unauthorized");
             const { id } = args;
             if (!id || typeof id !== 'string') throw new Error("Invalid user id");
             return await context.prisma.user.findUnique({
@@ -58,9 +58,18 @@ const resolvers = {
         },
         //orders functions ----------------------------------
         orders: async (parent, args, context) => {
+            console.log('args from the resolver orders : ', args);
+            //TODO: you need to find a way to pass the filters to the resolver, because GQL GET_ORDERS doesn't support variables
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
+            const { searchQuery, status, startDate, endDate } = args;
+            console.log({ searchQuery, status, startDate, endDate });
             return await context.prisma.order.findMany({
-                include: { user: true, items: true }
+                include: { user: true, items: true },
+                where: {
+                    id: { contains: searchQuery },
+                    status: { equals: status },
+                    createdAt: { gte: startDate, lte: endDate }
+                }
             });
         },
         order: async (parent, args, context) => {
@@ -249,16 +258,6 @@ const resolvers = {
             });
         },
 
-        updateCustomerProfile: async (parent, args, context) => {
-            if (!context.session || context.session?.user?.role !== Role.CUSTOMER) throw new Error("Unauthorized");
-
-            const { updatedCustomer } = args;
-            console.log('update customer profile , resolver level (yoga backend server), passed data are : ', updatedCustomer);
-            const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
-            if (!validation.success) throw new Error(validation.error.errors.map(e => e.message).join(', '));
-
-            return await context.prisma.user.update({ where: { id: context.session.user.id }, data: validation.data });
-        },
         deleteCustomerProfile: async (parent, args, context) => {
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
             const { userId } = args;

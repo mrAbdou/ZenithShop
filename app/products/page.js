@@ -1,7 +1,7 @@
 import ProductsListing from "@/components/ProductsListing";
 import CartFloatingButton from "@/components/CartFloatingButton";
-import { fetchProductsCount } from "@/services/products";
-import { fetchProducts } from "@/services/products";
+import { fetchProductsCount } from "@/services/products.client";
+import { fetchProducts } from "@/services/products.client";
 export const metadata = {
   title: "Products | ZenithShop",
   description: "Explore our complete collection of premium products at ZenithShop",

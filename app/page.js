@@ -1,6 +1,8 @@
 import CartFloatingButton from "@/components/CartFloatingButton";
 import ProductsListing from "@/components/ProductsListing";
-import { fetchProducts } from "@/services/products";
+import { fetchProducts } from "@/services/products.server";
+import { LIMIT } from "@/lib/constants";
+import { headers } from "next/headers";
 
 export const metadata = {
   title: "ZenithShop",
@@ -18,9 +20,12 @@ export const metadata = {
 };
 
 export default async function Home() {
+  const h = await headers();
+  const cookieHeader = h.get("cookie") || "";
   let products = [];
   try {
-    products = await fetchProducts();
+    products = await fetchProducts(LIMIT, 0, cookieHeader);
+    console.log('products :L', products);
   } catch (error) {
     return JSON.stringify(error, null, 2);
   }

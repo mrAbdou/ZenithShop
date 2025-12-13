@@ -10,11 +10,11 @@ export default function DashboardMetrics({
     customersCount
 }) {
 
-    const nbrAvailableProducts = useAvailableProductsCount();
-    const nbrActiveOrders = useActiveOrdersCount();
-    const nbrProducts = useProductsCount();
-    const nbrUsers = useUsersCount();
-    const nbrCustomers = useCustomersCount();
+    const { data: nbrAvailableProducts } = useAvailableProductsCount(availableProductsCount);
+    const { data: nbrActiveOrders } = useActiveOrdersCount(activeOrdersCount);
+    const { data: nbrProducts } = useProductsCount(productsCount);
+    const { data: nbrUsers } = useUsersCount(usersCount);
+    const { data: nbrCustomers } = useCustomersCount(customersCount);
 
     return (
         <>
@@ -49,7 +49,7 @@ export default function DashboardMetrics({
                         <div className="flex items-center justify-between mb-6">
                             <div className="bg-linear-to-br from-green-50 to-green-100 rounded-2xl p-4">
                                 <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM9 12a6 6 0 11-12 0 6 6 0 0112 0z" />
+                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
                                 </svg>
                             </div>
                             <div className="text-right">

@@ -1,7 +1,7 @@
 // hooks/products.js
 "use client";
 
-import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
     fetchProducts,
     fetchProduct,
@@ -9,25 +9,25 @@ import {
     fetchAvailableProductsCount,
     fetchProductsInCart,
     addProduct,
-} from "@/services/products";
+} from "@/services/products.client";
 import { LIMIT } from "@/lib/constants";
+import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
 
 /**
  * Hook to fetch a paginated list of products.
  * Accepts optional initialData (array) from SSR.
  */
-export function useProducts(initialData = []) {
+export function useProducts(limit, offset, initialData = []) {
     const hasInitial = Array.isArray(initialData) && initialData.length > 0;
     const formattedInitial = hasInitial ? { pages: [initialData], pageParams: [0] } : undefined;
-
     return useInfiniteQuery({
-        queryKey: ["products", LIMIT],
-        queryFn: ({ pageParam = 0 }) => fetchProducts(LIMIT, pageParam),
+        queryKey: ["products", limit, offset],
+        queryFn: ({ pageParam = offset }) => fetchProducts(limit, pageParam),
         getNextPageParam: (lastPage, allPages) =>
-            lastPage?.length === LIMIT ? allPages.length * LIMIT : undefined,
+            lastPage?.length === limit ? allPages.length * limit : undefined,
         ...(hasInitial && { initialData: formattedInitial }),
-        staleTime: 0,
-        refetchOnMount: true,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnMount: false,
         keepPreviousData: true,
     });
 }
@@ -42,18 +42,20 @@ export function useProduct(id) {
 }
 
 /** Count of all products */
-export function useProductsCount() {
+export function useProductsCount(initialData) {
     return useQuery({
         queryKey: ["productsCount"],
         queryFn: fetchProductsCount,
+        initialData
     });
 }
 
 /** Count of available (in‑stock) products */
-export function useAvailableProductsCount() {
+export function useAvailableProductsCount(initialData) {
     return useQuery({
         queryKey: ["availableProductsCount"],
         queryFn: fetchAvailableProductsCount,
+        initialData
     });
 }
 
@@ -68,7 +70,27 @@ export function useProductsInCart(cart) {
 
 /** Mutation to add a new product */
 export function useAddProduct() {
+    const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: addProduct,
+        mutationFn: (data) => {
+            const validation = safeValidate(AddProductSchema, data);
+            if (!validation.success) {
+                throw new Error(validation.error.message);
+            }
+            return addProduct(validation.data);
+        },
+    }, {
+        onSuccess: async (data) => {
+            await queryClient.setQueryData({
+                queryKey: ["products"],
+                data: (prevData) => {
+                    if (!prevData) return [data];
+                    return [...prevData, data];
+                }
+            });
+            await queryClient.invalidateQueries({
+                queryKey: ["products"]
+            });
+        },
     });
 }

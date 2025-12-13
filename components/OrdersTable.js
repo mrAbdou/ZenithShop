@@ -1,5 +1,7 @@
 'use client';
-import { useMyOrders } from "@/hooks/users";
+import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
+import { useOrders } from "@/hooks/orders";
+import { useContext } from "react";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -14,8 +16,9 @@ const formatDate = (dateString) => {
 
 export default function OrdersTable({ initialData }) {
     // If initialData is provided and non-empty, use it directly (no client fetch needed)
-    const { data: orders, isLoading, error } = useMyOrders(initialData);
-
+    const { filters } = useContext(OrdersFiltersContext);
+    console.log('filters from the OrdersTable : ', filters);
+    const { data: orders, isLoading, error } = useOrders(initialData, filters);
     // Only show loading/error for client fetches when no server data
     if (isLoading) {
         return (

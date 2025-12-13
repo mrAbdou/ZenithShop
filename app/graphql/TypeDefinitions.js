@@ -83,7 +83,6 @@ type OrderItem {
 
 type Mutation {
     # User Profile ###########################
-    updateCustomerProfile(updatedCustomer: UpdateCustomerInput!): User!
     deleteCustomerProfile(userId: ID!): Boolean!
     completeSignUp(phoneNumber: String!, address: String!, role: Role!): User!
 
@@ -118,12 +117,6 @@ input ProductInput {
     qteInStock: Int!
 }
 
-input UpdateCustomerInput {
-    name: String
-    email: String
-    address: String
-    phoneNumber: String
-}
 
 input UserInput {
     name: String!

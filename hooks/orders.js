@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount } from "@/services/orders";
+import { addOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount } from "@/services/orders.client";
 import { CreateOrderSchema, safeValidate } from "@/lib/zodSchemas";
 import toast from "react-hot-toast";
-export function useOrders(initialData = []) {
+export function useOrders(initialData = [], filters = {}) {
+    console.log('filters from the custom hook useOrders : ', filters);
     return useQuery({
-        queryKey: ['orders'],
-        queryFn: fetchOrders,
+        queryKey: ['orders', filters],
+        queryFn: () => fetchOrders(filters),
         initialData
     })
 }
@@ -63,9 +64,10 @@ export function useOrdersCount() {
         queryFn: fetchOrdersCount,
     })
 }
-export function useActiveOrdersCount() {
+export function useActiveOrdersCount(initialData) {
     return useQuery({
         queryKey: ['activeOrdersCount'],
         queryFn: fetchActiveOrdersCount,
+        initialData
     })
 }

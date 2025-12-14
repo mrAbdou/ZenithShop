@@ -75,7 +75,7 @@ export function useAddProduct() {
         mutationFn: (data) => {
             const validation = safeValidate(AddProductSchema, data);
             if (!validation.success) {
-                throw new Error(validation.error.message);
+                throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
             }
             return addProduct(validation.data);
         },

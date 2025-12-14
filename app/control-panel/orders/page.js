@@ -1,7 +1,7 @@
 import OrdersManagement from "@/components/OrdersManagement";
 import { auth } from "@/lib/auth";
 import { fetchOrders } from "@/services/orders.server"
-import { OrderStatus, Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
@@ -19,22 +19,41 @@ export default async function OrdersManagementPage() {
     if (!session || session.user.role !== Role.ADMIN) {
         return redirect("/");
     }
-    const searchQuery = '';
-    const status = OrderStatus.PENDING;
-    const startDate = null;
-    const endDate = null;
-    const sortBy = null;
-    const sortDirection = null;
     let orders = [];
     try {
-        orders = await fetchOrders(cookieHeader, searchQuery, status, startDate, endDate, sortBy, sortDirection);
-        console.log('orders from the page : ', orders);
+        // filters has a default value in fetchOrders so there is no need to pass it
+        orders = await fetchOrders(cookieHeader);
     } catch (error) {
         console.log('Error', error.message);
     }
     return (
-        <div className="container mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">Orders Management</h1>
+        <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
+            {/* Header Section */}
+            <div className="mb-12">
+                <div className="bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-8 md:p-12 text-white shadow-lg">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex-1">
+                            <h1 className="text-4xl md:text-5xl font-bold mb-2">
+                                Orders Management
+                            </h1>
+                            <p className="text-blue-100 text-lg font-medium mb-4">
+                                Manage customer orders efficiently
+                            </p>
+                            <p className="text-blue-50 max-w-2xl">
+                                View and manage all orders placed by customers. Track order status, customer details, and order history in real-time.
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-start md:items-end gap-4">
+                            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                                <div className="text-center">
+                                    <p className="text-3xl font-bold text-white mb-1">{orders.length}</p>
+                                    <p className="text-blue-100 text-sm">Total Orders</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* Search and Filter Partition */}
             <OrdersManagement orders={orders} />

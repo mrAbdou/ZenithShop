@@ -29,7 +29,8 @@ export default function UpdateCustomerProfileForm({ initialData = {} }) {
     const onSubmit = async (data) => {
         const validation = safeValidate(UpdateCustomerSchema, data);
         if (validation.error) {
-            toast.error(validation.error.message);
+            const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
+            toast.error(`Validation failed: ${errorMessages}`);
             return;
         }
         try {

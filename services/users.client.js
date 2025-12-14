@@ -118,7 +118,7 @@ export async function updateCustomerProfile(updatedCustomer) {
     try {
         console.log('update customer profile , service level (Better Auth), passed data are : ', updatedCustomer);
         const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
-        if (!validation.success) throw new Error(validation.error.errors.map(e => e.message).join(', '));
+        if (!validation.success) throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
         const result = await authClient.updateUser(validation.data);
         if (result.error) {
             throw new Error(result.error.message);

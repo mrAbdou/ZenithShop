@@ -1,8 +1,9 @@
 'use client';
 import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
 import { useOrders } from "@/hooks/orders";
-import { useContext, useState } from "react";
-
+import { OrderStatus } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useContext } from "react";
 const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
@@ -16,11 +17,12 @@ const formatDate = (dateString) => {
 
 export default function OrdersTable({ initialData }) {
     // If initialData is provided and non-empty, use it directly (no client fetch needed)
+    const router = useRouter();
     const { filters, setFilters } = useContext(OrdersFiltersContext);
     console.log('filters from the OrdersTable : ', filters);
     const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = filters;
     console.log('filters from the OrdersTable : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
-    const { data: orders, isLoading, error } = useOrders(initialData, searchQuery, status, startDate, endDate, sortBy, sortDirection);
+    const { data: orders, isLoading, error } = useOrders(initialData, filters);
     // Only show loading/error for client fetches when no server data
     const headersMapping = {
         'Order ID': 'id',
@@ -140,8 +142,8 @@ export default function OrdersTable({ initialData }) {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                        order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                            order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                        order.status === OrderStatus.PENDING ? 'bg-yellow-100 text-yellow-800' :
+                                            order.status === OrderStatus.CANCELLED ? 'bg-red-100 text-red-800' :
                                                 'bg-gray-100 text-gray-800'
                                         }`}>
                                         {order.status}
@@ -155,10 +157,10 @@ export default function OrdersTable({ initialData }) {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex space-x-2">
-                                        <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                                        <button onClick={() => router.push(`/control-panel/orders/${order.id}`)} className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                                             View
                                         </button>
-                                        <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                        <button onClick={() => router.push(`/control-panel/orders/${order.id}/update`)} className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
                                             Update
                                         </button>
                                         <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">

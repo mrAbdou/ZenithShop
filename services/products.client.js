@@ -96,7 +96,7 @@ export async function addProduct(newProduct) {
     try {
         const validation = safeValidate(AddProductSchema, newProduct);
         if (!validation.success) {
-            throw new Error(validation.error.message);
+            throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
         }
         const data = await graphqlRequest(ADD_PRODUCT, { newProduct: validation.data });
         return data?.addNewProduct ?? null;

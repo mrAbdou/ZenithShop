@@ -1,5 +1,5 @@
 import { graphqlRequest } from '@/lib/graphql-client';
-import { CreateOrderSchema, safeValidate } from '@/lib/zodSchemas';
+import { CreateOrderSchema, OrderFilterSchema, safeValidate } from '@/lib/zodSchemas';
 import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
@@ -18,12 +18,27 @@ query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime
     }
 }`;
 export const GET_ORDER = gql`
-query GetOrder($id: ID!) {
+query GetOrder($id: String!) {
     order(id: $id) {
         id
         status
         createdAt
         updatedAt
+        total
+        user {
+            name
+            email
+            phoneNumber
+            address
+        }
+        items {
+            id 
+            qte
+            product {
+                name
+                price
+            }
+        }
     }
 }`;
 export const ADD_ORDER = gql`
@@ -43,9 +58,14 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
-export async function fetchOrders(searchQuery = '', status = OrderStatus.PENDING, startDate = null, endDate = null, sortBy = null, sortDirection = null) {
-    console.log('filters from the service fetchOrders : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
+export async function fetchOrders(filters) {
+    console.log('filters from the service fetchOrders : ', filters);
     try {
+        const validation = safeValidate(OrderFilterSchema, filters);
+        if (!validation.success) {
+            throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
+        }
+        const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = validation.data;
         const data = await graphqlRequest(GET_ORDERS, { searchQuery, status, startDate, endDate, sortBy, sortDirection });
         return data?.orders ?? [];
     } catch (error) {
@@ -80,7 +100,7 @@ export async function addOrder(new_order) {
     console.log('new order from the service addOrder : ', new_order);
     const validation = safeValidate(CreateOrderSchema, new_order);
     if (!validation.success) {
-        throw new Error(validation.error.errors.map(error => error.message).join(', '));
+        throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
     }
     try {
         const data = await graphqlRequest(ADD_ORDER, validation.data);
@@ -89,4 +109,3 @@ export async function addOrder(new_order) {
         throw error;
     }
 }
-

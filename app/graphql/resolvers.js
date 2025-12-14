@@ -111,7 +111,7 @@ const resolvers = {
 
             const order = await context.prisma.order.findUnique({
                 where: { id },
-                include: { user: true, items: true }
+                include: { user: true, items: { include: { product: true } } }
             });
 
             if (!order) throw new Error("Order not found");
@@ -236,7 +236,7 @@ const resolvers = {
             const { items, total } = args;
             const validation = safeValidate(CreateOrderSchema, { items, total });
             if (!validation.success) {
-                const errorMessages = validation.error.errors.map(e => e.message).join(', ');
+                const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
                 throw new Error(`Validation failed: ${errorMessages}`);
             }
             return await context.prisma.$transaction(async (tx) => {

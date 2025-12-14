@@ -39,7 +39,7 @@ export default function CustomerCheckoutDashboard() {
 
         const validation = safeValidate(CreateOrderSchema, new_order);
         if (!validation.success) {
-            const errorMessages = validation.error.errors.map(e => e.message).join(', ');
+            const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
             toast.error(`Validation failed: ${errorMessages}`);
             return;
         }

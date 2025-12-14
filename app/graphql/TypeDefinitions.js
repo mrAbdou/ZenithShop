@@ -9,7 +9,7 @@ scalar Decimal
 #                     User Type                 #
 #################################################
 type User {
-    id: ID!
+    id: String!
     name: String!
     email: String!
     # password removed for security reasons
@@ -30,8 +30,8 @@ enum Role {
 #                     Order Type                #
 #################################################
 type Order {
-    id: ID!
-    userId: ID!
+    id: String!
+    userId: String!
     user: User!
     status: OrderStatus!
     total: Decimal!
@@ -53,7 +53,7 @@ enum OrderStatus {
 #                     Product Type              #
 #################################################
 type Product {
-    id: ID!
+    id: String!
     name: String!
     description: String
     price: Decimal!
@@ -67,10 +67,10 @@ type Product {
 #                     OrderItem Type            #
 #################################################
 type OrderItem {
-    id: ID!
-    orderId: ID!
+    id: String!
+    orderId: String!
     order: Order!
-    productId: ID!
+    productId: String!
     product: Product!
     qte: Int!
     createdAt: DateTime!
@@ -83,13 +83,13 @@ type OrderItem {
 
 type Mutation {
     # User Profile ###########################
-    deleteCustomerProfile(userId: ID!): Boolean!
+    deleteCustomerProfile(userId: String!): Boolean!
     completeSignUp(phoneNumber: String!, address: String!, role: Role!): User!
 
     # Product Management (Admin) #############
     addNewProduct(product: ProductInput!): Product!
-    updateProduct(id: ID!, product: ProductInput!): Product!
-    deleteProduct(productId: ID!): Boolean!
+    updateProduct(id: String!, product: ProductInput!): Product!
+    deleteProduct(productId: String!): Boolean!
 
     # Order & Cart Management ################
     addOrder(items: [OrderItemInput!]!, total: Decimal!): Order!
@@ -137,7 +137,7 @@ input OrderItemInput {
 }
 
 input CartItemInput {
-    id: String!      # product ID
+    id: String!      # product String
     price: Decimal!  # price at checkout (client‑side copy)
     qte: Int!        # quantity
     name: String     # optional product name (client‑side only)

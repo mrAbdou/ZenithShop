@@ -1,12 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount } from "@/services/orders.client";
-import { CreateOrderSchema, safeValidate } from "@/lib/zodSchemas";
+import { CreateOrderSchema, OrderFilterSchema, safeValidate } from "@/lib/zodSchemas";
 import toast from "react-hot-toast";
-export function useOrders(initialData = [], searchQuery = '', status = OrderStatus.PENDING, startDate = null, endDate = null, sortBy = null, sortDirection = null) {
-    console.log('filters from the custom hook useOrders : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
+export function useOrders(initialData = [], filters) {
+    console.log('filters from the custom hook useOrders : ', filters);
+
     return useQuery({
-        queryKey: ['orders', searchQuery, status, startDate, endDate, sortBy, sortDirection],
-        queryFn: () => fetchOrders(searchQuery, status, startDate, endDate, sortBy, sortDirection),
+        queryKey: ['orders', filters],
+        queryFn: () => {
+            const validation = safeValidate(OrderFilterSchema, filters)
+            if (!validation.success) {
+                throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
+            }
+            return fetchOrders(validation.data)
+        },
         initialData
     })
 }
@@ -21,10 +28,9 @@ export function useAddOrder() {
 
     return useMutation({
         mutationFn: (new_order) => {
-            console.log('new order from the custom hook useAddOrder : ', new_order);
             const validation = safeValidate(CreateOrderSchema, new_order);
             if (!validation.success) {
-                const errorMessages = validation.error.errors.map(e => e.message).join(', ');
+                const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
                 throw new Error(`Validation failed: ${errorMessages}`);
             }
             return addOrder(validation.data);

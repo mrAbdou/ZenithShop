@@ -61,7 +61,7 @@ export function useUpdateCustomerProfile() {
         mutationFn: async (updatedCustomer) => {
             console.log('update customer profile , custom hook level(react-query), passed data are : ', updatedCustomer);
             const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
-            if (!validation.success) throw new Error(validation.error.errors.map(e => e.message).join(', '));
+            if (!validation.success) throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
             return await updateCustomerProfile(validation.data);
         },
         onSuccess: (data) => {

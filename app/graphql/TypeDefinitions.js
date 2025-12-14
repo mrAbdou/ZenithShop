@@ -150,22 +150,22 @@ input CartItemInput {
 #################################################
 type Query {
     users: [User!]!
-    user(id: ID!): User
+    user(id: String): User
     customersCount: Int!
     usersCount: Int!
-    orders: [Order!]!
+    orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String): [Order!]!
     myOrders: [Order!]!
-    order(id: ID!): Order
+    order(id: String): Order
     activeOrdersCount: Int!
     
     products(limit: Int!, offset: Int!): [Product!]!
-    product(id: ID!): Product
+    product(id: String): Product
     productsCount: Int!
     availableProductsCount: Int!
-    productsInCart(cart: [ID!]!): [Product!]!
+    productsInCart(cart: [String!]!): [Product!]!
     
     orderItems: [OrderItem!]!
-    orderItem(id: ID!): OrderItem
+    orderItem(id: String!): OrderItem
 }
 
 `;

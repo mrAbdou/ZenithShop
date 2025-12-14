@@ -3,13 +3,16 @@ import { CreateOrderSchema, safeValidate } from '@/lib/zodSchemas';
 import { gql } from 'graphql-request';
 import toast from 'react-hot-toast';
 export const GET_ORDERS = gql`
-query GetOrders {
-    orders {
+query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String) {
+    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection) {
         id
         status
         total
         user {
             name
+        }
+        items {
+            id
         }
         createdAt
     }
@@ -40,9 +43,9 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
-export async function fetchOrders(cookieHeader = '') {
+export async function fetchOrders(cookieHeader = '', searchQuery = '', status = OrderStatus.PENDING, startDate = null, endDate = null) {
     try {
-        const data = await graphqlServerRequest(GET_ORDERS, {}, cookieHeader);
+        const data = await graphqlServerRequest(GET_ORDERS, { searchQuery, status, startDate, endDate }, cookieHeader);
         return data?.orders ?? [];
     } catch (error) {
         throw error;

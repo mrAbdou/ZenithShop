@@ -1,7 +1,7 @@
 import OrdersManagement from "@/components/OrdersManagement";
 import { auth } from "@/lib/auth";
 import { fetchOrders } from "@/services/orders.server"
-import { Role } from "@prisma/client";
+import { OrderStatus, Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
@@ -13,14 +13,22 @@ export default async function OrdersManagementPage() {
     const h = await headers();
     const cookieHeader = h.get("cookie");
     const session = await auth.api.getSession({
+        // headers: { cookie: cookieHeader ?? "" }
         headers: h
     });
-    if (session.user.role !== Role.ADMIN) {
+    if (!session || session.user.role !== Role.ADMIN) {
         return redirect("/");
     }
+    const searchQuery = '';
+    const status = OrderStatus.PENDING;
+    const startDate = null;
+    const endDate = null;
+    const sortBy = null;
+    const sortDirection = null;
     let orders = [];
     try {
-        orders = await fetchOrders(cookieHeader);
+        orders = await fetchOrders(cookieHeader, searchQuery, status, startDate, endDate, sortBy, sortDirection);
+        console.log('orders from the page : ', orders);
     } catch (error) {
         console.log('Error', error.message);
     }

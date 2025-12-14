@@ -1,14 +1,18 @@
 import { graphqlRequest } from '@/lib/graphql-client';
 import { CreateOrderSchema, safeValidate } from '@/lib/zodSchemas';
+import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
-query GetOrders {
-    orders {
+query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String) {
+    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection) {
         id
         status
         total
         user {
             name
+        }
+        items {
+            id 
         }
         createdAt
     }
@@ -39,10 +43,10 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
-export async function fetchOrders(filters = {}) {
-    console.log('filters from the service fetchOrders : ', filters);
+export async function fetchOrders(searchQuery = '', status = OrderStatus.PENDING, startDate = null, endDate = null, sortBy = null, sortDirection = null) {
+    console.log('filters from the service fetchOrders : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
     try {
-        const data = await graphqlRequest(GET_ORDERS, { ...filters });
+        const data = await graphqlRequest(GET_ORDERS, { searchQuery, status, startDate, endDate, sortBy, sortDirection });
         return data?.orders ?? [];
     } catch (error) {
         throw error;

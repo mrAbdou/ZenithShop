@@ -1,7 +1,7 @@
 'use client';
 import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
 import { useOrders } from "@/hooks/orders";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -16,10 +16,63 @@ const formatDate = (dateString) => {
 
 export default function OrdersTable({ initialData }) {
     // If initialData is provided and non-empty, use it directly (no client fetch needed)
-    const { filters } = useContext(OrdersFiltersContext);
+    const { filters, setFilters } = useContext(OrdersFiltersContext);
     console.log('filters from the OrdersTable : ', filters);
-    const { data: orders, isLoading, error } = useOrders(initialData, filters);
+    const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = filters;
+    console.log('filters from the OrdersTable : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
+    const { data: orders, isLoading, error } = useOrders(initialData, searchQuery, status, startDate, endDate, sortBy, sortDirection);
     // Only show loading/error for client fetches when no server data
+    const headersMapping = {
+        'Order ID': 'id',
+        'Customer': 'user.name',
+        'Date': 'createdAt',
+        'Status': 'status',
+        'Total': 'total',
+        'Items': 'items',
+    }
+
+    const reverseHeadersMapping = {
+        'id': 'Order ID',
+        'user.name': 'Customer',
+        'createdAt': 'Date',
+        'status': 'Status',
+        'total': 'Total',
+    }
+
+    // meanings of counter values : 
+    // 0 : no sorting
+    // 1 : descending
+    // 2 : ascending
+    const onTableHeaderClicked = (e) => {
+        e.preventDefault();
+        const headerText = e.target.textContent.replace(/[↑↓]/g, '').trim();
+        const field = headersMapping[headerText];
+        let newSortBy;
+        let newSortDirection;
+        if (!field) {
+            return;
+        }
+        if (filters.sortBy === field) {
+            if (filters.sortDirection === 'desc') {
+                newSortDirection = 'asc';
+                newSortBy = field;
+            } else if (filters.sortDirection === 'asc') {
+                newSortDirection = null;
+                newSortBy = null;
+            } else {
+                newSortDirection = 'desc';
+                newSortBy = field;
+            }
+        } else {
+            newSortBy = field;
+            newSortDirection = 'desc';
+        }
+        setFilters({
+            ...filters,
+            sortBy: newSortBy,
+            sortDirection: newSortDirection
+        });
+    }
     if (isLoading) {
         return (
             <div className="bg-white shadow rounded-lg p-6">
@@ -50,20 +103,26 @@ export default function OrdersTable({ initialData }) {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Order ID
+                            <th onClick={onTableHeaderClicked} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                                Order ID{filters.sortBy === 'id' && (filters.sortDirection === 'asc' ? ' ↑' : filters.sortDirection === 'desc' ? ' ↓' : '')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Date
+                            <th onClick={onTableHeaderClicked} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                                Customer{filters.sortBy === 'user.name' && (filters.sortDirection === 'asc' ? ' ↑' : filters.sortDirection === 'desc' ? ' ↓' : '')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
+                            <th onClick={onTableHeaderClicked} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                                Date{filters.sortBy === 'createdAt' && (filters.sortDirection === 'asc' ? ' ↑' : filters.sortDirection === 'desc' ? ' ↓' : '')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total
+                            <th onClick={onTableHeaderClicked} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                                Status{filters.sortBy === 'status' && (filters.sortDirection === 'asc' ? ' ↑' : filters.sortDirection === 'desc' ? ' ↓' : '')}
+                            </th>
+                            <th onClick={onTableHeaderClicked} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
+                                Total{filters.sortBy === 'total' && (filters.sortDirection === 'asc' ? ' ↑' : filters.sortDirection === 'desc' ? ' ↓' : '')}
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Items
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -72,6 +131,9 @@ export default function OrdersTable({ initialData }) {
                             <tr key={order.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {order.id.slice(-8)} {/* Show last 8 chars */}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {order.user.name}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {formatDate(order.createdAt)}
@@ -90,6 +152,19 @@ export default function OrdersTable({ initialData }) {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {order.items?.length || 0} items
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="flex space-x-2">
+                                        <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                                            View
+                                        </button>
+                                        <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                            Update
+                                        </button>
+                                        <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+                                            Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

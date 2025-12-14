@@ -2,11 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount } from "@/services/orders.client";
 import { CreateOrderSchema, safeValidate } from "@/lib/zodSchemas";
 import toast from "react-hot-toast";
-export function useOrders(initialData = [], filters = {}) {
-    console.log('filters from the custom hook useOrders : ', filters);
+export function useOrders(initialData = [], searchQuery = '', status = OrderStatus.PENDING, startDate = null, endDate = null, sortBy = null, sortDirection = null) {
+    console.log('filters from the custom hook useOrders : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
     return useQuery({
-        queryKey: ['orders', filters],
-        queryFn: () => fetchOrders(filters),
+        queryKey: ['orders', searchQuery, status, startDate, endDate, sortBy, sortDirection],
+        queryFn: () => fetchOrders(searchQuery, status, startDate, endDate, sortBy, sortDirection),
         initialData
     })
 }

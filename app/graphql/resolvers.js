@@ -61,15 +61,47 @@ const resolvers = {
             console.log('args from the resolver orders : ', args);
             //TODO: you need to find a way to pass the filters to the resolver, because GQL GET_ORDERS doesn't support variables
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
-            const { searchQuery, status, startDate, endDate } = args;
-            console.log({ searchQuery, status, startDate, endDate });
+            const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = args;
+            console.log('filters from the resolver orders : ', { searchQuery, status, startDate, endDate, sortBy, sortDirection });
+
+            let where = {
+                status: { equals: status }
+            };
+            let orderBy = {};
+
+
+            if (searchQuery) {
+                where.OR = [
+                    { id: { contains: searchQuery, mode: 'insensitive' } },
+                    { user: { name: { contains: searchQuery, mode: 'insensitive' } } }
+                ];
+            }
+
+            if (startDate) {
+                where.createdAt = { gte: new Date(startDate) };
+            }
+
+            if (endDate) {
+                where.createdAt = { ...where.createdAt, lte: new Date(endDate) };
+            }
+            if (sortBy && sortDirection) {
+                if (sortBy.includes('.')) {
+                    const [field, subField] = sortBy.split('.');
+                    orderBy = {
+                        [field]: {
+                            [subField]: sortDirection
+                        }
+                    }
+                } else {
+                    orderBy = {
+                        [sortBy]: sortDirection
+                    }
+                }
+            }
             return await context.prisma.order.findMany({
                 include: { user: true, items: true },
-                where: {
-                    id: { contains: searchQuery },
-                    status: { equals: status },
-                    createdAt: { gte: startDate, lte: endDate }
-                }
+                where,
+                orderBy
             });
         },
         order: async (parent, args, context) => {
@@ -92,15 +124,7 @@ const resolvers = {
             return order;
         },
         products: async (parent, args, context) => {
-            console.log('Products resolver is called');
             const { limit, offset } = args;
-            console.log('args : ', JSON.stringify({
-                limit: limit,
-                limitType: typeof limit,
-                offset: offset,
-                offsetType: typeof offset
-            }, null, 2));
-
             if (limit === undefined || limit === null || typeof limit !== 'number' || limit < 1 || limit > 100 || limit % 1 !== 0) {
                 throw new Error("Invalid limit: must be an integer between 1 and 100");
             }

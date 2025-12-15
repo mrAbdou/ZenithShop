@@ -1,9 +1,9 @@
 'use client';
-import { useContext } from "react";
-import { CartContext } from "@/context/CartContext";
+import { useCartContext } from "@/context/CartContext";
 
 export default function CheckoutCartResume() {
-    const { cart } = useContext(CartContext);
+    const { getCart } = useCartContext();
+    const cart = getCart();
 
     // Calculate totals
     const totalItems = cart.reduce((sum, item) => sum + item.qte, 0);

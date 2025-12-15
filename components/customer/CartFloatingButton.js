@@ -1,10 +1,10 @@
 'use client';
-import { useContext } from 'react';
-import { CartContext } from '@/context/CartContext';
+import { useCartContext } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 
 export default function CartFloatingButton() {
-    const { cart } = useContext(CartContext);
+    const { getCart } = useCartContext();
+    const cart = getCart();
     const router = useRouter();
 
     const totalItems = cart.reduce((sum, item) => sum + item.qte, 0);

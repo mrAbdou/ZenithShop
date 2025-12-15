@@ -77,7 +77,7 @@ export default async function UpdateOrder({ params }) {
                 </div>
             </div>
 
-            <UpdateOrderForm id={orderId} />
+            <UpdateOrderForm id={order?.id || orderId} />
         </div>
     );
 }

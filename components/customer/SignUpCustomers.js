@@ -8,9 +8,10 @@ import { CartContext } from "@/context/CartContext";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useCompleteSignUp } from "@/hooks/users";
-import { Role } from "@prisma/client";
+import { Role } from "@/lib/constants";
 export default function SignUpCustomers({ redirectTo }) {
-    const { cart } = useContext(CartContext);
+    const { getCart } = useContext(CartContext);
+    const cart = getCart();
     const router = useRouter();
     const { register, handleSubmit, formState: { errors }, reset } = useForm({
         resolver: zodResolver(SignUpCustomerSchema),

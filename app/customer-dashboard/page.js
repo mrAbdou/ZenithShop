@@ -18,23 +18,21 @@ import { fetchMyOrders } from "@/services/users.server";
 
 //start prisma import ---------------------------------------------
 import { Role } from "@prisma/client";
+import OrdersTable from "@/components/customer/OrdersTable";
 //end prisma import -----------------------------------------------
 
 export default async function CustomerDashboard() {
-    const h = await headers(); // this gives me the headers that I'm going to need in service function to run
-    // check if the user is truly signed in :
-
+    // checking the session of the customer
+    const h = await headers();
     const session = await auth.api.getSession({
         headers: h,
     });
     if (!session || session?.user?.role !== Role.CUSTOMER) {
-        // if not authenticated or not a customer, redirect to auth
         const redirectUrl = encodeURIComponent('/customer-dashboard');
         redirect(`/auth?redirectTo=${redirectUrl}`);
     }
-    // extract the cookie header from the cookies
+    // extract the cookie header, and get the orders list
     const cookieHeader = h.get('cookie') || '';
-    // pass this cookie header to the service function so it could be run successfully, because this header is the proof of the user being authorized
     const orders = await fetchMyOrders(cookieHeader);
 
     return (
@@ -72,7 +70,8 @@ export default async function CustomerDashboard() {
 
                     {/* Orders and Profile Section */}
                     <div className="lg:col-span-2 space-y-8">
-                        {/* <OrdersTable initialData={orders} /> */}
+                        {/* TODO: re-implement orders table again */}
+                        <OrdersTable initialData={orders} />
 
                         {/* Profile Section */}
                         <UpdateCustomerProfileForm initialData={session?.user} />

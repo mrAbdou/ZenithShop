@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Role } from "@prisma/client";
+import { Role } from "@/lib/constants";
 import { authClient } from "@/lib/auth-client";
 export default function NavigationBar() {
     const [isOpen, setIsOpen] = useState(false);

@@ -3,9 +3,10 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client"; // use client auth
+import { Role } from "@/lib/constants";
 // zod schema for form validation of admin login 
 const schema = z.object({
     email: z
@@ -19,12 +20,21 @@ const schema = z.object({
 export default function ControlPanelForm() {
     //errors returned from the better-auth/client package goes in here
     const [error, setError] = useState(null);
+    const router = useRouter();
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: session } = await authClient.getSession();
+            if (session && session.user.role === Role.ADMIN) {
+                router.push('/control-panel/dashboard');
+            }
+        }
+        checkAuth();
+    }, []);
     /// react-hook-form setup for login admin form with zod validation
     const { register, handleSubmit, formState: { errors } } = useForm({
         resolver: zodResolver(schema),
         mode: "onChange",
     });
-    const router = useRouter();
     const onSubmit = async (formData) => {
         try {
             // use the signIn with email password method from better-auth client

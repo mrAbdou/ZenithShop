@@ -1,14 +1,15 @@
 'use client';
-import { useContext, useState } from 'react';
-import { CartContext } from '@/context/CartContext';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { useAddOrder } from '@/hooks/orders';
 import toast from 'react-hot-toast';
 import { safeValidate, CreateOrderSchema } from '@/lib/zodSchemas';
+import { useCartContext } from '@/context/CartContext';
 
 export default function CustomerCheckoutDashboard() {
-    const { cart, clearCart } = useContext(CartContext); // here i get what user select to order
+    const { getCart, clearCart } = useCartContext(); // here i get what user select to order
+    const cart = getCart();
     const router = useRouter(); // this is used for empty cart, amdin instead of user etc ...
     const { mutateAsync: createOrder } = useAddOrder(); // the custom hook that is going to create the new order
     const { data: session } = authClient.getSession();

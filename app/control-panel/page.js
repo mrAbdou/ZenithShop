@@ -1,9 +1,22 @@
 import ControlPanelForm from "@/components/admin/ControlPanelForm";
+import { auth } from "@/lib/auth";
+import { Role } from "@prisma/client";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import OrdersTable from "@/components/customer/OrdersTable";
 export const metadata = {
     title: "Admin Control Panel | ZenithShop",
     description: "Secure admin access for ZenithShop management. Login to manage products, orders, and content on the e-commerce platform.",
 }
-export default function ControlPanelPage() {
+export default async function ControlPanelPage() {
+    const h = await headers();
+
+    const session = await auth.api.getSession({
+        headers: h
+    });
+    if (session && session.user.role === Role.ADMIN) {
+        redirect('/control-panel/dashboard');
+    }
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
             {/* Container الرئيسي */}

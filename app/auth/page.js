@@ -14,8 +14,11 @@ export default async function AuthenticationPage({ searchParams }) {
     });
     const { redirectTo } = await searchParams;
     const redirectPath = decodeURIComponent(redirectTo || '/customer-dashboard');
-    if (!session) {
-        // No session, show auth form
+    if (session && session.user.role === Role.CUSTOMER) {
+        redirect(redirectPath);
+    } else if (session && session.user.role === Role.ADMIN) {
+        redirect('/control-panel');
+    } else {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
                 <div className="max-w-md mx-auto">
@@ -27,11 +30,5 @@ export default async function AuthenticationPage({ searchParams }) {
                 </div>
             </div>
         );
-        //there is a session and the role is admin, take it to control-panel/dashboard
-    } else if (session.user.role === Role.ADMIN) {
-        redirect('/control-panel/dashboard');
-    } else {
-        //there is a session and the role is customer, take it to customer-dashboard
-        redirect(redirectPath);
     }
 }

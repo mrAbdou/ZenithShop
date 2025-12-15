@@ -3,8 +3,8 @@ import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema }
 import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
-query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String) {
-    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection) {
+query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int, $limit: Int, $totalPages: Int) {
+    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, currentPage: $currentPage, limit: $limit, totalPages: $totalPages) {
         id
         status
         total
@@ -79,8 +79,8 @@ export async function fetchOrders(filters) {
         if (!validation.success) {
             throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
         }
-        const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = validation.data;
-        const data = await graphqlRequest(GET_ORDERS, { searchQuery, status, startDate, endDate, sortBy, sortDirection });
+        const { searchQuery, status, startDate, endDate, sortBy, sortDirection, currentPage, limit, totalPages } = validation.data;
+        const data = await graphqlRequest(GET_ORDERS, { searchQuery, status, startDate, endDate, sortBy, sortDirection, currentPage, limit, totalPages });
         return data?.orders ?? [];
     } catch (error) {
         throw error;

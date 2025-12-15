@@ -10,7 +10,6 @@ import {
     fetchProductsInCart,
     addProduct,
 } from "@/services/products.client";
-import { LIMIT } from "@/lib/constants";
 import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
 
 /**

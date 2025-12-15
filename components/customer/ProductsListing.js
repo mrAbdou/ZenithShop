@@ -2,9 +2,20 @@
 import { LIMIT } from "@/lib/constants";
 import Product from "../Product";
 import { useProducts } from "@/hooks/products";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
 export default function ProductsListing({ initialData = [] }) {
     const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useProducts(LIMIT, 0, initialData);
     const products = data?.pages?.flat() || [];
+    const { ref, inView } = useInView({
+        threshold: 0.1,
+        rootMargin: '100px',
+    });
+    useEffect(() => {
+        if (inView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
     return (
         <>
             {/* Initial Loading State */}
@@ -27,35 +38,23 @@ export default function ProductsListing({ initialData = [] }) {
                             ))}
                         </div>
                     )}
-                    {products.length > 0 && (
-                        <div className="text-center mt-8">
-                            {hasNextPage ? (
-                                <button
-                                    onClick={() => fetchNextPage()}
-                                    disabled={isFetchingNextPage}
-                                    className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:transform-none inline-flex items-center gap-2"
-                                >
-                                    {isFetchingNextPage ? (
-                                        <>
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Loading...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                            Load More Products
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100 inline-block">
-                                    <p className="text-gray-600 font-medium">All products have been loaded</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* Sentinel element for intersection observer */}
+                    <div
+                        ref={ref}
+                        className="flex justify-center items-center py-8"
+                    >
+                        {isFetchingNextPage && (
+                            <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-gray-600 font-medium">Loading more products...</span>
+                            </div>
+                        )}
+                        {!hasNextPage && !isFetchingNextPage && (
+                            <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
+                                <p className="text-gray-600 font-medium">All products have been loaded</p>
+                            </div>
+                        )}
+                    </div>
                     {/* Empty State */}
                     {products.length === 0 && (
                         <div className="text-center py-12">

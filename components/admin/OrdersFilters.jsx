@@ -4,11 +4,11 @@ import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { Form, FormInput } from "../UX";
 import FormSelect from "../UX/FormSelect";
-import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
 import { useContext } from "react";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { OrderFilterSchema } from "@/lib/zodSchemas";
+import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
 // this component is used to filter orders
 // it defines an object of conditions or filter values , that will be used to fetch orders from the server
 // it also provides a form to update the filter values
@@ -37,12 +37,12 @@ export default function OrdersFilters() {
         { value: OrderStatus.RETURNED, label: "Returned" },
     ];
     // i get the function that it will set the filter values in the context
-    const { setFilters } = useContext(OrdersFiltersContext);
+    const { updateFilters } = useOrderFiltersContext();
 
-    // and here i call the setFilters function to update the filter values in the context
+    // and here i call the updateFilters function to update the filter values in the context
     // this function is called when i click of apply filters button (submit the form)
     const onSubmit = (data) => {
-        setFilters(data);
+        updateFilters(data);
     }
 
     // Watch date fields to trigger cross-field validation

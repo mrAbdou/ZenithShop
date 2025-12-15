@@ -157,11 +157,11 @@ input OrderInput {
 #################################################
 type Query {
     users: [User!]!
-    user(id: String): User
+    user(id: String!): User
     customersCount: Int!
     usersCount: Int!
     
-    orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String): [Order!]!
+    orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, currentPage: Int, limit: Int, totalPages: Int): [Order!]!
     myOrders: [Order!]!
     order(id: String!): Order
     activeOrdersCount: Int!

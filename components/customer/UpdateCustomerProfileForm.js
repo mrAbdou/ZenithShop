@@ -9,7 +9,9 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 export default function UpdateCustomerProfileForm({ initialData = {} }) {
     const router = useRouter();
-    const { data: user, isLoading } = useUser(initialData.id);
+    const { data: user, isLoading } = useUser(initialData?.id);
+    console.log('user', user);
+    console.log('initial data', initialData);
     useEffect(() => {
         if (user) {
             reset(user);

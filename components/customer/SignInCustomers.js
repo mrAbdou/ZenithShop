@@ -9,7 +9,8 @@ import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
 export default function SignInCustomers({ redirectTo }) {
-    const { cart } = useContext(CartContext);
+    const { getCart } = useContext(CartContext);
+    const cart = getCart();
     const router = useRouter();
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {

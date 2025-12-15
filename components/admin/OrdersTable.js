@@ -1,10 +1,9 @@
 'use client';
-import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
-import { useDeleteOrder, useOrders } from "@/hooks/orders";
-import { OrderStatus } from "@prisma/client";
+import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
+import { useDeleteOrder, useOrders, useOrdersCount } from "@/hooks/orders";
 import { useRouter } from "next/navigation";
-import { useContext } from "react";
 import toast from "react-hot-toast";
+import { OrderStatus } from "@prisma/client";
 const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
@@ -18,8 +17,9 @@ const formatDate = (dateString) => {
 
 export default function OrdersTable({ initialData }) {
     // If initialData is provided and non-empty, use it directly (no client fetch needed)
+    const { data: ordersCount } = useOrdersCount();
     const router = useRouter();
-    const { getFilters, setFilters } = useContext(OrdersFiltersContext);
+    const { getFilters, updateFilters } = useOrderFiltersContext();
     const filters = getFilters();
     const { data: orders, isLoading, error } = useOrders(initialData, filters);
     const { mutateAsync: deleteOrderAsync } = useDeleteOrder();
@@ -66,7 +66,7 @@ export default function OrdersTable({ initialData }) {
             newSortBy = field;
             newSortDirection = 'desc';
         }
-        setFilters({
+        updateFilters({
             ...filters,
             sortBy: newSortBy,
             sortDirection: newSortDirection
@@ -189,6 +189,49 @@ export default function OrdersTable({ initialData }) {
                     </tbody>
                 </table>
             </div>
+            {/* Pagination Partition */}
+            <section className="mt-6 flex justify-between items-center">
+                <div className="text-sm text-gray-700">
+                    Showing 1 to {orders.length} of {orders.length} orders
+                </div>
+                <div className="flex space-x-2">
+                    <select
+                        onChange={(e) => updateFilters({ ...filters, limit: parseInt(e.target.value.trim()) })}
+                        value={filters.limit}
+                        className="block w-auto px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    >
+                        <option value="1">1</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                    <button
+                        className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
+                        disabled={filters.currentPage === 1}
+                        onClick={() => updateFilters({ ...filters, currentPage: filters.currentPage - 1 })}
+                    >
+                        Previous
+                    </button>
+                    {Array.from({ length: filters.totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                            key={page}
+                            className={`px-3 py-1 ${page === filters.currentPage ? 'bg-blue-500 text-white rounded-md text-sm' : 'border border-gray-300'} rounded-md text-sm`}
+                            onClick={() => updateFilters({ ...filters, currentPage: page })}
+                        >
+                            {page}
+                        </button>
+                    ))}
+                    {/* TODO: needs more work on the logic */}
+                    <button
+                        className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === filters.totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
+                        disabled={filters.currentPage === filters.totalPages}
+                        onClick={(e) => updateFilters({ ...filters, currentPage: filters.currentPage + 1 })}
+                    >
+                        Next
+                    </button>
+                </div>
+            </section>
         </div>
     );
 }

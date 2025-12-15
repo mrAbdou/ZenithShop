@@ -61,14 +61,14 @@ const resolvers = {
             console.log('args from the resolver orders : ', args);
             //TODO: you need to find a way to pass the filters to the resolver, because GQL GET_ORDERS doesn't support variables
             if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new Error("Unauthorized");
-            const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = args;
+            const { searchQuery, status, startDate, endDate, sortBy, sortDirection, currentPage, limit, totalPages } = args;
             console.log('filters from the resolver orders : ', { searchQuery, status, startDate, endDate, sortBy, sortDirection });
-
-            let where = {
-                status: { equals: status }
-            };
+            let where = {};
             let orderBy = {};
 
+            if (status) {
+                where.status = { equals: status }
+            }
 
             if (searchQuery) {
                 where.OR = [
@@ -101,7 +101,9 @@ const resolvers = {
             return await context.prisma.order.findMany({
                 include: { user: true, items: true },
                 where,
-                orderBy
+                orderBy,
+                skip: (currentPage - 1) * limit,
+                take: limit,
             });
         },
         order: async (parent, args, context) => {

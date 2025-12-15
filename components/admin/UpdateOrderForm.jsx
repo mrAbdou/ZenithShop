@@ -5,10 +5,11 @@ import { updateOrderSchema } from "@/lib/zodSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "../UX";
 import FormSelect from "../UX/FormSelect";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus } from "@/lib/constants";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 export default function UpdateOrderForm({ id }) {
     const router = useRouter();
     const { data: order } = useOrder(id);
@@ -19,6 +20,11 @@ export default function UpdateOrderForm({ id }) {
         resolver: zodResolver(updateOrderSchema),
         mode: "onChange",
     });
+    useEffect(() => {
+        form.reset({
+            status: order?.status,
+        });
+    }, [order]);
     const { mutateAsync: updateOrderAsync } = useUpdateOrder(id);
     const onSubmit = async (data) => {
         await updateOrderAsync(data, {

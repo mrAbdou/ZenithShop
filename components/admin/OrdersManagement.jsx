@@ -1,12 +1,12 @@
 'use client';
 import OrdersFilters from "@/components/admin/OrdersFilters";
-import OrdersTable from "@/components/OrdersTable";
-import OrdersFiltersProvider from "@/context/OrdersFiltersContext";
+import OrdersTable from "@/components/admin/OrdersTable";
+import OrderFiltersProvider from "@/context/OrdersFiltersContext";
 export default function OrdersManagement({ orders }) {
     return (
-        <OrdersFiltersProvider>
+        <OrderFiltersProvider>
             <OrdersFilters />
             <OrdersTable initialData={orders} />
-        </OrdersFiltersProvider>
+        </OrderFiltersProvider>
     );
 }

@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, updateOrder } from "@/services/orders.client";
 import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema } from "@/lib/zodSchemas";
-export function useOrders(initialData = [], filters) {
+import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
+export function useOrders(initialData = [], filters = {}) {
     console.log('filters from the custom hook useOrders : ', filters);
 
     return useQuery({
@@ -67,6 +68,10 @@ export function useOrdersCount() {
     return useQuery({
         queryKey: ['ordersCount'],
         queryFn: fetchOrdersCount,
+        onSuccess: (data) => {
+            const { setTotalPages } = useOrderFiltersContext();
+            setTotalPages(data);
+        }
     })
 }
 export function useActiveOrdersCount(initialData) {
@@ -88,9 +93,9 @@ export function useUpdateOrder(id) {
             return updateOrder(id, validation.data);
         },
         onSuccess: (data) => {
-            queryClient.setQueryData({
-                queryKey: ['orders'],
-                updater: (oldData) => {
+
+            queryClient.setQueryData(['orders'], (oldData) => {
+                if (Array.isArray(oldData)) {
                     return oldData.map((order) => {
                         if (order.id === id) {
                             return data;
@@ -98,14 +103,18 @@ export function useUpdateOrder(id) {
                         return order;
                     });
                 }
+                return oldData;
             });
             queryClient.setQueryData(['myOrders'], (oldData) => {
-                return oldData.map((order) => {
-                    if (order.id === id) {
-                        return data;
-                    }
-                    return order;
-                });
+                if (Array.isArray(oldData)) {
+                    return oldData.map((order) => {
+                        if (order.id === id) {
+                            return data;
+                        }
+                        return order;
+                    });
+                }
+                return oldData;
             });
             queryClient.setQueryData(['order', id], data);
             queryClient.invalidateQueries(['orders', 'order', 'myOrders', 'ordersCount', 'activeOrdersCount']);
@@ -118,17 +127,30 @@ export function useDeleteOrder() {
     return useMutation({
         mutationFn: (id) => deleteOrder(id),
         onSuccess: (data) => {
+            console.log('data from the deleteOrder mutation : ', data);
             queryClient.setQueryData(['orders'], (oldData) => {
-                return oldData.filter((order) => order.id !== data.id);
+                if (Array.isArray(oldData)) {
+                    return oldData.filter((order) => order.id !== data.id);
+                }
+                return oldData;
             });
             queryClient.setQueryData(['myOrders'], (oldData) => {
-                return oldData.filter((order) => order.id !== data.id);
+                if (Array.isArray(oldData)) {
+                    return oldData.filter((order) => order.id !== data.id);
+                }
+                return oldData;
             });
             queryClient.setQueryData(['ordersCount'], (oldData) => {
-                return oldData - 1;
+                if (typeof oldData === 'number') {
+                    return oldData - 1;
+                }
+                return oldData;
             });
             queryClient.setQueryData(['activeOrdersCount'], (oldData) => {
-                return oldData - 1;
+                if (typeof oldData === 'number') {
+                    return oldData - 1;
+                }
+                return oldData;
             });
             queryClient.invalidateQueries(['orders', 'myOrders', 'ordersCount', 'activeOrdersCount']);
         }

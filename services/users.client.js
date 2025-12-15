@@ -14,7 +14,7 @@ query GetUsers {
 }
 `;
 export const GET_USER = gql`
-query GetUser($id: ID!) {
+query GetUser($id: String!) {
     user(id: $id) {
         id
         name

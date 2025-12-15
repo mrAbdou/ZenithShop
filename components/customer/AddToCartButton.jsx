@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useContext } from "react";
-import { CartContext } from "@/context/CartContext";
+import { useCartContext } from "@/context/CartContext";
 
 export default function AddToCartButton({ product }) {
-  const { cart, addToCart, removeFromCart } = useContext(CartContext);
+  const { getCart, addToCart, removeFromCart } = useCartContext();
+  const cart = getCart();
   const [isInCart, setIsInCart] = useState(false);
   const [productQte, setProductQte] = useState(0);
 

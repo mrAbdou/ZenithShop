@@ -1,13 +1,14 @@
 'use client';
-import { useState, useEffect, createContext } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
+//creation of the context
 const CartContext = createContext();
 export { CartContext };
 export default function CartProvider({ children }) {
     const [cart, setCart] = useState([]); // this is the only state shared between the children components
     useEffect(() => {
-        const sotedCart = localStorage.getItem('cart');
-        if (sotedCart) {
-            setCart(JSON.parse(sotedCart));
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+            setCart(JSON.parse(storedCart));
         }
     }, []);
     const addToCart = (product) => {
@@ -38,9 +39,15 @@ export default function CartProvider({ children }) {
         setCart([]);
         localStorage.removeItem('cart');
     }
+    const getCart = () => {
+        return cart;
+    }
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
+        <CartContext.Provider value={{ getCart, addToCart, removeFromCart, clearCart }}>
             {children}
         </CartContext.Provider>
     )
+}
+export function useCartContext() {
+    return useContext(CartContext);
 }

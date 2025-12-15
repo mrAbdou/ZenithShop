@@ -11,7 +11,7 @@ import {
 import { safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
 import toast from "react-hot-toast";
 
-export function useUsers(initialData) {
+export function useUsers(initialData = []) {
     return useQuery({
         queryKey: ['users'],
         queryFn: fetchUsers,

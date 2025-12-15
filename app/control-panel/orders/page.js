@@ -72,18 +72,6 @@ export default async function OrdersManagementPage() {
 
             {/* Search and Filter Partition */}
             <OrdersManagement orders={orders} />
-
-            {/* Pagination Partition */}
-            <section className="mt-6 flex justify-between items-center">
-                <div className="text-sm text-gray-700">
-                    Showing 1 to {orders.length} of {orders.length} orders
-                </div>
-                <div className="flex space-x-2">
-                    <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">Previous</button>
-                    <button className="px-3 py-1 bg-blue-500 text-white rounded-md text-sm">1</button>
-                    <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">Next</button>
-                </div>
-            </section>
         </div>
     )
 }

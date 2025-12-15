@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import CustomerCheckoutDashboard from "@/components/CustomerCheckoutDashboard";
+import CustomerCheckoutDashboard from "@/components/customer/CustomerCheckoutDashboard";
 import { Role } from "@prisma/client";
 
 export default async function CheckoutConfirmationPage() {

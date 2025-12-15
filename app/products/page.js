@@ -1,7 +1,13 @@
-import ProductsListing from "@/components/ProductsListing";
-import CartFloatingButton from "@/components/CartFloatingButton";
+//start components import -----------------------------------------
+import ProductsListing from "@/components/customer/ProductsListing";
+import CartFloatingButton from "@/components/customer/CartFloatingButton";
+//end components import -------------------------------------------
+
+//start services import -------------------------------------------
 import { fetchProductsCount } from "@/services/products.client";
 import { fetchProducts } from "@/services/products.client";
+//end services import ---------------------------------------------
+
 export const metadata = {
   title: "Products | ZenithShop",
   description: "Explore our complete collection of premium products at ZenithShop",

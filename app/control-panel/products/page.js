@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import ProductsTable from "@/components/ProductsTable";
+import ProductsTable from "@/components/admin/ProductsTable";
 import { fetchProducts, fetchProductsCount } from "@/services/products.server";
 import { LIMIT } from "@/lib/constants";
 export const metadata = {

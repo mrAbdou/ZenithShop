@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount } from "@/services/orders.client";
-import { CreateOrderSchema, OrderFilterSchema, safeValidate } from "@/lib/zodSchemas";
-import toast from "react-hot-toast";
+import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, updateOrder } from "@/services/orders.client";
+import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema } from "@/lib/zodSchemas";
 export function useOrders(initialData = [], filters) {
     console.log('filters from the custom hook useOrders : ', filters);
 
@@ -75,5 +74,63 @@ export function useActiveOrdersCount(initialData) {
         queryKey: ['activeOrdersCount'],
         queryFn: fetchActiveOrdersCount,
         initialData
+    })
+}
+export function useUpdateOrder(id) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data) => {
+            const validation = safeValidate(updateOrderSchema, data);
+            if (!validation.success) {
+                const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
+                throw new Error(`Validation failed: ${errorMessages}`);
+            }
+            return updateOrder(id, validation.data);
+        },
+        onSuccess: (data) => {
+            queryClient.setQueryData({
+                queryKey: ['orders'],
+                updater: (oldData) => {
+                    return oldData.map((order) => {
+                        if (order.id === id) {
+                            return data;
+                        }
+                        return order;
+                    });
+                }
+            });
+            queryClient.setQueryData(['myOrders'], (oldData) => {
+                return oldData.map((order) => {
+                    if (order.id === id) {
+                        return data;
+                    }
+                    return order;
+                });
+            });
+            queryClient.setQueryData(['order', id], data);
+            queryClient.invalidateQueries(['orders', 'order', 'myOrders', 'ordersCount', 'activeOrdersCount']);
+        }
+
+    });
+}
+export function useDeleteOrder() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id) => deleteOrder(id),
+        onSuccess: (data) => {
+            queryClient.setQueryData(['orders'], (oldData) => {
+                return oldData.filter((order) => order.id !== data.id);
+            });
+            queryClient.setQueryData(['myOrders'], (oldData) => {
+                return oldData.filter((order) => order.id !== data.id);
+            });
+            queryClient.setQueryData(['ordersCount'], (oldData) => {
+                return oldData - 1;
+            });
+            queryClient.setQueryData(['activeOrdersCount'], (oldData) => {
+                return oldData - 1;
+            });
+            queryClient.invalidateQueries(['orders', 'myOrders', 'ordersCount', 'activeOrdersCount']);
+        }
     })
 }

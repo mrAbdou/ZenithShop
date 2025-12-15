@@ -1,7 +1,7 @@
 'use client';
-import OrdersFiltersProvider from "@/context/OrdersFiltersContext";
-import OrdersFilters from "@/components/OrdersFilters";
+import OrdersFilters from "@/components/admin/OrdersFilters";
 import OrdersTable from "@/components/OrdersTable";
+import OrdersFiltersProvider from "@/context/OrdersFiltersContext";
 export default function OrdersManagement({ orders }) {
     return (
         <OrdersFiltersProvider>

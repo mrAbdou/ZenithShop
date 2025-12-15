@@ -1,9 +1,23 @@
-import OrdersManagement from "@/components/OrdersManagement";
+// start components import ---------------------------------------
+import OrdersManagement from "@/components/admin/OrdersManagement";
+// end components import -----------------------------------------
+
+// start better auth import --------------------------------------
 import { auth } from "@/lib/auth";
-import { fetchOrders } from "@/services/orders.server"
+// end better auth import ----------------------------------------
+
+// start services import -----------------------------------------
+import { fetchOrders, fetchOrdersCount } from "@/services/orders.server"
+// end services import -------------------------------------------
+
+// start prisma import -------------------------------------------
 import { Role } from "@prisma/client";
+// end prisma import ---------------------------------------------
+
+// start next import ---------------------------------------------
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+// end next import -----------------------------------------------
 
 export const metadata = {
     title: "Orders Management",
@@ -13,16 +27,17 @@ export default async function OrdersManagementPage() {
     const h = await headers();
     const cookieHeader = h.get("cookie");
     const session = await auth.api.getSession({
-        // headers: { cookie: cookieHeader ?? "" }
         headers: h
     });
     if (!session || session.user.role !== Role.ADMIN) {
         return redirect("/");
     }
     let orders = [];
+    let ordersCount = 0;
     try {
         // filters has a default value in fetchOrders so there is no need to pass it
         orders = await fetchOrders(cookieHeader);
+        ordersCount = await fetchOrdersCount(cookieHeader);
     } catch (error) {
         console.log('Error', error.message);
     }
@@ -46,7 +61,7 @@ export default async function OrdersManagementPage() {
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
-                                    <p className="text-3xl font-bold text-white mb-1">{orders.length}</p>
+                                    <p className="text-3xl font-bold text-white mb-1">{ordersCount}</p>
                                     <p className="text-blue-100 text-sm">Total Orders</p>
                                 </div>
                             </div>

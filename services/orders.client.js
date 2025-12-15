@@ -1,5 +1,5 @@
 import { graphqlRequest } from '@/lib/graphql-client';
-import { CreateOrderSchema, OrderFilterSchema, safeValidate } from '@/lib/zodSchemas';
+import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema } from '@/lib/zodSchemas';
 import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
@@ -58,6 +58,20 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
+export const UPDATE_ORDER = gql`
+mutation UpdateOrder($id: String!, $status: OrderStatus!) {
+    updateOrder(id: $id, status: $status) {
+        id
+        status
+    }
+}`;
+export const DELETE_ORDER = gql`
+mutation DeleteOrder($id: String!) {
+    deleteOrder(id: $id) {
+        id
+        status
+    }
+}`;
 export async function fetchOrders(filters) {
     console.log('filters from the service fetchOrders : ', filters);
     try {
@@ -105,6 +119,25 @@ export async function addOrder(new_order) {
     try {
         const data = await graphqlRequest(ADD_ORDER, validation.data);
         return data?.addOrder ?? null;
+    } catch (error) {
+        throw error;
+    }
+}
+export async function updateOrder(id, updatedOrder) {
+    try {
+        const data = await graphqlRequest(UPDATE_ORDER, { id, ...updatedOrder });
+        return data?.updateOrder ?? null;
+    } catch (error) {
+        throw error
+    }
+}
+export async function deleteOrder(id) {
+    try {
+        if (!id || typeof id !== 'string') {
+            throw new Error('Order ID is not valid');
+        }
+        const data = await graphqlRequest(DELETE_ORDER, { id });
+        return data?.deleteOrder ?? null;
     } catch (error) {
         throw error;
     }

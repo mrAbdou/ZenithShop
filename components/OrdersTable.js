@@ -1,9 +1,10 @@
 'use client';
 import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
-import { useOrders } from "@/hooks/orders";
+import { useDeleteOrder, useOrders } from "@/hooks/orders";
 import { OrderStatus } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
+import toast from "react-hot-toast";
 const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
@@ -18,12 +19,10 @@ const formatDate = (dateString) => {
 export default function OrdersTable({ initialData }) {
     // If initialData is provided and non-empty, use it directly (no client fetch needed)
     const router = useRouter();
-    const { filters, setFilters } = useContext(OrdersFiltersContext);
-    console.log('filters from the OrdersTable : ', filters);
-    const { searchQuery, status, startDate, endDate, sortBy, sortDirection } = filters;
-    console.log('filters from the OrdersTable : ', searchQuery, status, startDate, endDate, sortBy, sortDirection);
+    const { getFilters, setFilters } = useContext(OrdersFiltersContext);
+    const filters = getFilters();
     const { data: orders, isLoading, error } = useOrders(initialData, filters);
-    // Only show loading/error for client fetches when no server data
+    const { mutateAsync: deleteOrderAsync } = useDeleteOrder();
     const headersMapping = {
         'Order ID': 'id',
         'Customer': 'user.name',
@@ -32,7 +31,6 @@ export default function OrdersTable({ initialData }) {
         'Total': 'total',
         'Items': 'items',
     }
-
     const reverseHeadersMapping = {
         'id': 'Order ID',
         'user.name': 'Customer',
@@ -40,7 +38,6 @@ export default function OrdersTable({ initialData }) {
         'status': 'Status',
         'total': 'Total',
     }
-
     // meanings of counter values : 
     // 0 : no sorting
     // 1 : descending
@@ -75,6 +72,20 @@ export default function OrdersTable({ initialData }) {
             sortDirection: newSortDirection
         });
     }
+
+    const onDeleteOrder = async (id) => {
+        if (window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+            deleteOrderAsync(id, {
+                onSuccess: () => {
+                    toast.success('Order deleted successfully');
+                },
+                onError: (error) => {
+                    toast.error(`Failed to delete order: ${error.message}`);
+                }
+            });
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="bg-white shadow rounded-lg p-6">
@@ -96,8 +107,6 @@ export default function OrdersTable({ initialData }) {
             </div>
         );
     }
-
-    // Display orders (either from server initialData or client fetch)
     return (
         <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Order History</h2>
@@ -163,7 +172,7 @@ export default function OrdersTable({ initialData }) {
                                         <button onClick={() => router.push(`/control-panel/orders/${order.id}/update`)} className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
                                             Update
                                         </button>
-                                        <button className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+                                        <button onClick={() => onDeleteOrder(order.id)} className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
                                             Delete
                                         </button>
                                     </div>

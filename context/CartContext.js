@@ -2,7 +2,7 @@
 import { useState, useEffect, createContext } from 'react';
 const CartContext = createContext();
 export { CartContext };
-export default function ContextProvider({ children }) {
+export default function CartProvider({ children }) {
     const [cart, setCart] = useState([]); // this is the only state shared between the children components
     useEffect(() => {
         const sotedCart = localStorage.getItem('cart');

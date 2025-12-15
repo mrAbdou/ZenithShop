@@ -93,6 +93,9 @@ type Mutation {
 
     # Order & Cart Management ################
     addOrder(items: [OrderItemInput!]!, total: Decimal!): Order!
+    updateOrder(id: String!, status: OrderStatus!): Order!
+    deleteOrder(id: String!): Order!
+
     }
 
 #################################################
@@ -145,6 +148,10 @@ input CartItemInput {
     qteInStock: Int  # optional stock info (was incomplete)
 }
 
+input OrderInput {
+    status: OrderStatus!
+}
+
 #################################################
 #                     Query                     #
 #################################################
@@ -153,13 +160,15 @@ type Query {
     user(id: String): User
     customersCount: Int!
     usersCount: Int!
+    
     orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String): [Order!]!
     myOrders: [Order!]!
-    order(id: String): Order
+    order(id: String!): Order
     activeOrdersCount: Int!
-    
+    ordersCount: Int!
+
     products(limit: Int!, offset: Int!): [Product!]!
-    product(id: String): Product
+    product(id: String!): Product
     productsCount: Int!
     availableProductsCount: Int!
     productsInCart(cart: [String!]!): [Product!]!

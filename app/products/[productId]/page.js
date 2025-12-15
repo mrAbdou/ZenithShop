@@ -1,7 +1,15 @@
+//start next import -----------------------------------------------
 import Link from "next/link";
-import AddToCartButton from "@/components/AddToCartButton";
-import { fetchProduct } from "@/services/products.client";
 import { notFound } from "next/navigation";
+//end next import -------------------------------------------------
+
+//start components import -----------------------------------------
+import AddToCartButton from "@/components/customer/AddToCartButton";
+//end components import -------------------------------------------
+
+//start services import -------------------------------------------
+import { fetchProduct } from "@/services/products.client";
+//end services import ---------------------------------------------
 
 export async function generateMetadata({ params }) {
   const { productId } = await params;

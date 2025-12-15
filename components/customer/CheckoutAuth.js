@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
-import SignInCustomers from "@/components/SignInCustomers";
-import SignUpCustomers from "@/components/SignUpCustomers";
+import SignInCustomers from "@/components/customer/SignInCustomers";
+import SignUpCustomers from "@/components/customer/SignUpCustomers";
 import { redirect } from "next/navigation";
 
 export default function CheckoutAuth({ redirectTo }) {

@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import AddProductForm from "@/components/AddProductForm";
+import AddProductForm from "@/components/admin/AddProductForm";
 
 export const metadata = {
     title: "Add Product | ZenithShop Admin",

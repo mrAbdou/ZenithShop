@@ -1,5 +1,5 @@
-import CartFloatingButton from "@/components/CartFloatingButton";
-import ProductsListing from "@/components/ProductsListing";
+import CartFloatingButton from "@/components/customer/CartFloatingButton";
+import ProductsListing from "@/components/customer/ProductsListing";
 import { fetchProducts } from "@/services/products.server";
 import { LIMIT } from "@/lib/constants";
 import { headers } from "next/headers";

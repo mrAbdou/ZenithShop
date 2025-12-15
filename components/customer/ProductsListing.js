@@ -1,6 +1,6 @@
 'use client';
 import { LIMIT } from "@/lib/constants";
-import Product from "./Product";
+import Product from "../Product";
 import { useProducts } from "@/hooks/products";
 export default function ProductsListing({ initialData = [] }) {
     const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useProducts(LIMIT, 0, initialData);

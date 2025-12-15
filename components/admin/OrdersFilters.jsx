@@ -2,8 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
-import { Form, FormInput } from "./UX";
-import FormSelect from "./UX/FormSelect";
+import { Form, FormInput } from "../UX";
+import FormSelect from "../UX/FormSelect";
 import { OrdersFiltersContext } from "@/context/OrdersFiltersContext";
 import { useContext } from "react";
 import { OrderStatus } from "@prisma/client";

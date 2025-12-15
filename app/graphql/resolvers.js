@@ -1,4 +1,4 @@
-import { CreateOrderSchema, safeValidate } from "@/lib/zodSchemas";
+import { CreateOrderSchema, safeValidate, updateOrderSchema } from "@/lib/zodSchemas";
 import { OrderStatus, Role } from "@prisma/client";
 
 const resolvers = {
@@ -123,6 +123,11 @@ const resolvers = {
 
             return order;
         },
+        ordersCount: async (parent, args, context) => {
+            if (!context.session || context.session.user.role !== Role.ADMIN) throw new Error("Unauthorized");
+            return await context.prisma.order.count();
+        },
+
         products: async (parent, args, context) => {
             const { limit, offset } = args;
             if (limit === undefined || limit === null || typeof limit !== 'number' || limit < 1 || limit > 100 || limit % 1 !== 0) {
@@ -333,6 +338,23 @@ const resolvers = {
             return await context.prisma.product.delete({ where: { id: productId } });
 
         },
+        updateOrder: async (parent, args, context) => {
+            if (!context.session || context.session.user.role !== Role.ADMIN) throw new Error("Unauthorized");
+            const { id, status } = args;
+            if (id && typeof id !== 'string') throw new Error("Invalid order id");
+            const validation = safeValidate(updateOrderSchema, { status });
+            if (!validation.success) {
+                const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
+                throw new Error(`Validation failed: ${errorMessages}`);
+            }
+            return await context.prisma.order.update({ where: { id }, data: { status: validation.data.status } });
+        },
+        deleteOrder: async (parent, args, context) => {
+            if (!context.session || context.session.user.role !== Role.ADMIN) throw new Error("Unauthorized");
+            const { id } = args;
+            if (id && typeof id !== 'string') throw new Error("Invalid order id");
+            return await context.prisma.order.delete({ where: { id } });
+        }
     },
 }
 

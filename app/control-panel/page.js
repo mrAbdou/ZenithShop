@@ -1,4 +1,4 @@
-import ControlPanelForm from "@/components/ControlPanelForm";
+import ControlPanelForm from "@/components/admin/ControlPanelForm";
 export const metadata = {
     title: "Admin Control Panel | ZenithShop",
     description: "Secure admin access for ZenithShop management. Login to manage products, orders, and content on the e-commerce platform.",

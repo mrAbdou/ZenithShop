@@ -21,12 +21,8 @@ export default function RQProvider({ children }) {
                 }
             },
             mutations: {
-                onError: (error) => {
-                    if (error.message.includes("Unauthorized")) {
-                        toast.error("You are not authorized to perform this action, please sign in / sign up first !");
-                        setTimeout(() => router.push("/auth"), 2000);
-                    }
-                }
+                // Mutations handle their own errors in onError callbacks
+                // Global redirect on Unauthorized removed to prevent conflicts
             }
         },
     }));

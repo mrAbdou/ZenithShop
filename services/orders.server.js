@@ -1,8 +1,7 @@
 import { graphqlServerRequest } from '@/lib/graphql-server';
-import { CreateOrderSchema, OrderFilterSchema, safeValidate } from '@/lib/zodSchemas';
+import { OrderFilterSchema, safeValidate } from '@/lib/zodSchemas';
 import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
-import toast from 'react-hot-toast';
 export const GET_ORDERS = gql`
 query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String) {
     orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection) {
@@ -42,15 +41,16 @@ query GetOrder($id: String!) {
         }
     }
 }`;
-export const ADD_ORDER = gql`
-mutation AddOrder($items: [OrderItemInput!]!, $total: Decimal!){
-    addOrder(items: $items, total: $total){
-        id
-        status
-        createdAt
-        updatedAt
-    }
-}`;
+// i don't think that server can do the add of an order even if it's possible i don't want to do it
+// export const ADD_ORDER = gql`
+// mutation AddOrder($items: [OrderItemInput!]!, $total: Decimal!){
+//     addOrder(items: $items, total: $total){
+//         id
+//         status
+//         createdAt
+//         updatedAt
+//     }
+// }`;
 export const GET_ORDERS_COUNT = gql`
 query GetOrdersCount {
     ordersCount
@@ -95,16 +95,17 @@ export async function fetchActiveOrdersCount(cookieHeader = '') {
         throw error;
     }
 }
-export async function addOrder(new_order, cookieHeader = '') {
-    console.log('new order from the service addOrder : ', new_order);
-    const validation = safeValidate(CreateOrderSchema, new_order);
-    if (!validation.success) {
-        throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
-    }
-    try {
-        const data = await graphqlServerRequest(ADD_ORDER, validation.data, cookieHeader);
-        return data?.addOrder ?? null;
-    } catch (error) {
-        throw error;
-    }
-}
+
+// export async function addOrder(new_order, cookieHeader = '') {
+//     console.log('new order from the service addOrder : ', new_order);
+//     const validation = safeValidate(CreateOrderSchema, new_order);
+//     if (!validation.success) {
+//         throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
+//     }
+//     try {
+//         const data = await graphqlServerRequest(ADD_ORDER, validation.data, cookieHeader);
+//         return data?.addOrder ?? null;
+//     } catch (error) {
+//         throw error;
+//     }
+// }

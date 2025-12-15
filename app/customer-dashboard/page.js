@@ -1,12 +1,24 @@
+//start better auth import --------------------------------------
 import { auth } from "@/lib/auth";
+//end better auth import ------------------------------------------
+
+//start next import -----------------------------------------------
 import { headers } from "next/headers";
+//end next import -------------------------------------------------
+
+//start components import -----------------------------------------
 import LogoutButton from "@/components/LogoutButton";
+import UpdateCustomerProfileForm from "@/components/customer/UpdateCustomerProfileForm";
+//end components import -------------------------------------------
+
+//start services import -------------------------------------------
 import { redirect } from "next/navigation";
 import { fetchMyOrders } from "@/services/users.server";
-import OrdersTable from "@/components/OrdersTable";
-import UpdateCustomerProfileForm from "@/components/UpdateCustomerProfileForm";
-import { Role } from "@prisma/client";
+//end services import ---------------------------------------------
 
+//start prisma import ---------------------------------------------
+import { Role } from "@prisma/client";
+//end prisma import -----------------------------------------------
 
 export default async function CustomerDashboard() {
     const h = await headers(); // this gives me the headers that I'm going to need in service function to run
@@ -15,8 +27,8 @@ export default async function CustomerDashboard() {
     const session = await auth.api.getSession({
         headers: h,
     });
-    if (session?.user?.role !== Role.CUSTOMER) {
-        // if not redirect to check out, that is going to ask him to sign in or sign up
+    if (!session || session?.user?.role !== Role.CUSTOMER) {
+        // if not authenticated or not a customer, redirect to auth
         const redirectUrl = encodeURIComponent('/customer-dashboard');
         redirect(`/auth?redirectTo=${redirectUrl}`);
     }
@@ -60,7 +72,7 @@ export default async function CustomerDashboard() {
 
                     {/* Orders and Profile Section */}
                     <div className="lg:col-span-2 space-y-8">
-                        <OrdersTable initialData={orders} />
+                        {/* <OrdersTable initialData={orders} /> */}
 
                         {/* Profile Section */}
                         <UpdateCustomerProfileForm initialData={session?.user} />

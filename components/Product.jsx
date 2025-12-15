@@ -1,6 +1,6 @@
 'use client';
 import Link from "next/link";
-import AddToCartButton from "./AddToCartButton";
+import AddToCartButton from "./customer/AddToCartButton";
 
 export default function Product({ product }) {
     return (

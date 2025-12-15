@@ -1,13 +1,27 @@
-import { auth } from "@/lib/auth";
-import DateTimeLive from "@/components/DateTimeLive";
+// start components import-----------------------------------------
+import DateTimeLive from "@/components/customer/DateTimeLive";
 import LogoutButton from "@/components/LogoutButton";
+import DashboardMetrics from "@/components/admin/DashboardMetrics";
+// end components import-----------------------------------------
+
+// better auth import --------------------------------------------
+import { auth } from "@/lib/auth";
+// end better auth import ------------------------------------------
+
+// start prisma import -------------------------------------------
 import { Role } from "@prisma/client";
+// end prisma import ---------------------------------------------
+
+// start next import ---------------------------------------------
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import DashboardMetrics from "@/components/DashboardMetrics";
+// end next import -----------------------------------------------
+
+// start services import -----------------------------------------
 import { fetchCustomersCount, fetchUsersCount } from "@/services/users.server";
 import { fetchAvailableProductsCount, fetchProductsCount } from "@/services/products.server";
 import { fetchActiveOrdersCount } from "@/services/orders.server";
+// end services import -------------------------------------------
 export const metadata = {
     title: "Admin Dashboard | ZenithShop",
     description: "Admin dashboard for ZenithShop management. Monitor business metrics, products, orders, and customer data in real-time.",

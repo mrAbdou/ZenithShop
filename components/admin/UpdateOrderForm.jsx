@@ -1,14 +1,16 @@
 'use client';
 
-import { useOrder } from "@/hooks/orders";
+import { useOrder, useUpdateOrder } from "@/hooks/orders";
 import { updateOrderSchema } from "@/lib/zodSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "./UX";
-import FormSelect from "./UX/FormSelect";
+import { Form } from "../UX";
+import FormSelect from "../UX/FormSelect";
 import { OrderStatus } from "@prisma/client";
 import { useForm } from "react-hook-form";
-
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 export default function UpdateOrderForm({ id }) {
+    const router = useRouter();
     const { data: order } = useOrder(id);
     const form = useForm({
         defaultValues: {
@@ -17,10 +19,18 @@ export default function UpdateOrderForm({ id }) {
         resolver: zodResolver(updateOrderSchema),
         mode: "onChange",
     });
-
+    const { mutateAsync: updateOrderAsync } = useUpdateOrder(id);
     const onSubmit = async (data) => {
-        //TODO: implement the logic that will update the order status 
-        console.log(data);
+        await updateOrderAsync(data, {
+            onSuccess: (data) => {
+                form.reset();
+                toast.success("Order updated successfully");
+                router.push('/control-panel/orders');
+            },
+            onError: (error) => {
+                toast.error(error.message ?? 'Failed to update order');
+            }
+        });
     };
     const orderStatusOptions = [
         { value: OrderStatus.PENDING, label: "Pending" },

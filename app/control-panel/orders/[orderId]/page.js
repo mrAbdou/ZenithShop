@@ -1,9 +1,20 @@
+//start better auth import--------------------------------------
 import { auth } from "@/lib/auth";
+//end better auth import----------------------------------------
+
+//start services import-----------------------------------------
 import { fetchOrder } from "@/services/orders.server";
+//end services import-------------------------------------------
+
+//start prisma import-------------------------------------------
 import { Role, OrderStatus } from "@prisma/client";
+//end prisma import---------------------------------------------
+
+//start next import---------------------------------------------
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+//end next import-------------------------------------------------
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -23,7 +34,7 @@ export default async function OrderView({ params }) {
     const session = await auth.api.getSession({
         headers: { cookie: cookieHeader ?? "" }
     });
-    if (!session || session.user.role !== Role.ADMIN) {
+    if (!session || session?.user?.role !== Role.ADMIN) {
         return redirect("/");
     }
     const order = await fetchOrder(orderId, cookieHeader);

@@ -72,6 +72,10 @@ mutation DeleteOrder($id: String!) {
         status
     }
 }`;
+export const FILTERED_ORDERS_COUNT = gql`
+query FilteredOrdersCount($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime){
+    filteredOrdersCount(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate)
+}`;
 export async function fetchOrders(filters) {
     console.log('filters from the service fetchOrders : ', filters);
     try {
@@ -138,6 +142,15 @@ export async function deleteOrder(id) {
         }
         const data = await graphqlRequest(DELETE_ORDER, { id });
         return data?.deleteOrder ?? null;
+    } catch (error) {
+        throw error;
+    }
+}
+export async function filteredOrdersCount(filters) {
+    console.log('filters from the service filteredOrdersCount : ', filters);
+    try {
+        const data = await graphqlRequest(FILTERED_ORDERS_COUNT, filters);
+        return data?.filteredOrdersCount ?? 0;
     } catch (error) {
         throw error;
     }

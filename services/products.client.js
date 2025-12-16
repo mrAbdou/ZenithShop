@@ -3,8 +3,8 @@ import { LIMIT } from '@/lib/constants';
 import { gql } from 'graphql-request';
 import { AddProductSchema, safeValidate } from '@/lib/zodSchemas';
 export const GET_PRODUCTS = gql`
-query GetProducts($limit: Int!, $offset: Int!) {
-    products(limit: $limit, offset: $offset) {
+query GetProducts($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+    products(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name
         description
@@ -50,9 +50,13 @@ mutation addProduct($newProduct: ProductInput!){
         qteInStock
     }
 }`;
-export async function fetchProducts(limit = LIMIT, offset = 0) {
+export const FILTERED_PRODUCTS_COUNT = gql`
+query GetFilteredProductsCount($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String) {
+    filteredProductsCount(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection)
+}`;
+export async function fetchProducts(filters) {
     try {
-        const data = await graphqlRequest(GET_PRODUCTS, { limit, offset });
+        const data = await graphqlRequest(GET_PRODUCTS, filters);
         return data?.products ?? [];
     } catch (error) {
         console.log(error);
@@ -100,6 +104,14 @@ export async function addProduct(newProduct) {
         }
         const data = await graphqlRequest(ADD_PRODUCT, { newProduct: validation.data });
         return data?.addNewProduct ?? null;
+    } catch (error) {
+        throw error;
+    }
+}
+export async function filteredProductsCount(filters) {
+    try {
+        const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, filters);
+        return data?.filteredProductsCount ?? 0;
     } catch (error) {
         throw error;
     }

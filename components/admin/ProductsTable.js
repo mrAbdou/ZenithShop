@@ -1,152 +1,217 @@
 "use client";
-import { useProducts } from "@/hooks/products";
+import { useCountFilteredProducts, useProducts } from "@/hooks/products";
 import { useRouter } from "next/navigation";
-import { LIMIT } from "@/lib/constants.js";
-export default function ProductsTable({ limit = LIMIT, offset = 0, initialData = [] } = {}) {
-    const router = useRouter();
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useProducts(limit, offset, initialData);
-    const products = data?.pages?.flat() || [];
-    const navigateToAddProductPage = () => {
-        router.push("/control-panel/products/add-product");
-    };
-    return (
-        <>
-            {
-                products?.length > 0 && (
-                    <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 mb-8">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div className="flex-1 max-w-md">
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        placeholder="Search products..."
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <button onClick={navigateToAddProductPage} className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-green-700 hover:to-green-800 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                    Add Product
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                {products?.map(product => (
-                    <div key={product.id} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group">
-                        <div className="flex flex-col h-full">
-                            {/* Product Info */}
-                            <div className="flex-1 mb-4">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-200">
-                                    {product.name}
-                                </h3>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-2xl font-bold text-green-600">
-                                        ${product.price}
-                                    </span>
-                                </div>
-                            </div>
+import { useProductContext } from "@/context/ProductContext";
+import { useMemo } from "react";
 
-                            {/* Action Buttons */}
-                            <div className="flex gap-3 pt-4 border-t border-gray-100">
-                                <button className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm">
-                                    Update
-                                </button>
-                                <button className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-2 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-red-700 hover:to-red-800 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hour = date.getHours().toString().padStart(2, '0');
+    const minute = date.getMinutes().toString().padStart(2, '0');
+    const second = date.getSeconds().toString().padStart(2, '0');
+    return `${day}-${month}-${year} ${hour}:${minute}:${second}`;
+};
+
+export default function ProductsTable({ initialData = [] }) {
+    const router = useRouter();
+    const { getFilters, setPaginationCurrentPage, setPaginationLimit } = useProductContext();
+    const filters = getFilters();
+    let products = [];
+    let { data: filteredProductsCount } = useCountFilteredProducts(filters);
+    const totalPages = useMemo(() => Math.ceil(filteredProductsCount / filters.limit), [filteredProductsCount, filters.limit]);
+
+    const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
+        const pages = [];
+
+        // Always show first page
+        if (totalPages >= 1) pages.push(1);
+
+        // Calculate range around current page
+        let start = Math.max(2, currentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages - 1, start + maxVisible - 1);
+
+        // Adjust if near start/end
+        if (end - start + 1 < maxVisible) {
+            start = Math.max(2, end - maxVisible + 1);
+        }
+
+        // Add ellipsis before range if needed
+        if (start > 2) pages.push('...');
+
+        // Add page range
+        for (let i = start; i <= end; i++) {
+            if (i !== 1 && i !== totalPages) pages.push(i);
+        }
+
+        // Add ellipsis after range if needed
+        if (end < totalPages - 1) pages.push('...');
+
+        // Always show last page
+        if (totalPages > 1) pages.push(totalPages);
+
+        return pages.filter((page, index, arr) =>
+            // Remove consecutive ellipsis
+            !(page === '...' && arr[index - 1] === '...')
+        );
+    };
+
+    try {
+        const { data } = useProducts(initialData, filters);
+        products = data;
+    } catch (error) {
+        console.log(error);
+    }
+
+    const onViewProduct = (productId) => {
+        router.push(`/control-panel/products/${productId}`);
+    };
+
+    const onEditProduct = (productId) => {
+        router.push(`/control-panel/products/${productId}/edit`);
+    };
+
+    const onDeleteProduct = async (productId) => {
+        if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+            // Delete logic will be implemented later
+            console.log('Delete product:', productId);
+        }
+    };
+    const onChangeLimit = (e) => {
+        const limit = parseInt(e.target.value.trim());
+        setPaginationLimit(limit);
+    }
+    return (
+        <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Products Management</h2>
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Product ID
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Price
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Stock
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Created
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {products?.map((product) => (
+                            <tr key={product.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {product.id.slice(-8)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {product.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                    ${product.price}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.qteInStock > 10 ? 'bg-green-100 text-green-800' :
+                                        product.qteInStock > 0 ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-red-100 text-red-800'
+                                        }`}>
+                                        {product.qteInStock > 10 ? 'In Stock' :
+                                            product.qteInStock > 0 ? 'Low Stock' : 'Out of Stock'}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {formatDate(product.createdAt)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => onViewProduct(product.id)}
+                                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                                        >
+                                            View
+                                        </button>
+                                        <button
+                                            onClick={() => onEditProduct(product.id)}
+                                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => onDeleteProduct(product.id)}
+                                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {(!products || products.length === 0) && (
+                            <tr>
+                                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                                    No products found
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
-            {products.length > 0 && (
-                <div className="text-center mt-8">
-                    {hasNextPage ? (
-                        <button
-                            onClick={() => fetchNextPage()}
-                            disabled={isFetchingNextPage}
-                            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
-                        >
-                            {isFetchingNextPage ? (
-                                <>
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Loading...
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                    Load More Products
-                                </>
-                            )}
-                        </button>
-                    ) : (
-                        <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100 inline-block">
-                            <p className="text-gray-600 font-medium">All products have been loaded</p>
-                        </div>
-                    )}
+            {/* Pagination Controls */}
+            <section className="mt-6 flex justify-between items-center">
+                <div className="text-sm text-gray-700">
+                    Showing {((filters.currentPage - 1) * filters.limit) + 1} to {Math.min(filters.currentPage * filters.limit, filteredProductsCount || 0)} of {filteredProductsCount || 0} products
                 </div>
-            )}
-            {/* Empty State */}
-            {
-                products?.length === 0 && (
-                    <div className="text-center py-16">
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">No products found</h3>
-                        <p className="text-gray-600 mb-6">Start building your product catalog by adding your first product.</p>
-                        <button onClick={navigateToAddProductPage} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 inline-flex items-center gap-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Add Your First Product
-                        </button>
-                    </div>
-                )
-            }
-            {/* Footer Stats */}
-            {products.length > 0 && (
-                <div className="mt-12 bg-white rounded-2xl p-8 shadow-md border border-gray-100">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div className="text-center">
-                            <p className="text-3xl font-bold text-indigo-600 mb-2">{products.length}</p>
-                            <p className="text-gray-600 text-sm">Total Products</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-3xl font-bold text-green-600 mb-2">${products.reduce((sum, p) => sum + p.price, 0).toFixed(2)}</p>
-                            <p className="text-gray-600 text-sm">Total Value</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-3xl font-bold text-blue-600 mb-2">${(products.reduce((sum, p) => sum + p.price, 0) / products.length).toFixed(2)}</p>
-                            <p className="text-gray-600 text-sm">Average Price</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <p className="text-gray-600 text-sm">System Ready</p>
-                        </div>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <select onChange={onChangeLimit} className="block w-auto px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                    </select>
+                    <button
+                        className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
+                        disabled={filters.currentPage === 1}
+                        onClick={() => setPaginationCurrentPage(filters.currentPage - 1)}
+                    >
+                        Previous
+                    </button>
+                    {getVisiblePages(filters.currentPage, totalPages, 7).map((page, index) => (
+                        page === '...' ? (
+                            <span key={`ellipsis-${index}`} className="px-2 text-gray-500">...</span>
+                        ) : (
+                            <button
+                                key={page}
+                                className={`px-3 py-1 rounded-md text-sm ${page === filters.currentPage
+                                    ? 'bg-blue-500 text-white'
+                                    : 'border border-gray-300 hover:bg-gray-100'
+                                    }`}
+                                onClick={() => setPaginationCurrentPage(page)}
+                            >
+                                {page}
+                            </button>
+                        )
+                    ))}
+                    <button
+                        className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
+                        disabled={filters.currentPage === totalPages}
+                        onClick={() => setPaginationCurrentPage(filters.currentPage + 1)}
+                    >
+                        Next
+                    </button>
                 </div>
-            )}
-        </>
+            </section>
+        </div>
     );
 }

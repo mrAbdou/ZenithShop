@@ -9,6 +9,7 @@ import {
     fetchAvailableProductsCount,
     fetchProductsInCart,
     addProduct,
+    filteredProductsCount,
 } from "@/services/products.client";
 import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
 
@@ -16,18 +17,11 @@ import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
  * Hook to fetch a paginated list of products.
  * Accepts optional initialData (array) from SSR.
  */
-export function useProducts(limit, offset, initialData = []) {
-    const hasInitial = Array.isArray(initialData) && initialData.length > 0;
-    const formattedInitial = hasInitial ? { pages: [initialData], pageParams: [0] } : undefined;
-    return useInfiniteQuery({
-        queryKey: ["products", limit, offset],
-        queryFn: ({ pageParam = offset }) => fetchProducts(limit, pageParam),
-        getNextPageParam: (lastPage, allPages) =>
-            lastPage?.length === limit ? allPages.length * limit : undefined,
-        ...(hasInitial && { initialData: formattedInitial }),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        refetchOnMount: false,
-        keepPreviousData: true,
+export function useProducts(initialData = [], filters = { searchQuery: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
+    return useQuery({
+        queryKey: ["products", filters],
+        queryFn: () => fetchProducts(filters),
+        initialData
     });
 }
 
@@ -91,5 +85,12 @@ export function useAddProduct() {
                 queryKey: ["products"]
             });
         },
+    });
+}
+
+export function useCountFilteredProducts(filters) {
+    return useQuery({
+        queryKey: ["countFilteredProducts"],
+        queryFn: () => filteredProductsCount(filters),
     });
 }

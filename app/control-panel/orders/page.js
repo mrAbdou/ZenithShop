@@ -29,6 +29,7 @@ export default async function OrdersManagementPage() {
     const session = await auth.api.getSession({
         headers: h
     });
+    let error = '';
     if (!session || session.user.role !== Role.ADMIN) {
         return redirect("/");
     }
@@ -39,7 +40,7 @@ export default async function OrdersManagementPage() {
         orders = await fetchOrders(cookieHeader);
         ordersCount = await fetchOrdersCount(cookieHeader);
     } catch (error) {
-        console.log('Error', error.message);
+        error = error.message;
     }
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
@@ -69,7 +70,7 @@ export default async function OrdersManagementPage() {
                     </div>
                 </div>
             </div>
-
+            {error && <p className="text-red-500">{error}</p>}
             {/* Search and Filter Partition */}
             <OrdersManagement orders={orders} />
         </div>

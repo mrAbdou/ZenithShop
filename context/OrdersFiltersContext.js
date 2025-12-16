@@ -18,17 +18,16 @@ export default function OrderFiltersProvider({ children }) {
         sortBy: null,
         sortDirection: null,
         //pagination props .....
-        limit: 1,
+        limit: 5,
         currentPage: 1,
-        totalPages: 1,
     });
     const getFilters = () => filters;
-    const updateFilters = (newFilters) => setFilters(newFilters);
-    const setPaginationLimit = (limit) => setFilters({ ...filters, limit, currentPage: 1 });
-    const setTotalPages = (dataCount) => setFilters({ ...filters, totalPages: Math.ceil(dataCount / filters.limit) });
-    const setPaginationCurrentPage = (page) => setFilters({ ...filters, currentPage: page });
+    const updateFilters = (newFilters) => setFilters(prev => ({ ...prev, searchQuery: newFilters.searchQuery, status: newFilters.status, startDate: newFilters.startDate, endDate: newFilters.endDate }));
+    const updateSortingProps = (newSortingProps) => setFilters(prev => ({ ...prev, sortBy: newSortingProps.sortBy, sortDirection: newSortingProps.sortDirection }));
+    const setPaginationLimit = (limit) => setFilters(prev => ({ ...prev, limit, currentPage: 1 }));
+    const setPaginationCurrentPage = (page) => setFilters(prev => ({ ...prev, currentPage: page }));
     return (
-        <OrderFiltersContext.Provider value={{ getFilters, updateFilters, setPaginationLimit, setTotalPages, setPaginationCurrentPage }}>
+        <OrderFiltersContext.Provider value={{ getFilters, updateFilters, updateSortingProps, setPaginationLimit, setPaginationCurrentPage }}>
             {children}
         </OrderFiltersContext.Provider>
     );

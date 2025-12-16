@@ -59,7 +59,7 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
-export async function fetchOrders(cookieHeader = '', filters = { searchQuery: '', status: OrderStatus.PENDING, startDate: null, endDate: null, sortBy: null, sortDirection: null }) {
+export async function fetchOrders(cookieHeader = '', filters = { searchQuery: '', status: OrderStatus.PENDING, startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 1, currentPage: 1 }) {
     try {
         const validation = safeValidate(OrderFilterSchema, filters)
         if (!validation.success) {

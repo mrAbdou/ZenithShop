@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import ProductsTable from "@/components/admin/ProductsTable";
 import { fetchProducts, fetchProductsCount } from "@/services/products.server";
 import { LIMIT } from "@/lib/constants";
+import ProductsManagement from "@/components/admin/ProductsManagement";
 export const metadata = {
     title: "Products Management | ZenithShop Admin",
     description: "Admin interface for managing ZenithShop product catalog. Add, edit, delete, and organize products efficiently with real-time updates and analytics.",
@@ -17,9 +18,9 @@ export default async function ProductsManagementPage() {
     });
 
     if (!session || !(session?.user?.role === Role.ADMIN)) return redirect("/");
-    const products = await fetchProducts(LIMIT, 0, cookieHeader);
+    const products = await fetchProducts(cookieHeader);
+    console.log('server side fetching on products : ', products)
     const totalProducts = await fetchProductsCount(cookieHeader);
-    console.log(products);
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}
@@ -49,7 +50,7 @@ export default async function ProductsManagementPage() {
                 </div>
             </div>
 
-            <ProductsTable initialData={products} />
+            <ProductsManagement products={products} />
 
         </div>
     )

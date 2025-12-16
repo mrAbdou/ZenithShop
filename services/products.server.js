@@ -1,9 +1,8 @@
 import { graphqlServerRequest } from '@/lib/graphql-server';
-import { LIMIT } from '@/lib/constants';
 import { gql } from 'graphql-request';
 export const GET_PRODUCTS = gql`
-query GetProducts($limit: Int!, $offset: Int!) {
-    products(limit: $limit, offset: $offset) {
+query GetProducts($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+    products(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name
         description
@@ -49,10 +48,17 @@ mutation addProduct($newProduct: ProductInput!){
         qteInStock
     }
 }`;
-export async function fetchProducts(limit = LIMIT, offset = 0, cookieHeader = '') {
-    console.log('fetchProducts : ', { limit, offset, cookieHeader });
+export async function fetchProducts(cookieHeader = '', filters = { searchQuery: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
     try {
-        const data = await graphqlServerRequest(GET_PRODUCTS, { limit, offset }, cookieHeader);
+        const data = await graphqlServerRequest(GET_PRODUCTS, {
+            searchQuery: filters.searchQuery,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+            sortBy: filters.sortBy,
+            sortDirection: filters.sortDirection,
+            limit: filters.limit,
+            currentPage: filters.currentPage
+        }, cookieHeader);
         return data?.products ?? [];
     } catch (error) {
         throw error;

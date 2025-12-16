@@ -1,6 +1,7 @@
 'use client';
+import React, { useMemo } from "react";
 import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
-import { useDeleteOrder, useOrders, useOrdersCount } from "@/hooks/orders";
+import { useCountFilteredOrders, useDeleteOrder, useOrders, useOrdersCount } from "@/hooks/orders";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { OrderStatus } from "@prisma/client";
@@ -16,13 +17,53 @@ const formatDate = (dateString) => {
 };
 
 export default function OrdersTable({ initialData }) {
-    // If initialData is provided and non-empty, use it directly (no client fetch needed)
-    const { data: ordersCount } = useOrdersCount();
-    const router = useRouter();
-    const { getFilters, updateFilters } = useOrderFiltersContext();
+    const { getFilters, updateSortingProps, setPaginationCurrentPage, setPaginationLimit } = useOrderFiltersContext();
     const filters = getFilters();
+    const { data: filteredOrdersCount } = useCountFilteredOrders({
+        searchQuery: filters.searchQuery,
+        status: filters.status ? filters.status : null,
+        startDate: filters.startDate ? new Date(filters.startDate) : null,
+        endDate: filters.endDate ? new Date(filters.endDate) : null,
+    });
+    const router = useRouter();
     const { data: orders, isLoading, error } = useOrders(initialData, filters);
     const { mutateAsync: deleteOrderAsync } = useDeleteOrder();
+    const totalPages = useMemo(() => Math.ceil(filteredOrdersCount / filters.limit), [filteredOrdersCount, filters.limit]);
+
+    const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
+        const pages = [];
+
+        // Always show first page
+        if (totalPages >= 1) pages.push(1);
+
+        // Calculate range around current page
+        let start = Math.max(2, currentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages - 1, start + maxVisible - 1);
+
+        // Adjust if near start/end
+        if (end - start + 1 < maxVisible) {
+            start = Math.max(2, end - maxVisible + 1);
+        }
+
+        // Add ellipsis before range if needed
+        if (start > 2) pages.push('...');
+
+        // Add page range
+        for (let i = start; i <= end; i++) {
+            if (i !== 1 && i !== totalPages) pages.push(i);
+        }
+
+        // Add ellipsis after range if needed
+        if (end < totalPages - 1) pages.push('...');
+
+        // Always show last page
+        if (totalPages > 1) pages.push(totalPages);
+
+        return pages.filter((page, index, arr) =>
+            // Remove consecutive ellipsis
+            !(page === '...' && arr[index - 1] === '...')
+        );
+    };
     const headersMapping = {
         'Order ID': 'id',
         'Customer': 'user.name',
@@ -38,10 +79,6 @@ export default function OrdersTable({ initialData }) {
         'status': 'Status',
         'total': 'Total',
     }
-    // meanings of counter values : 
-    // 0 : no sorting
-    // 1 : descending
-    // 2 : ascending
     const onTableHeaderClicked = (e) => {
         e.preventDefault();
         const headerText = e.target.textContent.replace(/[↑↓]/g, '').trim();
@@ -66,8 +103,7 @@ export default function OrdersTable({ initialData }) {
             newSortBy = field;
             newSortDirection = 'desc';
         }
-        updateFilters({
-            ...filters,
+        updateSortingProps({
             sortBy: newSortBy,
             sortDirection: newSortDirection
         });
@@ -106,6 +142,9 @@ export default function OrdersTable({ initialData }) {
                 <div className="text-red-600">Error loading orders: {error.message}</div>
             </div>
         );
+    }
+    const onChangeLimit = (e) => {
+        setPaginationLimit(parseInt(e.target.value.trim()));
     }
     return (
         <div className="bg-white shadow rounded-lg p-6">
@@ -192,15 +231,14 @@ export default function OrdersTable({ initialData }) {
             {/* Pagination Partition */}
             <section className="mt-6 flex justify-between items-center">
                 <div className="text-sm text-gray-700">
-                    Showing 1 to {orders.length} of {orders.length} orders
+                    Showing {((filters.currentPage - 1) * filters.limit) + 1} to {Math.min(filters.currentPage * filters.limit, filteredOrdersCount || 0)} of {filteredOrdersCount || 0} orders
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex items-center gap-2">
                     <select
-                        onChange={(e) => updateFilters({ ...filters, limit: parseInt(e.target.value.trim()) })}
+                        onChange={onChangeLimit}
                         value={filters.limit}
                         className="block w-auto px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     >
-                        <option value="1">1</option>
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="15">15</option>
@@ -209,24 +247,30 @@ export default function OrdersTable({ initialData }) {
                     <button
                         className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
                         disabled={filters.currentPage === 1}
-                        onClick={() => updateFilters({ ...filters, currentPage: filters.currentPage - 1 })}
+                        onClick={() => setPaginationCurrentPage(filters.currentPage - 1)}
                     >
                         Previous
                     </button>
-                    {Array.from({ length: filters.totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                            key={page}
-                            className={`px-3 py-1 ${page === filters.currentPage ? 'bg-blue-500 text-white rounded-md text-sm' : 'border border-gray-300'} rounded-md text-sm`}
-                            onClick={() => updateFilters({ ...filters, currentPage: page })}
-                        >
-                            {page}
-                        </button>
+                    {getVisiblePages(filters.currentPage, totalPages, 7).map((page, index) => (
+                        page === '...' ? (
+                            <span key={`ellipsis-${index}`} className="px-2 text-gray-500">...</span>
+                        ) : (
+                            <button
+                                key={page}
+                                className={`px-3 py-1 rounded-md text-sm ${page === filters.currentPage
+                                    ? 'bg-blue-500 text-white'
+                                    : 'border border-gray-300 hover:bg-gray-100'
+                                    }`}
+                                onClick={() => setPaginationCurrentPage(page)}
+                            >
+                                {page}
+                            </button>
+                        )
                     ))}
-                    {/* TODO: needs more work on the logic */}
                     <button
-                        className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === filters.totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
-                        disabled={filters.currentPage === filters.totalPages}
-                        onClick={(e) => updateFilters({ ...filters, currentPage: filters.currentPage + 1 })}
+                        className={`px-3 py-1 rounded-md text-sm ${filters.currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'border border-gray-300 hover:bg-gray-50'}`}
+                        disabled={filters.currentPage === totalPages}
+                        onClick={() => setPaginationCurrentPage(filters.currentPage + 1)}
                     >
                         Next
                     </button>

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, updateOrder } from "@/services/orders.client";
+import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, filteredOrdersCount, updateOrder } from "@/services/orders.client";
 import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema } from "@/lib/zodSchemas";
-import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
 export function useOrders(initialData = [], filters = {}) {
     console.log('filters from the custom hook useOrders : ', filters);
 
@@ -65,13 +64,10 @@ export function useAddOrder() {
     });
 }
 export function useOrdersCount() {
+    console.log('useOrdersCount hook called');
     return useQuery({
         queryKey: ['ordersCount'],
         queryFn: fetchOrdersCount,
-        onSuccess: (data) => {
-            const { setTotalPages } = useOrderFiltersContext();
-            setTotalPages(data);
-        }
     })
 }
 export function useActiveOrdersCount(initialData) {
@@ -154,5 +150,11 @@ export function useDeleteOrder() {
             });
             queryClient.invalidateQueries(['orders', 'myOrders', 'ordersCount', 'activeOrdersCount']);
         }
+    })
+}
+export function useCountFilteredOrders(filters = {}) {
+    return useQuery({
+        queryKey: ['countFilteredOrders', filters],
+        queryFn: () => filteredOrdersCount(filters),
     })
 }

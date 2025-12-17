@@ -6,8 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ProductFilterSchema } from "@/lib/zodSchemas";
 import FormSelect from "@/components/UX/FormSelect";
 import { FormInput } from "@/components/UX";
+import { useProductContext } from "@/context/ProductContext";
 
 export default function ProductsFilters() {
+    const { setFilteringProps } = useProductContext();
     const form = useForm({
         defaultValues: {
             searchQuery: '',
@@ -19,7 +21,7 @@ export default function ProductsFilters() {
         mode: 'onChange',
     });
     const onSubmit = (data) => {
-        console.log(data);
+        setFilteringProps(data);
     }
     return (
         <section className="bg-white p-4 rounded-lg mb-6">
@@ -35,6 +37,7 @@ export default function ProductsFilters() {
                         name="stock"
                         label='Stock Status'
                         options={[
+                            { value: '', label: 'All' },
                             { value: 'In Stock', label: 'In Stock' },
                             { value: 'Low Stock', label: 'Low Stock' },
                             { value: 'Out Stock', label: 'Out of Stock' },

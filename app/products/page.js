@@ -4,17 +4,22 @@ import CartFloatingButton from "@/components/customer/CartFloatingButton";
 //end components import -------------------------------------------
 
 //start services import -------------------------------------------
-import { fetchProductsCount } from "@/services/products.client";
-import { fetchProducts } from "@/services/products.client";
+import { fetchInfiniteProducts, fetchProductsCount } from "@/services/products.server";
 //end services import ---------------------------------------------
+
+//start next imports ---------------------------------------------
+import { headers } from "next/headers";
+//end next imports -----------------------------------------------
 
 export const metadata = {
   title: "Products | ZenithShop",
   description: "Explore our complete collection of premium products at ZenithShop",
 }
 export default async function ProductsPage() {
-  const productsCount = await fetchProductsCount();
-  const products = await fetchProducts();
+  const h = await headers();
+  const cookieHeader = h.get("cookie") || "";
+  const productsCount = await fetchProductsCount(cookieHeader);
+  const products = await fetchInfiniteProducts(cookieHeader);
   return (
     <div className="min-h-screen p-6 relative">
       {/* Header Section */}

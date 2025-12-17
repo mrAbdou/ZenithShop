@@ -1,7 +1,6 @@
 import CartFloatingButton from "@/components/customer/CartFloatingButton";
 import ProductsListing from "@/components/customer/ProductsListing";
-import { fetchProducts } from "@/services/products.server";
-import { LIMIT } from "@/lib/constants";
+import { fetchInfiniteProducts } from "@/services/products.server";
 import { headers } from "next/headers";
 
 export const metadata = {
@@ -21,14 +20,8 @@ export const metadata = {
 
 export default async function Home() {
   const h = await headers();
-  const cookieHeader = h.get("cookie") || "";
-  let products = [];
-  try {
-    products = await fetchProducts(LIMIT, 0, cookieHeader);
-    console.log('products :L', products);
-  } catch (error) {
-    return JSON.stringify(error, null, 2);
-  }
+  const cookieHeader = h.get('cookie');
+  const products = await fetchInfiniteProducts(cookieHeader);
   return (
     <div className="min-h-screen p-6 relative">
       {/* Hero Section */}
@@ -65,10 +58,6 @@ export default async function Home() {
       </div>
 
       {/* Products Section */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">Featured Products</h2>
-        <p className="text-center text-gray-600 text-lg mb-12">Check out our most popular items</p>
-      </div>
       <ProductsListing initialData={products} />
 
       {/* Floating Cart Button */}

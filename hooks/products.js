@@ -3,28 +3,52 @@
 
 import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
-    fetchProducts,
     fetchProduct,
     fetchProductsCount,
     fetchAvailableProductsCount,
     fetchProductsInCart,
     addProduct,
     filteredProductsCount,
+    fetchPaginatedProducts,
+    fetchInfiniteProducts,
 } from "@/services/products.client";
 import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
+import { LIMIT } from "@/lib/constants";
 
 /**
  * Hook to fetch a paginated list of products.
  * Accepts optional initialData (array) from SSR.
  */
-export function useProducts(initialData = [], filters = { searchQuery: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
+export function usePaginationProducts(initialData = [], filters = { searchQuery: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
     return useQuery({
         queryKey: ["products", filters],
-        queryFn: () => fetchProducts(filters),
+        queryFn: () => fetchPaginatedProducts(filters),
         initialData
     });
 }
 
+export function useInfiniteProducts(limit = LIMIT, offset = 0, initialData = []) {
+    return useInfiniteQuery({
+        queryKey: ["products", limit, offset],
+        queryFn: ({ pageParam = 0 }) => fetchInfiniteProducts(limit, pageParam),
+        initialData: {
+            pages: [initialData],
+            pageParams: [offset],
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            const loadedItems = allPages.reduce(
+                (acc, page) => acc + (page?.length || 0),
+                0
+            );
+
+            // If the last page has fewer items than the limit, we've reached the end
+            return lastPage && lastPage.length === limit
+                ? loadedItems   // this becomes the NEXT offset
+                : undefined;    // stop
+        }
+
+    });
+}
 /** Fetch a single product by ID */
 export function useProduct(id) {
     return useQuery({

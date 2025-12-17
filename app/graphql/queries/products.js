@@ -2,10 +2,10 @@ import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
 export default {
-    //select all products
-    products: async (parent, args, context) => {
+    //select products for table pagination
+    paginatedProducts: async (parent, args, context) => {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
-        const { searchQuery, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
+        const { searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
         let where = {};
         let orderBy = {};
         if (searchQuery) {
@@ -13,6 +13,28 @@ export default {
                 { name: { contains: searchQuery, mode: "insensitive" } },
                 { description: { contains: searchQuery, mode: "insensitive" } }
             ]
+        }
+        if (stock) {
+            switch (stock) {
+                case 'In Stock':
+                    where.qteInStock = {
+                        gte: 10
+                    }
+                    break;
+                case 'Low Stock':
+                    where.qteInStock = {
+                        gt: 0,
+                        lt: 10
+                    }
+                    break;
+                case 'Out Stock':
+                    where.qteInStock = {
+                        eq: 0
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
         if (startDate) {
             where.createdAt = {
@@ -24,6 +46,7 @@ export default {
                 lte: endDate
             }
         }
+
         if (sortBy && sortDirection) {
             if (sortBy.includes('.')) {
                 const [field, subField] = sortBy.split('.');
@@ -44,11 +67,24 @@ export default {
                 orderBy,
                 take: limit,
                 skip: (currentPage - 1) * limit
-            })
+            });
         }
         return await context.prisma.product.findMany({
             where,
             orderBy,
+        });
+
+    },
+
+    //select products for infinite scroll
+    infiniteProducts: async (parent, args, context) => {
+        const { limit, offset } = args;
+        if (!limit && typeof limit !== 'number') throw new GraphQLError("Invalid limit");
+        if (!offset && typeof offset !== 'number') throw new GraphQLError("Invalid offset");
+
+        return await context.prisma.product.findMany({
+            take: limit,
+            skip: offset
         });
     },
 
@@ -97,13 +133,33 @@ export default {
 
     filteredProductsCount: async (parent, args, context) => {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
-        const { searchQuery, startDate, endDate } = args;
+        const { searchQuery, stock, startDate, endDate } = args;
         let where = {};
         if (searchQuery) {
             where.OR = [
                 { name: { contains: searchQuery, mode: "insensitive" } },
                 { description: { contains: searchQuery, mode: "insensitive" } }
             ]
+        }
+        switch (stock) {
+            case 'In Stock':
+                where.qteInStock = {
+                    gte: 10
+                }
+                break;
+            case 'Low Stock':
+                where.qteInStock = {
+                    gt: 0,
+                    lt: 10
+                }
+                break;
+            case 'Out Stock':
+                where.qteInStock = {
+                    eq: 0
+                }
+                break;
+            default:
+                break;
         }
         if (startDate) {
             where.createdAt = {

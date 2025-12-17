@@ -2,9 +2,7 @@ import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import ProductsTable from "@/components/admin/ProductsTable";
-import { fetchProducts, fetchProductsCount } from "@/services/products.server";
-import { LIMIT } from "@/lib/constants";
+import { fetchPaginatedProducts, fetchProductsCount } from "@/services/products.server";
 import ProductsManagement from "@/components/admin/ProductsManagement";
 export const metadata = {
     title: "Products Management | ZenithShop Admin",
@@ -18,9 +16,8 @@ export default async function ProductsManagementPage() {
     });
 
     if (!session || !(session?.user?.role === Role.ADMIN)) return redirect("/");
-    const products = await fetchProducts(cookieHeader);
-    console.log('server side fetching on products : ', products)
-    const totalProducts = await fetchProductsCount(cookieHeader);
+    const products = await fetchPaginatedProducts(cookieHeader);
+    const totalProducts = await fetchProductsCount(cookieHeader); // needs to count the filtered data not the full products available !!
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}
@@ -49,7 +46,6 @@ export default async function ProductsManagementPage() {
                     </div>
                 </div>
             </div>
-
             <ProductsManagement products={products} />
 
         </div>

@@ -1,8 +1,20 @@
+import { LIMIT } from '@/lib/constants';
 import { graphqlServerRequest } from '@/lib/graphql-server';
 import { gql } from 'graphql-request';
-export const GET_PRODUCTS = gql`
-query GetProducts($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
-    products(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
+export const GET_INFINITE_PRODUCTS = gql`
+query GetInfiniteProducts($limit: Int, $offset: Int) {
+    infiniteProducts(limit: $limit, offset: $offset) {
+        id
+        name
+        description
+        qteInStock
+        price
+        createdAt
+    }
+}`;
+export const GET_PAGINATED_PRODUCTS = gql`
+query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+    paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name
         description
@@ -48,10 +60,11 @@ mutation addProduct($newProduct: ProductInput!){
         qteInStock
     }
 }`;
-export async function fetchProducts(cookieHeader = '', filters = { searchQuery: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
+export async function fetchPaginatedProducts(cookieHeader = '', filters = { searchQuery: '', stock: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
     try {
-        const data = await graphqlServerRequest(GET_PRODUCTS, {
+        const data = await graphqlServerRequest(GET_PAGINATED_PRODUCTS, {
             searchQuery: filters.searchQuery,
+            stock: filters.stock,
             startDate: filters.startDate,
             endDate: filters.endDate,
             sortBy: filters.sortBy,
@@ -59,7 +72,15 @@ export async function fetchProducts(cookieHeader = '', filters = { searchQuery: 
             limit: filters.limit,
             currentPage: filters.currentPage
         }, cookieHeader);
-        return data?.products ?? [];
+        return data?.paginatedProducts ?? [];
+    } catch (error) {
+        throw error;
+    }
+}
+export async function fetchInfiniteProducts(cookieHeader = '', limit = LIMIT, offset = 0) {
+    try {
+        const data = await graphqlServerRequest(GET_INFINITE_PRODUCTS, { limit, offset }, cookieHeader);
+        return data?.infiniteProducts ?? [];
     } catch (error) {
         throw error;
     }

@@ -2,9 +2,20 @@ import { graphqlRequest } from '@/lib/graphql-client';
 import { LIMIT } from '@/lib/constants';
 import { gql } from 'graphql-request';
 import { AddProductSchema, safeValidate } from '@/lib/zodSchemas';
-export const GET_PRODUCTS = gql`
-query GetProducts($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
-    products(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
+export const GET_PAGINATED_PRODUCTS = gql`
+query GetPaginatedProducts($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+    paginatedProducts(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
+        id
+        name
+        description
+        qteInStock
+        price
+        createdAt
+    }
+}`;
+export const GET_INFINITE_PRODUCTS = gql`
+query GetInfiniteProducts($limit: Int, $offset: Int) {
+    infiniteProducts(limit: $limit, offset: $offset) {
         id
         name
         description
@@ -51,15 +62,23 @@ mutation addProduct($newProduct: ProductInput!){
     }
 }`;
 export const FILTERED_PRODUCTS_COUNT = gql`
-query GetFilteredProductsCount($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String) {
-    filteredProductsCount(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection)
+query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String) {
+    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection)
 }`;
-export async function fetchProducts(filters) {
+export async function fetchPaginatedProducts(filters) {
     try {
-        const data = await graphqlRequest(GET_PRODUCTS, filters);
-        return data?.products ?? [];
+        const data = await graphqlRequest(GET_PAGINATED_PRODUCTS, filters);
+        return data?.paginatedProducts ?? [];
     } catch (error) {
         console.log(error);
+        throw error;
+    }
+}
+export async function fetchInfiniteProducts(limit = LIMIT, offset = 0) {
+    try {
+        const data = await graphqlRequest(GET_INFINITE_PRODUCTS, { limit, offset });
+        return data?.infiniteProducts ?? [];
+    } catch (error) {
         throw error;
     }
 }
@@ -110,7 +129,7 @@ export async function addProduct(newProduct) {
 }
 export async function filteredProductsCount(filters) {
     try {
-        const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, filters);
+        const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, { ...filters });
         return data?.filteredProductsCount ?? 0;
     } catch (error) {
         throw error;

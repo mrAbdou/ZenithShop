@@ -1,5 +1,5 @@
 "use client";
-import { useCountFilteredProducts, useProducts } from "@/hooks/products";
+import { useCountFilteredProducts, usePaginationProducts } from "@/hooks/products";
 import { useRouter } from "next/navigation";
 import { useProductContext } from "@/context/ProductContext";
 import { useMemo } from "react";
@@ -22,7 +22,7 @@ export default function ProductsTable({ initialData = [] }) {
     let products = [];
     let { data: filteredProductsCount } = useCountFilteredProducts(filters);
     const totalPages = useMemo(() => Math.ceil(filteredProductsCount / filters.limit), [filteredProductsCount, filters.limit]);
-
+    console.log('total pages : ', totalPages, 'filtered products count : ', filteredProductsCount)
     const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
         const pages = [];
 
@@ -59,7 +59,7 @@ export default function ProductsTable({ initialData = [] }) {
     };
 
     try {
-        const { data } = useProducts(initialData, filters);
+        const { data } = usePaginationProducts(initialData, filters);
         products = data;
     } catch (error) {
         console.log(error);

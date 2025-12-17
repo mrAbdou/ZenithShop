@@ -6,6 +6,7 @@ export default function ProductProvider({ children }) {
     const [filters, setFilters] = useState({
         // filtering props .... 
         searchQuery: '',
+        stock: null,
         startDate: null,
         endDate: null,
         // sorting props ...
@@ -16,6 +17,15 @@ export default function ProductProvider({ children }) {
         currentPage: 1
     });
     const getFilters = () => filters;
+    const setFilteringProps = (filteringProps) => {
+        setFilters((prevFilters) => ({
+            ...prevFilters,
+            searchQuery: filteringProps.searchQuery,
+            stock: filteringProps.stock,
+            startDate: filteringProps.startDate,
+            endDate: filteringProps.endDate
+        }));
+    }
     const setSortingFilters = (sortingFilters) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
@@ -36,7 +46,7 @@ export default function ProductProvider({ children }) {
         }));
     }
     return (
-        <ProductContext.Provider value={{ getFilters, setSortingFilters, setPaginationLimit, setPaginationCurrentPage }}>
+        <ProductContext.Provider value={{ getFilters, setFilteringProps, setSortingFilters, setPaginationLimit, setPaginationCurrentPage }}>
             {children}
         </ProductContext.Provider>
     )

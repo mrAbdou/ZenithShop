@@ -1,11 +1,17 @@
 'use client';
 import { LIMIT } from "@/lib/constants";
 import Product from "../Product";
-import { useProducts } from "@/hooks/products";
+import { useInfiniteProducts } from "@/hooks/products";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
-export default function ProductsListing({ initialData = [] }) {
-    const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useProducts(LIMIT, 0, initialData);
+export default function ProductsListing({ initialData }) {
+    const {
+        data,
+        isLoading,
+        hasNextPage,
+        isFetchingNextPage,
+        fetchNextPage
+    } = useInfiniteProducts(LIMIT, 0, initialData);
     const products = data?.pages?.flat() || [];
     const { ref, inView } = useInView({
         threshold: 0.1,

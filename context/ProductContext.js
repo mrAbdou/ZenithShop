@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-
+import React from 'react';
 const ProductContext = createContext();
 
 export default function ProductProvider({ children }) {
@@ -7,8 +7,8 @@ export default function ProductProvider({ children }) {
         // filtering props .... 
         searchQuery: '',
         stock: null,
-        startDate: null,
-        endDate: null,
+        startDate: '',
+        endDate: '',
         // sorting props ...
         sortBy: null,
         sortDirection: null,
@@ -16,8 +16,8 @@ export default function ProductProvider({ children }) {
         limit: 5,
         currentPage: 1
     });
-    const getFilters = () => filters;
-    const setFilteringProps = (filteringProps) => {
+    const getFilters = React.useCallback(() => filters, [filters]);
+    const setFilteringProps = React.useCallback((filteringProps) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             searchQuery: filteringProps.searchQuery,
@@ -25,26 +25,26 @@ export default function ProductProvider({ children }) {
             startDate: filteringProps.startDate,
             endDate: filteringProps.endDate
         }));
-    }
-    const setSortingFilters = (sortingFilters) => {
+    }, []);
+    const setSortingFilters = React.useCallback((sortingFilters) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             sortBy: sortingFilters.sortBy,
             sortDirection: sortingFilters.sortDirection
         }));
-    }
-    const setPaginationLimit = (limit) => {
+    }, []);
+    const setPaginationLimit = React.useCallback((limit) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             limit: limit
         }));
-    }
-    const setPaginationCurrentPage = (currentPage) => {
+    }, []);
+    const setPaginationCurrentPage = React.useCallback((currentPage) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             currentPage: currentPage
         }));
-    }
+    }, []);
     return (
         <ProductContext.Provider value={{ getFilters, setFilteringProps, setSortingFilters, setPaginationLimit, setPaginationCurrentPage }}>
             {children}

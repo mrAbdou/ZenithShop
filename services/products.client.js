@@ -3,8 +3,8 @@ import { LIMIT } from '@/lib/constants';
 import { gql } from 'graphql-request';
 import { AddProductSchema, safeValidate } from '@/lib/zodSchemas';
 export const GET_PAGINATED_PRODUCTS = gql`
-query GetPaginatedProducts($searchQuery: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
-    paginatedProducts(searchQuery: $searchQuery, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
+query GetPaginatedProducts($searchQuery: String,$stock: String, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+    paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name
         description
@@ -62,12 +62,18 @@ mutation addProduct($newProduct: ProductInput!){
     }
 }`;
 export const FILTERED_PRODUCTS_COUNT = gql`
-query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String) {
-    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection)
+query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime) {
+    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate)
 }`;
 export async function fetchPaginatedProducts(filters) {
     try {
-        const data = await graphqlRequest(GET_PAGINATED_PRODUCTS, filters);
+        console.log("Filters before sanitization:", filters);
+        const sanitizedFilters = {
+            ...filters,
+            startDate: filters.startDate === '' ? null : filters.startDate,
+            endDate: filters.endDate === '' ? null : filters.endDate,
+        };
+        const data = await graphqlRequest(GET_PAGINATED_PRODUCTS, sanitizedFilters);
         return data?.paginatedProducts ?? [];
     } catch (error) {
         console.log(error);
@@ -129,7 +135,13 @@ export async function addProduct(newProduct) {
 }
 export async function filteredProductsCount(filters) {
     try {
-        const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, { ...filters });
+        console.log('filtered Products Count service : ', filters);
+        const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, {
+            searchQuery: filters.searchQuery,
+            stock: filters.stock,
+            startDate: filters.startDate === '' ? null : filters.startDate,
+            endDate: filters.endDate === '' ? null : filters.endDate
+        });
         return data?.filteredProductsCount ?? 0;
     } catch (error) {
         throw error;

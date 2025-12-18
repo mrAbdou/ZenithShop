@@ -168,13 +168,13 @@ type Query {
     ordersCount: Int!
     filteredOrdersCount(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime): Int!
 
-    paginatedProducts(searchQuery: String, stock: String, startDate: String, endDate: String, sortBy: String, sortDirection: String, limit: Int, currentPage: Int): [Product!]!
+    paginatedProducts(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, limit: Int, currentPage: Int): [Product!]!
     infiniteProducts(limit: Int, offset: Int): [Product!]!
     product(id: String!): Product
     productsCount: Int!
     availableProductsCount: Int!
     productsInCart(cart: [String!]!): [Product!]!
-    filteredProductsCount(searchQuery: String, stock: String, startDate: String, endDate: String, sortBy: String, sortDirection: String): Int!
+    filteredProductsCount(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime): Int!
     
     orderItems: [OrderItem!]!
     orderItem(id: String!): OrderItem

@@ -14,12 +14,13 @@ import {
 } from "@/services/products.client";
 import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
 import { LIMIT } from "@/lib/constants";
+import { GraphQLError } from "graphql";
 
 /**
  * Hook to fetch a paginated list of products.
  * Accepts optional initialData (array) from SSR.
  */
-export function usePaginationProducts(initialData = [], filters = { searchQuery: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
+export function usePaginationProducts(initialData = [], filters) {
     return useQuery({
         queryKey: ["products", filters],
         queryFn: () => fetchPaginatedProducts(filters),
@@ -89,32 +90,26 @@ export function useProductsInCart(cart) {
 export function useAddProduct() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (data) => {
-            const validation = safeValidate(AddProductSchema, data);
-            if (!validation.success) {
-                throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
-            }
-            return addProduct(validation.data);
-        },
-    }, {
-        onSuccess: async (data) => {
-            await queryClient.setQueryData({
+        mutationFn: (data) => addProduct(data),
+        onSuccess: () => {
+            queryClient.setQueryData({
                 queryKey: ["products"],
                 data: (prevData) => {
                     if (!prevData) return [data];
                     return [...prevData, data];
                 }
             });
-            await queryClient.invalidateQueries({
+            queryClient.invalidateQueries({
                 queryKey: ["products"]
             });
-        },
-    });
+        }
+    })
 }
 
 export function useCountFilteredProducts(filters) {
+    console.log('filtered products count custom hook : ', filters);
     return useQuery({
-        queryKey: ["countFilteredProducts"],
+        queryKey: ["countFilteredProducts", filters],
         queryFn: () => filteredProductsCount(filters),
     });
 }

@@ -55,7 +55,7 @@ export default function OrdersFilters() {
 
     return (
         <section className="bg-white p-4 rounded-lg mb-6">
-            <Form form={form} onSubmit={form.handleSubmit(onSubmit)} title="Search and Filter Orders" showHeader>
+            <Form form={form} onSubmit={onSubmit} title="Search and Filter Orders" showHeader>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FormInput
                         name="searchQuery"

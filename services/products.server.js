@@ -13,7 +13,7 @@ query GetInfiniteProducts($limit: Int, $offset: Int) {
     }
 }`;
 export const GET_PAGINATED_PRODUCTS = gql`
-query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: String, $endDate: String, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
     paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name

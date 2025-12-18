@@ -6,30 +6,33 @@ export default {
     paginatedProducts: async (parent, args, context) => {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
         const { searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
+
         let where = {};
         let orderBy = {};
         if (searchQuery) {
             where.OR = [
+                { id: { contains: searchQuery, mode: "insensitive" } },
                 { name: { contains: searchQuery, mode: "insensitive" } },
-                { description: { contains: searchQuery, mode: "insensitive" } }
+                { description: { contains: searchQuery, mode: "insensitive" } },
             ]
         }
         if (stock) {
-            switch (stock) {
+            const stockStatus = stock.trim();
+            switch (stockStatus) {
                 case 'In Stock':
                     where.qteInStock = {
-                        gte: 10
+                        gt: 10
                     }
                     break;
                 case 'Low Stock':
                     where.qteInStock = {
                         gt: 0,
-                        lt: 10
+                        lte: 10
                     }
                     break;
                 case 'Out Stock':
                     where.qteInStock = {
-                        eq: 0
+                        equals: 0
                     }
                     break;
                 default:
@@ -38,11 +41,13 @@ export default {
         }
         if (startDate) {
             where.createdAt = {
+                ...where.createdAt,
                 gte: startDate
             }
         }
         if (endDate) {
             where.createdAt = {
+                ...where.createdAt,
                 lte: endDate
             }
         }
@@ -61,6 +66,9 @@ export default {
                 }
             }
         }
+
+
+
         if (limit && currentPage) {
             return await context.prisma.product.findMany({
                 where,
@@ -137,40 +145,49 @@ export default {
         let where = {};
         if (searchQuery) {
             where.OR = [
+                { id: { contains: searchQuery, mode: "insensitive" } },
                 { name: { contains: searchQuery, mode: "insensitive" } },
-                { description: { contains: searchQuery, mode: "insensitive" } }
+                { description: { contains: searchQuery, mode: "insensitive" } },
             ]
         }
-        switch (stock) {
-            case 'In Stock':
-                where.qteInStock = {
-                    gte: 10
-                }
-                break;
-            case 'Low Stock':
-                where.qteInStock = {
-                    gt: 0,
-                    lt: 10
-                }
-                break;
-            case 'Out Stock':
-                where.qteInStock = {
-                    eq: 0
-                }
-                break;
-            default:
-                break;
+        if (stock) {
+            const stockStatus = stock.trim();
+            switch (stockStatus) {
+                case 'In Stock':
+                    where.qteInStock = {
+                        gt: 10
+                    }
+                    break;
+                case 'Low Stock':
+                    where.qteInStock = {
+                        gt: 0,
+                        lte: 10
+                    }
+                    break;
+                case 'Out Stock':
+                    where.qteInStock = {
+                        equals: 0
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
         if (startDate) {
             where.createdAt = {
+                ...where.createdAt,
                 gte: startDate
             }
         }
         if (endDate) {
             where.createdAt = {
+                ...where.createdAt,
                 lte: endDate
             }
         }
+
+
+
         return await context.prisma.product.count({
             where,
         });

@@ -17,12 +17,14 @@ const formatDate = (dateString) => {
 
 export default function ProductsTable({ initialData = [] }) {
     const router = useRouter();
-    const { getFilters, setPaginationCurrentPage, setPaginationLimit } = useProductContext();
+
+    const { getFilters, setPaginationCurrentPage, setPaginationLimit, setSortingFilters } = useProductContext();
     const filters = getFilters();
-    let products = [];
-    let { data: filteredProductsCount } = useCountFilteredProducts(filters);
-    const totalPages = useMemo(() => Math.ceil(filteredProductsCount / filters.limit), [filteredProductsCount, filters.limit]);
-    console.log('total pages : ', totalPages, 'filtered products count : ', filteredProductsCount)
+
+    const { data: products } = usePaginationProducts(initialData, filters);
+    const { data: filteredProductsCount } = useCountFilteredProducts(filters);
+    const totalPages = useMemo(() => filteredProductsCount && filteredProductsCount > 0 ? Math.ceil(filteredProductsCount / filters.limit) : 1, [filteredProductsCount, filters.limit]);
+
     const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
         const pages = [];
 
@@ -58,13 +60,6 @@ export default function ProductsTable({ initialData = [] }) {
         );
     };
 
-    try {
-        const { data } = usePaginationProducts(initialData, filters);
-        products = data;
-    } catch (error) {
-        console.log(error);
-    }
-
     const onViewProduct = (productId) => {
         router.push(`/control-panel/products/${productId}`);
     };
@@ -76,12 +71,35 @@ export default function ProductsTable({ initialData = [] }) {
     const onDeleteProduct = async (productId) => {
         if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
             // Delete logic will be implemented later
-            console.log('Delete product:', productId);
         }
     };
     const onChangeLimit = (e) => {
         const limit = parseInt(e.target.value.trim());
         setPaginationLimit(limit);
+    }
+    const getHeaderText = (label, field) => {
+        if (filters.sortBy === field) {
+            return filters.sortDirection === 'asc' ? `${label} ↑` : filters.sortDirection === 'desc' ? `${label} ↓` : `${label} ⇅`;
+        }
+        return `${label} ⇅`;
+    }
+    const onHeaderClick = (field) => {
+        let sortBy;
+        let sortDirection;
+        if (filters.sortBy === field) {
+            if (filters.sortDirection === 'desc') {
+                sortDirection = 'asc';
+            } else if (filters.sortDirection === 'asc') {
+                sortDirection = null;
+                sortBy = null;
+            } else {
+                sortDirection = 'desc';
+            }
+        } else {
+            sortDirection = 'desc';
+        }
+        sortBy = sortBy !== undefined ? sortBy : field;
+        setSortingFilters({ sortBy, sortDirection });
     }
     return (
         <div className="bg-white shadow rounded-lg p-6">
@@ -90,20 +108,20 @@ export default function ProductsTable({ initialData = [] }) {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Product ID
+                            <th onClick={() => onHeaderClick('id')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {getHeaderText('Product ID', 'id')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Name
+                            <th onClick={() => onHeaderClick('name')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {getHeaderText('Name', 'name')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Price
+                            <th onClick={() => onHeaderClick('price')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {getHeaderText('Price', 'price')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Stock
+                            <th onClick={() => onHeaderClick('qteInStock')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {getHeaderText('Stock', 'qteInStock')}
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Created
+                            <th onClick={() => onHeaderClick('createdAt')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {getHeaderText('Created', 'createdAt')}
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
@@ -127,8 +145,8 @@ export default function ProductsTable({ initialData = [] }) {
                                         product.qteInStock > 0 ? 'bg-yellow-100 text-yellow-800' :
                                             'bg-red-100 text-red-800'
                                         }`}>
-                                        {product.qteInStock > 10 ? 'In Stock' :
-                                            product.qteInStock > 0 ? 'Low Stock' : 'Out of Stock'}
+                                        {product.qteInStock > 10 ? `In Stock (${product.qteInStock})` :
+                                            product.qteInStock > 0 ? `Low Stock (${product.qteInStock})` : `Out of Stock (${product.qteInStock})`}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -9,13 +9,14 @@ import { FormInput } from "@/components/UX";
 import { useProductContext } from "@/context/ProductContext";
 
 export default function ProductsFilters() {
-    const { setFilteringProps } = useProductContext();
+    const { getFilters, setFilteringProps } = useProductContext();
+    const filters = getFilters();
     const form = useForm({
         defaultValues: {
-            searchQuery: '',
-            stock: '',
-            startDate: null,
-            endDate: null,
+            searchQuery: filters.searchQuery || '',
+            stock: filters.stock || '',
+            startDate: filters.startDate || null,
+            endDate: filters.endDate || null,
         },
         resolver: zodResolver(ProductFilterSchema),
         mode: 'onChange',
@@ -25,7 +26,7 @@ export default function ProductsFilters() {
     }
     return (
         <section className="bg-white p-4 rounded-lg mb-6">
-            <Form form={form} onSubmit={form.handleSubmit(onSubmit)} title="Search and Filter Products" showHeader>
+            <Form form={form} onSubmit={onSubmit} title="Search and Filter Products" showHeader>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FormInput
                         name="searchQuery"
@@ -36,6 +37,7 @@ export default function ProductsFilters() {
                     <FormSelect
                         name="stock"
                         label='Stock Status'
+                        placeholder="Select stock status"
                         options={[
                             { value: '', label: 'All' },
                             { value: 'In Stock', label: 'In Stock' },

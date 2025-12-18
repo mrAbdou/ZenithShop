@@ -24,7 +24,7 @@ query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: Dat
     }
 }`;
 export const GET_PRODUCT = gql`
-query GetProduct($id: ID!) {
+query GetProduct($id: String!) {
     product(id: $id) {
         id
         name
@@ -90,7 +90,6 @@ export async function fetchProduct(id, cookieHeader = '') {
         const data = await graphqlServerRequest(GET_PRODUCT, { id }, cookieHeader);
         return data?.product ?? null;
     } catch (error) {
-        console.log(error);
         throw error;
     }
 }

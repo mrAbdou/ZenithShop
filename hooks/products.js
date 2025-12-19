@@ -11,10 +11,9 @@ import {
     filteredProductsCount,
     fetchPaginatedProducts,
     fetchInfiniteProducts,
+    updateProduct,
 } from "@/services/products.client";
-import { AddProductSchema, safeValidate } from "@/lib/zodSchemas";
 import { LIMIT } from "@/lib/constants";
-import { GraphQLError } from "graphql";
 
 /**
  * Hook to fetch a paginated list of products.
@@ -28,13 +27,14 @@ export function usePaginationProducts(initialData = [], filters) {
     });
 }
 
-export function useInfiniteProducts(limit = LIMIT, offset = 0, initialData = []) {
+export function useInfiniteProducts(initialData = [], limit) {
     return useInfiniteQuery({
-        queryKey: ["products", limit, offset],
+        queryKey: ["products", limit],
         queryFn: ({ pageParam = 0 }) => fetchInfiniteProducts(limit, pageParam),
+        initialPageParam: 0,
         initialData: {
             pages: [initialData],
-            pageParams: [offset],
+            pageParams: [0],
         },
         getNextPageParam: (lastPage, allPages) => {
             const loadedItems = allPages.reduce(
@@ -42,7 +42,6 @@ export function useInfiniteProducts(limit = LIMIT, offset = 0, initialData = [])
                 0
             );
 
-            // If the last page has fewer items than the limit, we've reached the end
             return lastPage && lastPage.length === limit
                 ? loadedItems   // this becomes the NEXT offset
                 : undefined;    // stop
@@ -52,6 +51,7 @@ export function useInfiniteProducts(limit = LIMIT, offset = 0, initialData = [])
 }
 /** Fetch a single product by ID */
 export function useProduct(id) {
+    console.log('useProduct hook params: ', id);
     return useQuery({
         queryKey: ["product", id],
         queryFn: () => fetchProduct(id),
@@ -91,17 +91,16 @@ export function useAddProduct() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data) => addProduct(data),
-        onSuccess: () => {
-            queryClient.setQueryData({
-                queryKey: ["products"],
-                data: (prevData) => {
-                    if (!prevData) return [data];
-                    return [...prevData, data];
-                }
+        onSuccess: (data) => {
+            queryClient.setQueryData(['product', data.id], data);
+            queryClient.setQueryData(['products'], (oldData) => {
+                if (!oldData) return [data];
+                return [...oldData, data];
             });
-            queryClient.invalidateQueries({
-                queryKey: ["products"]
-            });
+
+            queryClient.invalidateQueries({ queryKey: ['productsCount'] });
+            queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
+            queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
         }
     })
 }
@@ -112,4 +111,30 @@ export function useCountFilteredProducts(filters) {
         queryKey: ["countFilteredProducts", filters],
         queryFn: () => filteredProductsCount(filters),
     });
+}
+
+export function useUpdateProduct(id) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data) => updateProduct(id, data),
+        onSuccess: (data) => {
+            // Update the specific product cache
+            queryClient.setQueryData(['product', id], data);
+
+            // Update the product in the products list if it exists
+            queryClient.setQueryData(['products'], (oldData) => {
+                if (!oldData) return [data];
+                return oldData.map((product) => (product.id === id ? data : product));
+            });
+
+            // Invalidate related queries
+            queryClient.invalidateQueries({ queryKey: ['productsCount'] });
+            queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
+            queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
+            queryClient.invalidateQueries({
+                queryKey: ["products"],
+                predicate: (query) => query.queryKey.length > 1 // Invalidate filtered queries
+            });
+        }
+    })
 }

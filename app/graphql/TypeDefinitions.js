@@ -56,7 +56,7 @@ type Product {
     id: String!
     name: String!
     description: String
-    price: Decimal!
+    price: Float!
     qteInStock: Int!
     createdAt: DateTime!
     updatedAt: DateTime
@@ -88,7 +88,7 @@ type Mutation {
 
     # Product Management (Admin) #############
     addNewProduct(product: ProductInput!): Product!
-    updateProduct(id: String!, product: ProductInput!): Product!
+    updateProduct(id: String!, product: UpdateProductInput!): Product!
     deleteProduct(productId: String!): Boolean!
 
     # Order & Cart Management ################
@@ -109,14 +109,14 @@ input LoginInput {
 input UpdateProductInput {
     name: String
     description: String
-    price: Decimal
+    price: Float
     qteInStock: Int
 }
 
 input ProductInput {
     name: String!
     description: String
-    price: Decimal!
+    price: Float!
     qteInStock: Int!
 }
 

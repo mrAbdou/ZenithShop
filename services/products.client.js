@@ -1,7 +1,7 @@
 import { graphqlRequest } from '@/lib/graphql-client';
 import { LIMIT } from '@/lib/constants';
 import { gql } from 'graphql-request';
-import { AddProductSchema, safeValidate } from '@/lib/zodSchemas';
+import { AddProductSchema, safeValidate, UpdateProductSchema } from '@/lib/zodSchemas';
 export const GET_PAGINATED_PRODUCTS = gql`
 query GetPaginatedProducts($searchQuery: String,$stock: String, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
     paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
@@ -25,7 +25,7 @@ query GetInfiniteProducts($limit: Int, $offset: Int) {
     }
 }`;
 export const GET_PRODUCT = gql`
-query GetProduct($id: ID!) {
+query GetProduct($id: String!) {
     product(id: $id) {
         id
         name
@@ -65,9 +65,18 @@ export const FILTERED_PRODUCTS_COUNT = gql`
 query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime) {
     filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate)
 }`;
+export const UPDATE_PRODUCT = gql`
+mutation updateProduct($id: String!, $product: UpdateProductInput!) {
+    updateProduct(id: $id, product: $product) {
+        id
+        name
+        description
+        price
+        qteInStock
+    }
+}`;
 export async function fetchPaginatedProducts(filters) {
     try {
-        console.log("Filters before sanitization:", filters);
         const sanitizedFilters = {
             ...filters,
             startDate: filters.startDate === '' ? null : filters.startDate,
@@ -76,20 +85,27 @@ export async function fetchPaginatedProducts(filters) {
         const data = await graphqlRequest(GET_PAGINATED_PRODUCTS, sanitizedFilters);
         return data?.paginatedProducts ?? [];
     } catch (error) {
-        console.log(error);
         throw error;
     }
+
 }
-export async function fetchInfiniteProducts(limit = LIMIT, offset = 0) {
+export async function fetchInfiniteProducts(limit, offset) {
     try {
+        if (!Number.isFinite(limit)) throw new Error('Invalid limit value');
+        if (!Number.isFinite(offset)) throw new Error('Invalid offset value');
         const data = await graphqlRequest(GET_INFINITE_PRODUCTS, { limit, offset });
         return data?.infiniteProducts ?? [];
     } catch (error) {
+        if (error.response?.errors) {
+            const errorString = error.response.errors.map(err => err.message).join('\n');
+            throw new Error(errorString);
+        }
         throw error;
     }
 }
 export async function fetchProduct(id) {
     try {
+        console.log('fetchProduct service params: ', id);
         const data = await graphqlRequest(GET_PRODUCT, { id });
         return data?.product ?? null;
     } catch (error) {
@@ -135,7 +151,6 @@ export async function addProduct(newProduct) {
 }
 export async function filteredProductsCount(filters) {
     try {
-        console.log('filtered Products Count service : ', filters);
         const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, {
             searchQuery: filters.searchQuery,
             stock: filters.stock,
@@ -143,6 +158,20 @@ export async function filteredProductsCount(filters) {
             endDate: filters.endDate === '' ? null : filters.endDate
         });
         return data?.filteredProductsCount ?? 0;
+    } catch (error) {
+        throw error;
+    }
+}
+export async function updateProduct(id, product) {
+    try {
+        if (!id || typeof id !== 'string') throw new Error('Invalid product ID');
+        const validation = safeValidate(UpdateProductSchema, product);
+        if (!validation.success) {
+            const errorMessage = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
+            throw new Error(`Validation failed: ${errorMessage}`);
+        }
+        const data = await graphqlRequest(UPDATE_PRODUCT, { id, product: validation.data });
+        return data?.updateProduct ?? null;
     } catch (error) {
         throw error;
     }

@@ -1,3 +1,4 @@
+import { safeValidate, UpdateProductSchema } from "@/lib/zodSchemas";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -87,9 +88,9 @@ export default {
     //select products for infinite scroll
     infiniteProducts: async (parent, args, context) => {
         const { limit, offset } = args;
-        if (!limit && typeof limit !== 'number') throw new GraphQLError("Invalid limit");
+        if (!limit && typeof limit !== 'number') throw new GraphQLError("Resolver : Invalid limit");
         if (!offset && typeof offset !== 'number') throw new GraphQLError("Invalid offset");
-
+        console.log('infinite products resolver : ', { limit, offset });
         return await context.prisma.product.findMany({
             take: limit,
             skip: offset
@@ -114,6 +115,7 @@ export default {
 
     //select a product by id
     product: async (parent, args, context) => {
+        console.log('product query params: ', args);
         const { id } = args;
         if (!id || typeof id !== 'string') throw new GraphQLError("Invalid product id");
         return await context.prisma.product.findUnique({

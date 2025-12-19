@@ -7,11 +7,13 @@ import { useEffect } from "react";
 export default function ProductsListing({ initialData }) {
     const {
         data,
+        error,
+        isError,
         isLoading,
         hasNextPage,
         isFetchingNextPage,
         fetchNextPage
-    } = useInfiniteProducts(LIMIT, 0, initialData);
+    } = useInfiniteProducts(initialData, LIMIT);
     const products = data?.pages?.flat() || [];
     const { ref, inView } = useInView({
         threshold: 0.1,
@@ -22,6 +24,16 @@ export default function ProductsListing({ initialData }) {
             fetchNextPage();
         }
     }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage])
+    if (isError) {
+        return (
+            <div className="flex justify-center items-center py-12">
+                <div className="flex items-center gap-3">
+                    <span className="text-gray-600 font-medium">Something went wrong</span>
+                    {error.message}
+                </div>
+            </div>
+        )
+    }
     return (
         <>
             {/* Initial Loading State */}

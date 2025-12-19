@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo } from "react";
 import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
-import { useCountFilteredOrders, useDeleteOrder, useOrders, useOrdersCount } from "@/hooks/orders";
+import { useCountFilteredOrders, useDeleteOrder, useOrders } from "@/hooks/orders";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { OrderStatus } from "@prisma/client";

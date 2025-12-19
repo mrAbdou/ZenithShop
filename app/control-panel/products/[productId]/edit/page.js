@@ -91,7 +91,7 @@ export default async function EditProduct({ params }) {
 
             {/* Form Container */}
             <div className="max-w-4xl mx-auto">
-                <UpdateProductForm initialData={product} />
+                <UpdateProductForm productId={product.id} />
             </div>
         </div>
     );

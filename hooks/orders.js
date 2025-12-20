@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, filteredOrdersCount, updateOrder } from "@/services/orders.client";
-import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema } from "@/lib/zodSchemas";
+import { CreateOrderSchema, OrderFilterSchema, updateOrderSchema } from "@/lib/schemas/order.schema";
 export function useOrders(initialData = [], filters = {}) {
     console.log('filters from the custom hook useOrders : ', filters);
 
     return useQuery({
         queryKey: ['orders', filters],
         queryFn: () => {
-            const validation = safeValidate(OrderFilterSchema, filters)
+            const validation = OrderFilterSchema.safeParse(filters)
             if (!validation.success) {
                 throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
             }
@@ -27,7 +27,7 @@ export function useAddOrder() {
 
     return useMutation({
         mutationFn: (new_order) => {
-            const validation = safeValidate(CreateOrderSchema, new_order);
+            const validation = CreateOrderSchema.safeParse(new_order);
             if (!validation.success) {
                 const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
                 throw new Error(`Validation failed: ${errorMessages}`);
@@ -81,7 +81,7 @@ export function useUpdateOrder(id) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (data) => {
-            const validation = safeValidate(updateOrderSchema, data);
+            const validation = updateOrderSchema.safeParse(data);
             if (!validation.success) {
                 const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
                 throw new Error(`Validation failed: ${errorMessages}`);

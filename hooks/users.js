@@ -8,7 +8,7 @@ import {
     fetchUsersCount,
     updateCustomerProfile
 } from "@/services/users.client";
-import { safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
+import { UpdateCustomerSchema } from "@/lib/schemas/user.schema";
 import toast from "react-hot-toast";
 
 export function useUsers(initialData = []) {
@@ -60,7 +60,7 @@ export function useUpdateCustomerProfile() {
     return useMutation({
         mutationFn: async (updatedCustomer) => {
             console.log('update customer profile , custom hook level(react-query), passed data are : ', updatedCustomer);
-            const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
+            const validation = UpdateCustomerSchema.safeParse(updatedCustomer);
             if (!validation.success) throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
             return await updateCustomerProfile(validation.data);
         },

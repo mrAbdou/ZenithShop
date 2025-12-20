@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 //creation of the context
 const CartContext = createContext();
 export { CartContext };
@@ -21,7 +21,7 @@ export default function CartProvider({ children }) {
         }
         setCart(newCart);
         localStorage.setItem('cart', JSON.stringify(newCart));
-    }
+    };
     const removeFromCart = (product) => {
         const foundIndex = cart.findIndex(item => item.id === product.id);
         if (foundIndex !== -1) {
@@ -34,14 +34,14 @@ export default function CartProvider({ children }) {
             setCart(newCart);
             localStorage.setItem('cart', JSON.stringify(newCart));
         }
-    }
+    };
     const clearCart = () => {
         setCart([]);
         localStorage.removeItem('cart');
-    }
+    };
     const getCart = () => {
         return cart;
-    }
+    };
     return (
         <CartContext.Provider value={{ getCart, addToCart, removeFromCart, clearCart }}>
             {children}

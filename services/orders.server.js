@@ -95,17 +95,3 @@ export async function fetchActiveOrdersCount(cookieHeader = '') {
         throw error;
     }
 }
-
-// export async function addOrder(new_order, cookieHeader = '') {
-//     console.log('new order from the service addOrder : ', new_order);
-//     const validation = safeValidate(CreateOrderSchema, new_order);
-//     if (!validation.success) {
-//         throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
-//     }
-//     try {
-//         const data = await graphqlServerRequest(ADD_ORDER, validation.data, cookieHeader);
-//         return data?.addOrder ?? null;
-//     } catch (error) {
-//         throw error;
-//     }
-// }

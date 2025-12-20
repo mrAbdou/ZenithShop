@@ -1,5 +1,5 @@
 import { graphqlRequest } from '@/lib/graphql-client';
-import { safeValidate, UpdateCustomerSchema } from '@/lib/zodSchemas';
+import { UpdateCustomerSchema } from '@/lib/schemas/user.schema';
 import { gql } from 'graphql-request';
 import { authClient } from "@/lib/auth-client";
 
@@ -117,7 +117,7 @@ export async function fetchMyOrders() {
 export async function updateCustomerProfile(updatedCustomer) {
     try {
         console.log('update customer profile , service level (Better Auth), passed data are : ', updatedCustomer);
-        const validation = safeValidate(UpdateCustomerSchema, updatedCustomer);
+        const validation = UpdateCustomerSchema.safeParse(updatedCustomer);
         if (!validation.success) throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
         const result = await authClient.updateUser(validation.data);
         if (result.error) {

@@ -11,7 +11,8 @@
     "lint": "eslint",
     "seed": "node prisma/seed.js",
     "prisma:generate": "prisma generate",
-    "graphql:server": "node ./app/graphql/server.js"
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -41,7 +42,9 @@
     "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.5",
+    "jsdom": "^27.3.0",
     "prisma": "^7.1.0",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "vitest": "^4.0.16"
   }
 }

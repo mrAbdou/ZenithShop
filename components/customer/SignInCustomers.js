@@ -1,7 +1,7 @@
 'use client';
 import { useForm } from "react-hook-form";
 import { authClient } from "@/lib/auth-client";
-import { SignInCustomerSchema } from "@/lib/zodSchemas";
+import { SignInCustomerSchema } from "@/lib/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { useContext } from "react";

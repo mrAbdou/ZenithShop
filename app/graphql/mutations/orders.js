@@ -1,4 +1,4 @@
-import { CreateOrderSchema, safeValidate, updateOrderSchema } from "@/lib/zodSchemas";
+import { CreateOrderSchema, updateOrderSchema } from "@/lib/schemas/order.schema";
 import { OrderStatus, Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -9,7 +9,7 @@ export default {
         }
         const userId = context.session.user.id;
         const { items, total } = args;
-        const validation = safeValidate(CreateOrderSchema, { items, total });
+        const validation = CreateOrderSchema.safeParse({ items, total });
         if (!validation.success) {
             const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
             throw new GraphQLError(`Validation failed: ${errorMessages}`);
@@ -61,7 +61,7 @@ export default {
         if (!context.session || context.session.user.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
         const { id, status } = args;
         if (id && typeof id !== 'string') throw new GraphQLError("Invalid order id");
-        const validation = safeValidate(updateOrderSchema, { status });
+        const validation = updateOrderSchema.safeParse({ status });
         if (!validation.success) {
             const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
             throw new GraphQLError(`Validation failed: ${errorMessages}`);

@@ -10,12 +10,20 @@ export const metadata = {
 };
 
 export default async function AddProduct() {
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
 
-    if (!session || !(session?.user?.role === Role.ADMIN)) return redirect("/");
-
+        if (!session || !(session?.user?.role === Role.ADMIN)) {
+            redirect("/");
+            return;
+        }
+    } catch (error) {
+        console.log('Auth error : ', error);
+        redirect("/");
+        return;
+    }
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}

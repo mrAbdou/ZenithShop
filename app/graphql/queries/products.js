@@ -1,4 +1,4 @@
-import { safeValidate, UpdateProductSchema } from "@/lib/zodSchemas";
+import { InfiniteProductSchema, ProductPaginationSchema } from "@/lib/schemas/product.schema";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -8,17 +8,20 @@ export default {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
         const { searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
 
+        const validation = ProductPaginationSchema.safeParse({ searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage });
+        if (!validation.success) throw new GraphQLError(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('\n'), { extensions: { code: 'BAD_REQUEST' } });
+
         let where = {};
         let orderBy = {};
-        if (searchQuery) {
+        if (validation.data.searchQuery) {
             where.OR = [
-                { id: { contains: searchQuery, mode: "insensitive" } },
-                { name: { contains: searchQuery, mode: "insensitive" } },
-                { description: { contains: searchQuery, mode: "insensitive" } },
+                { id: { contains: validation.data.searchQuery, mode: "insensitive" } },
+                { name: { contains: validation.data.searchQuery, mode: "insensitive" } },
+                { description: { contains: validation.data.searchQuery, mode: "insensitive" } },
             ]
         }
-        if (stock) {
-            const stockStatus = stock.trim();
+        if (validation.data.stock) {
+            const stockStatus = validation.data.stock.trim();
             switch (stockStatus) {
                 case 'In Stock':
                     where.qteInStock = {
@@ -40,42 +43,42 @@ export default {
                     break;
             }
         }
-        if (startDate) {
+        if (validation.data.startDate) {
             where.createdAt = {
                 ...where.createdAt,
-                gte: startDate
+                gte: validation.data.startDate
             }
         }
-        if (endDate) {
+        if (validation.data.endDate) {
             where.createdAt = {
                 ...where.createdAt,
-                lte: endDate
+                lte: validation.data.endDate
             }
         }
 
-        if (sortBy && sortDirection) {
-            if (sortBy.includes('.')) {
-                const [field, subField] = sortBy.split('.');
+        if (validation.data.sortBy && validation.data.sortDirection) {
+            if (validation.data.sortBy.includes('.')) {
+                const [field, subField] = validation.data.sortBy.split('.');
                 orderBy = {
                     [field]: {
-                        [subField]: sortDirection
+                        [subField]: validation.data.sortDirection
                     }
                 }
             } else {
                 orderBy = {
-                    [sortBy]: sortDirection
+                    [validation.data.sortBy]: validation.data.sortDirection
                 }
             }
         }
 
 
 
-        if (limit && currentPage) {
+        if (validation.data.limit && validation.data.currentPage) {
             return await context.prisma.product.findMany({
                 where,
                 orderBy,
-                take: limit,
-                skip: (currentPage - 1) * limit
+                take: validation.data.limit,
+                skip: (validation.data.currentPage - 1) * validation.data.limit
             });
         }
         return await context.prisma.product.findMany({
@@ -88,12 +91,11 @@ export default {
     //select products for infinite scroll
     infiniteProducts: async (parent, args, context) => {
         const { limit, offset } = args;
-        if (!limit && typeof limit !== 'number') throw new GraphQLError("Resolver : Invalid limit");
-        if (!offset && typeof offset !== 'number') throw new GraphQLError("Invalid offset");
-        console.log('infinite products resolver : ', { limit, offset });
+        const validation = InfiniteProductSchema.safeParse({ limit, offset });
+        if (!validation.success) throw new GraphQLError(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('\n'), { extensions: { code: 'BAD_REQUEST' } });
         return await context.prisma.product.findMany({
-            take: limit,
-            skip: offset
+            take: validation.data.limit,
+            skip: validation.data.offset
         });
     },
 

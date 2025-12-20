@@ -1,7 +1,7 @@
 'use client';
 
 import { useUpdateCustomerProfile, useUser } from "@/hooks/users";
-import { safeValidate, UpdateCustomerSchema } from "@/lib/zodSchemas";
+import { UpdateCustomerSchema } from "@/lib/schemas/user.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -29,8 +29,8 @@ export default function UpdateCustomerProfileForm({ initialData = {} }) {
     });
     const { mutateAsync: updateCustomerProfileAsync } = useUpdateCustomerProfile();
     const onSubmit = async (data) => {
-        const validation = safeValidate(UpdateCustomerSchema, data);
-        if (validation.error) {
+        const validation = UpdateCustomerSchema.safeParse(data);
+        if (!validation.success) {
             const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
             toast.error(`Validation failed: ${errorMessages}`);
             return;

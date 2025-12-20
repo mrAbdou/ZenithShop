@@ -1,6 +1,5 @@
 import { graphqlRequest } from '@/lib/graphql-client';
-import { CreateOrderSchema, OrderFilterSchema, safeValidate, updateOrderSchema } from '@/lib/zodSchemas';
-import { OrderStatus } from '@prisma/client';
+import { CreateOrderSchema, OrderFilterSchema } from '@/lib/schemas/order.schema';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
 query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int, $limit: Int, $totalPages: Int) {
@@ -79,7 +78,7 @@ query FilteredOrdersCount($searchQuery: String, $status: OrderStatus, $startDate
 export async function fetchOrders(filters) {
     console.log('filters from the service fetchOrders : ', filters);
     try {
-        const validation = safeValidate(OrderFilterSchema, filters);
+        const validation = OrderFilterSchema.safeParse(filters);
         if (!validation.success) {
             throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
         }
@@ -116,7 +115,7 @@ export async function fetchActiveOrdersCount() {
 }
 export async function addOrder(new_order) {
     console.log('new order from the service addOrder : ', new_order);
-    const validation = safeValidate(CreateOrderSchema, new_order);
+    const validation = CreateOrderSchema.safeParse(new_order);
     if (!validation.success) {
         throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
     }

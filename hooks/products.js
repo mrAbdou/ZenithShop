@@ -90,23 +90,33 @@ export function useProductsInCart(cart) {
 export function useAddProduct() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (data) => addProduct(data),
+        mutationFn: async (data) => {
+            try {
+                return await addProduct(data)
+            } catch (error) {
+                console.error('Add Product mutation error : ', error);
+                throw error;
+            }
+        },
         onSuccess: (data) => {
-            queryClient.setQueryData(['product', data.id], data);
-            queryClient.setQueryData(['products'], (oldData) => {
-                if (!oldData) return [data];
-                return [...oldData, data];
-            });
+            try {
+                queryClient.setQueryData(['product', data.id], data);
+                queryClient.setQueryData(['products'], (oldData) => {
+                    if (!oldData) return [data];
+                    return [...oldData, data];
+                });
 
-            queryClient.invalidateQueries({ queryKey: ['productsCount'] });
-            queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
-            queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
+                queryClient.invalidateQueries({ queryKey: ['productsCount'] });
+                queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
+                queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
+            } catch (cacheError) {
+                console.error('Cache Update Error : ', cacheError);
+            }
         }
     })
 }
 
 export function useCountFilteredProducts(filters) {
-    console.log('filtered products count custom hook : ', filters);
     return useQuery({
         queryKey: ["countFilteredProducts", filters],
         queryFn: () => filteredProductsCount(filters),

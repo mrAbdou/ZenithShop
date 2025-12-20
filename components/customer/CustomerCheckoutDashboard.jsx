@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import { useAddOrder } from '@/hooks/orders';
 import toast from 'react-hot-toast';
-import { safeValidate, CreateOrderSchema } from '@/lib/zodSchemas';
+import { CreateOrderSchema } from '@/lib/schemas/order.schema';
 import { useCartContext } from '@/context/CartContext';
 
 export default function CustomerCheckoutDashboard() {
@@ -38,7 +38,7 @@ export default function CustomerCheckoutDashboard() {
             return;
         }
 
-        const validation = safeValidate(CreateOrderSchema, new_order);
+        const validation = CreateOrderSchema.safeParse(new_order);
         if (!validation.success) {
             const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
             toast.error(`Validation failed: ${errorMessages}`);

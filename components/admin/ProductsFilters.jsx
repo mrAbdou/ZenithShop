@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import Form from "@/components/UX/Form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ProductFilterSchema } from "@/lib/zodSchemas";
+import { ProductPaginationSchema } from "@/lib/schemas/product.schema";
 import FormSelect from "@/components/UX/FormSelect";
 import { FormInput } from "@/components/UX";
 import { useProductContext } from "@/context/ProductContext";
@@ -18,7 +18,7 @@ export default function ProductsFilters() {
             startDate: filters.startDate || null,
             endDate: filters.endDate || null,
         },
-        resolver: zodResolver(ProductFilterSchema),
+        resolver: zodResolver(ProductPaginationSchema),
         mode: 'onChange',
     });
     const onSubmit = (data) => {

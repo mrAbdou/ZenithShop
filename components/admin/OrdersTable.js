@@ -103,6 +103,7 @@ export default function OrdersTable({ initialData }) {
             newSortBy = field;
             newSortDirection = 'desc';
         }
+        //TODO: we need to use OrderFilterSchema to check the new values first
         updateSortingProps({
             sortBy: newSortBy,
             sortDirection: newSortDirection

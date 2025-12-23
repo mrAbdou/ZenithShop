@@ -5,11 +5,18 @@ import { GraphQLError } from "graphql";
 export default {
     //select products for table pagination
     paginatedProducts: async (parent, args, context) => {
-        if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
+        if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized access", { extensions: { code: 'UNAUTHORIZED' } });
         const { searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
 
         const validation = ProductPaginationSchema.safeParse({ searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage });
-        if (!validation.success) throw new GraphQLError(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('\n'), { extensions: { code: 'BAD_REQUEST' } });
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({
+                field: issue.path[0],
+                message: issue.message
+            }));
+            console.log('errors : ', errors);
+            throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
+        }
 
         let where = {};
         let orderBy = {};
@@ -92,7 +99,13 @@ export default {
     infiniteProducts: async (parent, args, context) => {
         const { limit, offset } = args;
         const validation = InfiniteProductSchema.safeParse({ limit, offset });
-        if (!validation.success) throw new GraphQLError(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('\n'), { extensions: { code: 'BAD_REQUEST' } });
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({
+                field: issue.path[0],
+                message: issue.message
+            }));
+            throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
+        }
         return await context.prisma.product.findMany({
             take: validation.data.limit,
             skip: validation.data.offset
@@ -117,9 +130,8 @@ export default {
 
     //select a product by id
     product: async (parent, args, context) => {
-        console.log('product query params: ', args);
         const { id } = args;
-        if (!id || typeof id !== 'string') throw new GraphQLError("Invalid product id");
+        if (!id || typeof id !== 'string') throw new GraphQLError("Invalid product id", { extensions: { code: 'BAD_REQUEST' } });
         return await context.prisma.product.findUnique({
             where: { id },
             include: {
@@ -134,7 +146,7 @@ export default {
         });
     },
 
-    //TODO: check from this function if still used ??
+    //TODO: to be removed from hooks/products.js services/products.client.js services/products.server.js app/graphql/TypeDefinitions.js
     productsInCart: async (parent, args, context) => {
         const ids = args.cart;
         if (!ids || ids.length === 0 || !Array.isArray(ids)) throw new GraphQLError("Invalid cart");

@@ -20,7 +20,7 @@ export default {
     //select a user by id
     user: async (parent, args, context) => {
         if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new GraphQLError("Unauthorized");
-        const { id } = args;
+        const id = context.session.user.id;
         if (!id || typeof id !== 'string') throw new GraphQLError("Invalid user id");
         return await context.prisma.user.findUnique({
             where: { id },

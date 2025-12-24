@@ -1,7 +1,7 @@
 import { InfiniteProductSchema, ProductPaginationSchema } from "@/lib/schemas/product.schema";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
-
+// all of these queries are tested and proven to work
 export default {
     //select products for table pagination
     paginatedProducts: async (parent, args, context) => {
@@ -14,7 +14,6 @@ export default {
                 field: issue.path[0],
                 message: issue.message
             }));
-            console.log('errors : ', errors);
             throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
         }
 
@@ -97,8 +96,8 @@ export default {
 
     //select products for infinite scroll
     infiniteProducts: async (parent, args, context) => {
-        const { limit, offset } = args;
-        const validation = InfiniteProductSchema.safeParse({ limit, offset });
+        const { limit, offset, searchQuery, stock, minPrice, maxPrice, sortBy, sortDirection } = args;
+        const validation = InfiniteProductSchema.safeParse({ limit, offset, searchQuery, stock, minPrice, maxPrice, sortBy, sortDirection });
         if (!validation.success) {
             const errors = validation.error.issues.map(issue => ({
                 field: issue.path[0],
@@ -106,7 +105,57 @@ export default {
             }));
             throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
         }
+        let where = {};
+        let orderBy = {};
+        if (validation.data.searchQuery) {
+            where.OR = [
+                { title: { contains: validation.data.searchQuery, mode: 'insensitive' } },
+                { description: { contains: validation.data.searchQuery, mode: 'insensitive' } }
+            ]
+        }
+        if (validation.data.stock) {
+            const stockStatus = validation.data.stock;
+            switch (stockStatus) {
+                case 'In Stock':
+                    where.qteInStock = {
+                        gt: 10
+                    }
+                    break;
+                case 'Low Stock':
+                    where.qteInStock = {
+                        gt: 0,
+                        lte: 10
+                    }
+                    break;
+                case 'Out Stock':
+                    where.qteInStock = {
+                        equals: 0
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (validation.data.minPrice) {
+            where.price = {
+                ...where.price,
+                gte: validation.data.minPrice
+            }
+        }
+        if (validation.data.maxPrice) {
+            where.price = {
+                ...where.price,
+                lte: validation.data.maxPrice
+            }
+        }
+        if (validation.data.sortBy && validation.data.sortDirection) {
+            orderBy = {
+                [validation.data.sortBy]: validation.data.sortDirection
+            }
+        }
         return await context.prisma.product.findMany({
+            where,
+            orderBy,
             take: validation.data.limit,
             skip: validation.data.offset
         });
@@ -143,15 +192,6 @@ export default {
                     }
                 }
             }
-        });
-    },
-
-    //TODO: to be removed from hooks/products.js services/products.client.js services/products.server.js app/graphql/TypeDefinitions.js
-    productsInCart: async (parent, args, context) => {
-        const ids = args.cart;
-        if (!ids || ids.length === 0 || !Array.isArray(ids)) throw new GraphQLError("Invalid cart");
-        return await context.prisma.product.findMany({
-            where: { id: { in: ids } }
         });
     },
 

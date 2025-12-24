@@ -157,7 +157,7 @@ input OrderInput {
 #################################################
 type Query {
     users: [User!]!
-    user(id: String!): User
+    user: User
     customersCount: Int!
     usersCount: Int!
     
@@ -169,11 +169,10 @@ type Query {
     filteredOrdersCount(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime): Int!
 
     paginatedProducts(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, limit: Int, currentPage: Int): [Product!]!
-    infiniteProducts(limit: Int, offset: Int): [Product!]!
+    infiniteProducts(limit: Int!, offset: Int!, searchQuery: String, stock: String, minPrice: Float, maxPrice: Float, sortBy: String, sortDirection: String): [Product!]!
     product(id: String!): Product
     productsCount: Int!
     availableProductsCount: Int!
-    productsInCart(cart: [String!]!): [Product!]!
     filteredProductsCount(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime): Int!
     
     orderItems: [OrderItem!]!

@@ -156,7 +156,7 @@ input OrderInput {
 #                     Query                     #
 #################################################
 type Query {
-    users: [User!]!
+    users(searchQuery: String, role: Role, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, currentPage: Int!, limit: Int!): [User!]!
     user: User
     customersCount: Int!
     usersCount: Int!

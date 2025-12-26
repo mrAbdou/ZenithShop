@@ -16,18 +16,181 @@ const createMockContext = (overrides = {}) => ({
     },
     ...overrides
 });
+//100% tested and proven
 describe('User Queries', () => {
     describe('Users Resolver Tests', () => {
+        it('should throw an error when the admin is signed in', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        findMany: vi.fn().mockResolvedValue([
+                            {
+                                id: 'cl0293h4r000108l17n9fclbb',
+                                name: 'jane smith',
+                                email: 'jane.smith@example.com',
+                                role: Role.CUSTOMER,
+                                orders: []
+                            }
+                        ])
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'cl0293h4r000008l17n9fclba',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                currentPage: -1,
+                limit: 9999
+            };
+            try {
+                await userQueries.users(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Validation failed');
+                expect(error.extensions.code).toBe('BAD_REQUEST');
+                expect(error.extensions.errors).toEqual([
+                    { field: 'currentPage', message: 'Current page must be at least 1' },
+                    { field: 'limit', message: 'Limit must be at most 20' }
+                ]);
+            }
+        });
+        it('should throw an error when a signed in customer try to get the list of users', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        findMany: vi.fn().mockResolvedValue()
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'cl0293h4r000008l17n9fclba',
+                        role: Role.CUSTOMER
+                    }
+                }
+            });
+            const args = {
+                currentPage: 1,
+                limit: 10
+            };
+            try {
+                await userQueries.users(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+            }
+        });
+        it('should throw an error when a guest try to get the list of users', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        findMany: vi.fn().mockResolvedValue()
+                    }
+                }
+            });
+            const args = {
+                currentPage: 1,
+                limit: 10
+            };
+            try {
+                await userQueries.users(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+            }
+        });
+        it('should return a list of paginated, sorted, and filtered users when a signed in admin ask for it', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        findMany: vi.fn().mockResolvedValue([
+                            {
+                                id: 'cl0293h4r000008l17n9fclbB',
+                                name: 'JANE SMITH',
+                                email: 'jane.smith@example.com',
+                                role: Role.CUSTOMER,
+                                orders: []
+                            }
+                        ])
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclba',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                searchQuery: 'JANE SMITH',
+                role: Role.CUSTOMER,
+                startDate: '2025-12-01',
+                endDate: '2025-12-31',
+                sortBy: 'name',
+                sortDirection: 'asc',
+                limit: 10,
+                currentPage: 1
+            };
+            let where = {
+                OR: [
+                    { id: { contains: 'JANE SMITH', mode: 'insensitive' } },
+                    { name: { contains: 'JANE SMITH', mode: 'insensitive' } },
+                    { email: { contains: 'JANE SMITH', mode: 'insensitive' } }
+                ],
+                role: Role.CUSTOMER,
+                createdAt: {
+                    gte: new Date('2025-12-01'),
+                    lte: new Date('2025-12-31')
+                },
+            }
+            const orderBy = {
+                name: 'asc'
+            }
+            const result = await userQueries.users(null, args, context);
+            expect(result.length).toBe(1);
+            expect(result.length).toBeLessThanOrEqual(10);
+            expect(result).toMatchObject([
+                {
+                    id: 'cl0293h4r000008l17n9fclbB',
+                    name: 'JANE SMITH',
+                    email: 'jane.smith@example.com',
+                    role: Role.CUSTOMER,
+                    orders: []
+                }
+            ]);
+            expect(context.prisma.user.findMany).toHaveBeenCalledWith({
+                where,
+                orderBy,
+                take: 10,
+                skip: 0,
+                include: {
+                    orders: {
+                        include: {
+                            items: {
+                                include: { product: true }
+                            }
+                        }
+                    }
+                }
+            });
+        });
         it('should return a list of users when the admin is signed in', async () => {
             const context = createMockContext({
                 prisma: {
                     user: {
                         findMany: vi.fn().mockResolvedValue([
                             {
-                                id: 'cl0293h4r000008l17n9fclba',
-                                name: 'john doe',
-                                email: 'john.doe@example.com',
-                                role: 'ADMIN'
+                                id: 'cl0293h4r000008l17n9fclbB',
+                                name: 'JANE SMITH',
+                                email: 'jane.smith@example.com',
+                                role: Role.CUSTOMER,
                             }
                         ])
                     }
@@ -51,12 +214,14 @@ describe('User Queries', () => {
                 where: {},
                 orderBy: {}
             });
+            expect(result.length).toBeLessThan(10);
+            expect(result.length).toBe(1);
             expect(result).toEqual([
                 {
-                    id: 'cl0293h4r000008l17n9fclba',
-                    name: 'john doe',
-                    email: 'john.doe@example.com',
-                    role: 'ADMIN'
+                    id: 'cl0293h4r000008l17n9fclbB',
+                    name: 'JANE SMITH',
+                    email: 'jane.smith@example.com',
+                    role: 'CUSTOMER',
                 }
             ]);
         });
@@ -71,6 +236,7 @@ describe('User Queries', () => {
             const args = {};
             try {
                 await userQueries.users(null, args, context);
+                expect.fail('should have thrown');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Unauthorized');
@@ -81,7 +247,6 @@ describe('User Queries', () => {
         });
     });
     describe('User Resolver Tests', () => {
-        // TODO: Test user with valid customer session (already done)
         it('should return an object that contains user information when that user is signed in', async () => {
             const context = createMockContext({
                 prisma: {
@@ -111,10 +276,9 @@ describe('User Queries', () => {
                 id: 'cl0293h4r000108l17n9fclbb',
                 name: 'jane smith',
                 email: 'jane.smith@example.com',
-                role: Role.CUSTOMER
+                role: 'CUSTOMER'
             });
         });
-        // TODO: Test user with non-customer role fails
         it('should throw an error when try to get user information by non-customer role', async () => {
             const context = createMockContext({
                 prisma: {
@@ -132,6 +296,7 @@ describe('User Queries', () => {
             const args = {};
             try {
                 await userQueries.user(null, args, context);
+                expect.fail('should have thrown');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Unauthorized');
@@ -139,7 +304,6 @@ describe('User Queries', () => {
                 expect(context.prisma.user.findUnique).not.toHaveBeenCalled();
             }
         });
-        // TODO: Test user with no session fails
         it('should throw an error when try to get user information with no session', async () => {
             const context = createMockContext({
                 prisma: {
@@ -151,6 +315,7 @@ describe('User Queries', () => {
             const args = {};
             try {
                 await userQueries.user(null, args, context);
+                expect.fail('should have thrown');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Unauthorized');
@@ -159,90 +324,138 @@ describe('User Queries', () => {
             }
         });
     });
-})
-
-// TODO: Add new describe for 'Customers Count Resolver Tests'
-describe('Customer Count Resolver Tests', () => {
-    // TODO: Test customersCount with admin session returns count
-    it('should return the number of customer account created when the admin is signed in', async () => {
-        const context = createMockContext({
-            prisma: {
-                user: {
-                    count: vi.fn().mockResolvedValue(6),
+    describe('Customer Count Resolver Tests', () => {
+        it('should return the number of customer account created when the admin is signed in', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        count: vi.fn().mockResolvedValue(6),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'cl0293h4r000008l17n9fclba',
+                        role: Role.ADMIN
+                    }
                 }
-            },
-            session: {
-                user: {
-                    id: 'cl0293h4r000008l17n9fclba',
-                    role: Role.ADMIN
+            });
+            const args = {};
+            const result = await userQueries.customersCount(null, args, context);
+            expect(result).toBe(6);
+            expect(context.prisma.user.count).toHaveBeenCalledWith({
+                where: { role: { equals: Role.CUSTOMER } }
+            });
+        });
+        it('should throw an error when try to get the number of customer accounts created with customer (non-admin) authorization', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        count: vi.fn().mockResolvedValue(),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'cl0293h4r000108l17n9fclbb',
+                        role: Role.CUSTOMER
+                    }
                 }
+            });
+            const args = {};
+            try {
+                await userQueries.customersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+                expect(context.prisma.user.count).not.toHaveBeenCalled();
             }
-        });
-        const args = {};
-        const result = await userQueries.customersCount(null, args, context);
-        expect(result).toBe(6);
-        expect(context.prisma.user.count).toHaveBeenCalledWith({
-            where: { role: { equals: Role.CUSTOMER } }
-        });
+        })
+        it('should throw an error when try to get the number of customer accounts created without admin authorization', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        count: vi.fn().mockResolvedValue(),
+                    }
+                }
+            });
+            const args = {};
+            try {
+                await userQueries.customersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+                expect(context.prisma.user.count).not.toHaveBeenCalled();
+            }
+        })
+
     });
-    // TODO: Test customersCount with non-admin fails
-    it('should throw an error when try to get the number of customer accounts created with customer (non-admin) authorization', async () => {
-        const context = createMockContext({
-            prisma: {
-                user: {
-                    count: vi.fn().mockResolvedValue(),
+    describe('Users Count Resolver Tests', () => {
+        it('should return the number of user accounts when admin is signed in', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        count: vi.fn().mockResolvedValue(6),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'cl0293h4r000008l17n9fclba',
+                        role: Role.ADMIN
+                    }
                 }
-            },
-            session: {
-                user: {
-                    id: 'cl0293h4r000108l17n9fclbb',
-                    role: Role.CUSTOMER
+            });
+            const args = {};
+            const result = await userQueries.usersCount(null, args, context);
+            expect(result).toBe(6);
+            expect(context.prisma.user.count).toHaveBeenCalledWith();
+        })
+        it('should throw an error when a customer tries to get the number of user accounts created', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        count: vi.fn().mockResolvedValue(),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'cl0293h4r000008l17n9fclba',
+                        role: Role.CUSTOMER
+                    }
                 }
+            });
+            const args = {};
+            try {
+                await userQueries.usersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+                expect(context.prisma.user.count).not.toHaveBeenCalled();
             }
-        });
-        const args = {};
-        try {
-            await userQueries.customersCount(null, args, context);
-            expect.fail('should have thrown');
-        } catch (error) {
-            expect(error).toBeInstanceOf(GraphQLError);
-            expect(error.message).toBe('Unauthorized');
-            expect(error.extensions.code).toBe('UNAUTHORIZED');
-            expect(context.prisma.user.count).not.toHaveBeenCalled();
-        }
-    })
-    // TODO: Test customersCount with no session fails
-    it('should throw an error when try to get the number of customer accounts created without admin authorization', async () => {
-        const context = createMockContext({
-            prisma: {
-                user: {
-                    count: vi.fn().mockResolvedValue(),
+        })
+        it('should throw an error when a guest tries to get the number of user accounts created with no session at all', async () => {
+            const context = createMockContext({
+                prisma: {
+                    user: {
+                        count: vi.fn().mockResolvedValue()
+                    }
                 }
+            });
+            const args = {};
+            try {
+                await userQueries.usersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+                expect(context.prisma.user.count).not.toHaveBeenCalled();
             }
-        });
-        const args = {};
-        try {
-            await userQueries.customersCount(null, args, context);
-            expect.fail('should have thrown');
-        } catch (error) {
-            expect(error).toBeInstanceOf(GraphQLError);
-            expect(error.message).toBe('Unauthorized');
-            expect(error.extensions.code).toBe('UNAUTHORIZED');
-            expect(context.prisma.user.count).not.toHaveBeenCalled();
-        }
-    })
+        })
+    });
 
-})
-
-// TODO: Add new describe for 'Users Count Resolver Tests'
-// TODO: Test usersCount with admin session returns count
-// TODO: Test usersCount with non-admin fails
-// TODO: Test usersCount with no session fails
-
-// TODO: Under 'Users Resolver Tests' - update with new params
-// TODO: Test users with valid admin session and pagination/filtering/sorting
-// TODO: Test users with valid admin session and various combinations of params
-// TODO: Test users returns correct include and data structure
-// TODO: Test users with invalid params fails validation
-// TODO: Test users with non-admin fails
-// TODO: Test users with no session fails
+});

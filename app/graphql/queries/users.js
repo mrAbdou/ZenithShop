@@ -113,7 +113,7 @@ export default {
     },
     //count all users
     usersCount: async (parent, args, context) => {
-        if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized");
+        if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
         return await context.prisma.user.count();
     },
 }

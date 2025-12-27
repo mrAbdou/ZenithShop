@@ -175,7 +175,7 @@ type Query {
     availableProductsCount: Int!
     filteredProductsCount(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime): Int!
     
-    orderItems: [OrderItem!]!
+    orderItems(orderId: String!): [OrderItem!]!
     orderItem(id: String!): OrderItem
 }
 

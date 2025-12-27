@@ -1,23 +1,30 @@
+import { CompleteSignUpSchema } from "@/lib/schemas/user.schema";
 import { Role } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
 export default {
     //complete sign up mutation
     completeSignUp: async (parent, args, context) => {
-        console.log('complete sign up, resolver level (yoga backend server), data passed : ', args);
-        if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new GraphQLError('Unauthorized');
-        const { phoneNumber, address, role } = args;
-        if (!phoneNumber || !address || !role) throw new GraphQLError('Missing required fields');
-        if (typeof phoneNumber !== 'string' || typeof address !== 'string') throw new GraphQLError('Invalid input types');
-        const user = await context.prisma.user.update({
-            where: { id: context.session.user.id },
-            data: {
-                phoneNumber,
-                address,
-                role
+
+        if (!context.session?.user?.id) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
+        const validation = CompleteSignUpSchema.safeParse(args);
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({ path: issue.path, message: issue.message }));
+            throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
+        }
+        try {
+            const user = await context.prisma.user.update({
+                where: { id: context.session.user.id },
+                data: validation.data
+            });
+            return user;
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError) {
+                if (error.code === 'P2025') throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
             }
-        });
-        return user;
+            throw error;
+        }
     },
 
     deleteCustomerProfile: async (parent, args, context) => {

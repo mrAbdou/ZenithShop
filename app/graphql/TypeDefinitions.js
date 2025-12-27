@@ -161,7 +161,7 @@ type Query {
     customersCount: Int!
     usersCount: Int!
     
-    orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, currentPage: Int, limit: Int, totalPages: Int): [Order!]!
+    orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, currentPage: Int, limit: Int): [Order!]!
     myOrders: [Order!]!
     order(id: String!): Order
     activeOrdersCount: Int!

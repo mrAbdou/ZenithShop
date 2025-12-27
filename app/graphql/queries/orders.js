@@ -1,4 +1,4 @@
-import { OrderFilterSchema } from "@/lib/schemas/order.schema";
+import { FilteredOrdersCountSchema, OrderFilterSchema } from "@/lib/schemas/order.schema";
 import { OrderStatus, Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -104,7 +104,7 @@ export default {
 
     //count active orders
     activeOrdersCount: async (parent, args, context) => {
-        if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized");
+        if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
         return await context.prisma.order.count({
             where: {
                 status: {
@@ -115,27 +115,35 @@ export default {
     },
 
     filteredOrdersCount: async (parent, args, context) => {
-        if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
+        if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
         const { searchQuery, status, startDate, endDate } = args;
+        const validation = FilteredOrdersCountSchema.safeParse({ searchQuery, status, startDate, endDate });
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({
+                path: issue.path,
+                message: issue.message
+            }));
+            console.log('from filteredOrdersCount errors: ', errors);
+            throw new GraphQLError("Validation failed", { extensions: { code: 'VALIDATION_FAILED', errors } });
+        }
         let where = {};
-
-        if (searchQuery) {
+        if (validation.data.searchQuery) {
             where.OR = [
-                { id: { contains: searchQuery, mode: 'insensitive' } },
-                { user: { name: { contains: searchQuery, mode: 'insensitive' } } }
+                { id: { contains: validation.data.searchQuery, mode: 'insensitive' } },
+                { user: { name: { contains: validation.data.searchQuery, mode: 'insensitive' } } }
             ];
         }
 
-        if (status) {
-            where.status = { equals: status }
+        if (validation.data.status) {
+            where.status = { equals: validation.data.status }
         }
 
-        if (startDate) {
-            where.createdAt = { gte: new Date(startDate) };
+        if (validation.data.startDate) {
+            where.createdAt = { gte: new Date(validation.data.startDate) };
         }
 
-        if (endDate) {
-            where.createdAt = { ...where.createdAt, lte: new Date(endDate) };
+        if (validation.data.endDate) {
+            where.createdAt = { ...where.createdAt, lte: new Date(validation.data.endDate) };
         }
 
         return await context.prisma.order.count({

@@ -1038,7 +1038,6 @@ describe("orderQueries", () => {
                 expect(error.extensions.code).toBe('NOT_FOUND');
             }
         })
-        // TODO: Add it test for valid id, customer owns order - mock customer session, valid id string, order.userId matches session.user.id, expect order object with includes.
         it('should return an order when a valid string id is provided with customer session', async () => {
             const context = createMockContext({
                 prisma: {
@@ -1075,7 +1074,6 @@ describe("orderQueries", () => {
                 items: []
             });
         })
-        // TODO: Add it test for valid id, admin access - mock admin session, valid id string, expect order object with includes.
         it('should return an order when a valid string id is provided with admin session', async () => {
             const context = createMockContext({
                 prisma: {
@@ -1210,5 +1208,177 @@ describe("orderQueries", () => {
                 expect(error.extensions.code).toBe('UNAUTHORIZED');
             }
         });
-    })
+    });
+    describe('Active Orders Count Query Resolver function', () => {
+        it('should return the count of active orders when admin session is available', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue(10)
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {};
+            const result = await orderQueries.activeOrdersCount(null, args, context);
+            expect(result).toBe(10);
+            expect(context.prisma.order.count).toHaveBeenCalledWith({
+                where: {
+                    status: {
+                        notIn: [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.RETURNED]
+                    }
+                }
+            });
+        });
+        it('should throw an error when customer session is available', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue()
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbB',
+                        role: Role.CUSTOMER
+                    }
+                }
+            });
+            const args = {};
+            try {
+                await orderQueries.activeOrdersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+            }
+        });
+        it('should throw an error when no session is available', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue()
+                    }
+                }
+            });
+            const args = {};
+            try {
+                await orderQueries.ordersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+            }
+        });
+    });
+
+    describe('Filtered Orders Count Query Resolver function', () => {
+        it('should return the count of orders when admin session is available with filters', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue(5)
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                searchQuery: 'test',
+                status: OrderStatus.PENDING,
+                startDate: '2024-01-01',
+                endDate: '2024-12-31'
+            };
+            const result = await orderQueries.filteredOrdersCount(null, args, context);
+            expect(result).toBe(5);
+            expect(context.prisma.order.count).toHaveBeenCalledWith({
+                where: {
+                    OR: [
+                        { id: { contains: 'test', mode: 'insensitive' } },
+                        { user: { name: { contains: 'test', mode: 'insensitive' } } }
+                    ],
+                    status: { equals: OrderStatus.PENDING },
+                    createdAt: {
+                        gte: new Date('2024-01-01'),
+                        lte: new Date('2024-12-31')
+                    }
+                }
+            });
+
+        });
+        it('should return the count of orders when admin session is available with no filters', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue(10)
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {};
+            const result = await orderQueries.filteredOrdersCount(null, args, context);
+            expect(result).toBe(10);
+            expect(context.prisma.order.count).toHaveBeenCalledWith({
+                where: {}
+            });
+        });
+        it('should throw an error when customer session is available', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue()
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbB',
+                        role: Role.CUSTOMER
+                    }
+                }
+            });
+            const args = {};
+            try {
+                await orderQueries.filteredOrdersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+            }
+        });
+        it('should throw an error when no session is available', async () => {
+            const context = createMockContext({
+                prisma: {
+                    order: {
+                        count: vi.fn().mockResolvedValue()
+                    }
+                }
+            });
+            const args = {};
+            try {
+                await orderQueries.filteredOrdersCount(null, args, context);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+            }
+        });
+    });
 });

@@ -83,7 +83,7 @@ type OrderItem {
 
 type Mutation {
     # User Profile ###########################
-    deleteCustomerProfile(userId: String!): Boolean!
+    deleteCustomerProfile(userId: String): Boolean!
     completeSignUp(phoneNumber: String!, address: String!, role: Role!): User!
 
     # Product Management (Admin) #############

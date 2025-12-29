@@ -111,7 +111,7 @@ export default {
         let orderBy = {};
         if (validation.data.searchQuery) {
             where.OR = [
-                { title: { contains: validation.data.searchQuery, mode: 'insensitive' } },
+                { name: { contains: validation.data.searchQuery, mode: 'insensitive' } },
                 { description: { contains: validation.data.searchQuery, mode: 'insensitive' } }
             ]
         }

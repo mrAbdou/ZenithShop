@@ -279,11 +279,16 @@ describe('User Queries', () => {
                 role: 'CUSTOMER'
             });
         });
-        it('should throw an error when try to get user information by non-customer role', async () => {
+        it('should return a user profile when try to get user information by non-customer role', async () => {
             const context = createMockContext({
                 prisma: {
                     user: {
-                        findUnique: vi.fn().mockResolvedValue()
+                        findUnique: vi.fn().mockResolvedValue({
+                            id: 'cl0293h4r000108l17n9fclbb',
+                            name: 'jane smith',
+                            email: 'jane.smith@example.com',
+                            role: Role.CUSTOMER
+                        })
                     }
                 },
                 session: {
@@ -293,16 +298,18 @@ describe('User Queries', () => {
                     }
                 }
             });
-            const args = {};
-            try {
-                await userQueries.user(null, args, context);
-                expect.fail('should have thrown');
-            } catch (error) {
-                expect(error).toBeInstanceOf(GraphQLError);
-                expect(error.message).toBe('Unauthorized');
-                expect(error.extensions.code).toBe('UNAUTHORIZED');
-                expect(context.prisma.user.findUnique).not.toHaveBeenCalled();
-            }
+            const args = { id: 'cl0293h4r000108l17n9fclbb' };
+            const result = await userQueries.user(null, args, context);
+            expect(context.prisma.user.findUnique).toHaveBeenCalledWith({
+                where: { id: 'cl0293h4r000108l17n9fclbb' },
+                include: { orders: { include: { items: { include: { product: true } } } } }
+            });
+            expect(result).toEqual({
+                id: 'cl0293h4r000108l17n9fclbb',
+                name: 'jane smith',
+                email: 'jane.smith@example.com',
+                role: 'CUSTOMER'
+            });
         });
         it('should throw an error when try to get user information with no session', async () => {
             const context = createMockContext({

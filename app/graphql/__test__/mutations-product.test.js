@@ -841,5 +841,215 @@ describe('Product Mutation Resolver Functions Tests', () => {
             });
         });
     });
+    describe('deleteProduct mutation resolver function Tests', () => {
+        // TODO: Test deleting product with admin session and correct productId - should succeed
+        it('should successfuly delete product when admin session is available', async () => {
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockResolvedValue({
+                            id: 'clp293h4r000008l17n9fclbE',
+                            name: 'Product 01',
+                            price: 20,
+                            qteInStock: 20,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        })
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                productId: 'clp293h4r000008l17n9fclbE'
+            };
+            const result = await mutationsProduct.deleteProduct(null, args, context);
+            expect(context.prisma.product.delete).toBeCalledWith({
+                where: {
+                    id: 'clp293h4r000008l17n9fclbE'
+                }
+            })
+            expect(result).toMatchObject({
+                id: 'clp293h4r000008l17n9fclbE',
+                name: 'Product 01',
+                price: 20,
+                qteInStock: 20,
+                createdAt: expect.any(Date),
+                updatedAt: expect.any(Date)
+            });
+        });
+        // TODO: Test deleting product with customer session - should fail with Unauthorized
+        it('should throw an error when you try to delete product with customer session', async () => {
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockResolvedValue(),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbE',
+                        role: Role.CUSTOMER
+                    }
+                }
+            });
+            const args = {
+                productId: 'clp293h4r000008l17n9fclbE'
+            }
+            try {
+                await mutationsProduct.deleteProduct(null, args, context);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+                expect(context.prisma.product.delete).not.toHaveBeenCalled();
+            }
+        })
+        // TODO: Test deleting product with no session - should fail with Unauthorized
+        it('should throw an error when you try to delete product with no session', async () => {
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockResolvedValue(),
+                    }
+                }
+            });
+            const args = {
+                productId: 'clp293h4r000008l17n9fclbE'
+            }
+            try {
+                await mutationsProduct.deleteProduct(null, args, context);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Unauthorized');
+                expect(error.extensions.code).toBe('UNAUTHORIZED');
+                expect(context.prisma.product.delete).not.toHaveBeenCalled();
+            }
+        })
+        // TODO: Test deleting product with wrong productId (non-existent) and admin session - should fail with PRODUCT_NOT_FOUND
+        it('should throw an error when you try to delete product with wrong productId (non-existent) and admin session', async () => {
+            const { PrismaClientKnownRequestError } = await import('@prisma/client');
+            const P2025Error = new PrismaClientKnownRequestError('P2025', {
+                code: 'P2025',
+                meta: {
+                    code: 'P2025',
+                    message: 'Product not found'
+                }
+            });
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockRejectedValue(P2025Error),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                productId: 'clp293h4r000008l17n9fclbE'
+            }
+            try {
+                await mutationsProduct.deleteProduct(null, args, context);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Product not found');
+                expect(error.extensions.code).toBe('PRODUCT_NOT_FOUND');
+                expect(context.prisma.product.delete).toHaveBeenCalledWith({
+                    where: {
+                        id: 'clp293h4r000008l17n9fclbE'
+                    }
+                });
+            }
+        })
+        // TODO: Test deleting product with null productId and admin session - should fail with Invalid product id
+        it('should throw an error when you try a product with null product id and admin session', async () => {
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockResolvedValue(),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                productId: null
+            }
+            try {
+                await mutationsProduct.deleteProduct(null, args, context);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Invalid product id');
+                expect(error.extensions.code).toBe('BAD_REQUEST');
+                expect(context.prisma.product.delete).not.toHaveBeenCalled();
+            }
+        })
+        // TODO: Test deleting product with undefined productId and admin session - should fail with Invalid product id
+        it('should throw an error when you try a product with undefined product id and admin session', async () => {
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockResolvedValue(),
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                productId: undefined
+            }
+            try {
+                await mutationsProduct.deleteProduct(null, args, context);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Invalid product id');
+                expect(error.extensions.code).toBe('BAD_REQUEST');
+                expect(context.prisma.product.delete).not.toHaveBeenCalled();
+            }
+        })
+        // TODO: Test deleting product with non-string productId (e.g., integer) and admin session - should fail with Invalid product id
+        it('should throw an error when try to delete porduct with non string product id and admin session', async () => {
+            const context = createMockContext({
+                prisma: {
+                    product: {
+                        delete: vi.fn().mockResolvedValue()
+                    }
+                },
+                session: {
+                    user: {
+                        id: 'clp293h4r000008l17n9fclbD',
+                        role: Role.ADMIN
+                    }
+                }
+            });
+            const args = {
+                productId: 123
+            }
+            try {
+                await mutationsProduct.deleteProduct(null, args, context);
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Invalid product id');
+                expect(error.extensions.code).toBe('BAD_REQUEST');
+                expect(context.prisma.product.delete).not.toHaveBeenCalled();
+            }
+        })
+    });
 
 });

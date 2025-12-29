@@ -7,7 +7,7 @@ import { GraphQLError } from "graphql";
 export default {
     //select All users
     users: async (parent, args, context) => {
-        if (!(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
+        if (context.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
         const { searchQuery, role, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
         let where = {};
         let orderBy = {};
@@ -86,11 +86,17 @@ export default {
     },
     //select a user by id
     user: async (parent, args, context) => {
-        if (!context.session || !(context.session?.user?.role === Role.CUSTOMER)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        const id = context.session.user.id;
-        if (!id || typeof id !== 'string') throw new GraphQLError("Invalid user id");
+        if (context.session?.user?.role !== Role.CUSTOMER && context.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
+        const { id } = args;
+        let targetId;
+        if (context.session?.user?.role === Role.ADMIN) {
+            if (!id || typeof id !== 'string') throw new GraphQLError("Invalid user id", { extensions: { code: 'BAD_REQUEST' } });
+            targetId = id;
+        } else {
+            targetId = context.session?.user.id;
+        }
         return await context.prisma.user.findUnique({
-            where: { id },
+            where: { id: targetId },
             include: {
                 orders: {
                     include: {

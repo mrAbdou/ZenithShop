@@ -2,8 +2,8 @@ import { graphqlServerRequest } from '@/lib/graphql-server';
 import { gql } from 'graphql-request';
 
 export const GET_USERS = gql`
-query GetUsers {
-    users {
+query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int!, $limit: Int!) {
+    users(searchQuery: $searchQuery, role: $role, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, currentPage: $currentPage, limit: $limit) {
         id
         name
         email
@@ -29,17 +29,17 @@ query GetUsersCount {
     usersCount
 }`;
 
-export const COMPLETE_SIGNUP = gql`
-mutation CompleteSignUp($phoneNumber: String!, $address: String!, $role: Role!){
-    completeSignUp(phoneNumber: $phoneNumber, address: $address, role: $role){
-        id
-        name
-        email
-        phoneNumber
-        address
-        role
-    }
-}`;
+// export const COMPLETE_SIGNUP = gql`
+// mutation CompleteSignUp($phoneNumber: String!, $address: String!, $role: Role!){
+//     completeSignUp(phoneNumber: $phoneNumber, address: $address, role: $role){
+//         id
+//         name
+//         email
+//         phoneNumber
+//         address
+//         role
+//     }
+// }`;
 export const MY_ORDERS = gql`
 query MyOrders{
     myOrders{
@@ -57,9 +57,9 @@ query MyOrders{
         }
     }
 }`;
-export async function fetchUsers(cookieHeader = '') {
+export async function fetchUsers(variables, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(GET_USERS, {}, cookieHeader);
+        const data = await graphqlServerRequest(GET_USERS, variables, cookieHeader);
         return data?.users ?? [];
     } catch (err) {
         throw err;
@@ -89,18 +89,18 @@ export async function fetchUsersCount(cookieHeader = '') {
         throw error;
     }
 }
-export async function completeSignUp(phoneNumber, address, role, cookieHeader = '') {
-    try {
-        const data = await graphqlServerRequest(COMPLETE_SIGNUP, {
-            phoneNumber,
-            address,
-            role,
-        }, cookieHeader);
-        return data?.completeSignUp ?? null;
-    } catch (catchError) {
-        throw catchError;
-    }
-}
+// export async function completeSignUp(phoneNumber, address, role, cookieHeader = '') {
+//     try {
+//         const data = await graphqlServerRequest(COMPLETE_SIGNUP, {
+//             phoneNumber,
+//             address,
+//             role,
+//         }, cookieHeader);
+//         return data?.completeSignUp ?? null;
+//     } catch (catchError) {
+//         throw catchError;
+//     }
+// }
 export async function fetchMyOrders(cookieHeader) {
     try {
         const data = await graphqlServerRequest(MY_ORDERS, {}, cookieHeader);

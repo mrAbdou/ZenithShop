@@ -99,7 +99,25 @@ export default {
             throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
         }
         try {
-            return await context.prisma.order.update({ where: { id }, data: { status: validation.data.status } });
+            return await context.prisma.$transaction(async (tx) => {
+                const order = await tx.order.findUnique({ where: { id }, select: { status: true, items: { select: { productId: true, qte: true } } } });
+                if (!order) throw new GraphQLError("Order not found", { extensions: { code: 'NOT_FOUND' } });
+                const isAlreadyCancelledOrReturned = [OrderStatus.CANCELLED, OrderStatus.RETURNED].includes(order.status);
+                const isGoingToBeCancelledOrReturned = [OrderStatus.CANCELLED, OrderStatus.RETURNED].includes(validation.data.status);
+                if (isGoingToBeCancelledOrReturned && isAlreadyCancelledOrReturned) {
+                    return tx.order.findUnique({ where: { id } });
+                } else if (isGoingToBeCancelledOrReturned && !isAlreadyCancelledOrReturned) {
+                    const updatedOrder = await tx.order.update({ where: { id }, data: { status: validation.data.status } });
+                    for (const item of order.items) {
+                        await tx.product.update({ where: { id: item.productId }, data: { qteInStock: { increment: item.qte } } });
+                    }
+                    return updatedOrder;
+                } else {
+                    const updatedOrder = await tx.order.update({ where: { id }, data: { status: validation.data.status } });
+                    return updatedOrder;
+                }
+
+            })
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {
@@ -129,6 +147,7 @@ export default {
             return await context.prisma.order.delete({ where: { id } });
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
+            console.log(JSON.stringify(prismaError, null, 2));
             switch (prismaError.code) {
                 case 'P2025':
                     throw new GraphQLError("Order not found", { extensions: { code: 'ORDER_NOT_FOUND' } });
@@ -142,7 +161,7 @@ export default {
                 case 'P1000':
                     throw new GraphQLError("Database temporarily unavailable", { extensions: { code: 'DATABASE_TEMPORARILY_UNAVAILABLE' } });
                 default:
-                    console.error('Unhandled database error : ', prismaError);
+                    //console.error('Unhandled database error : ', prismaError);
                     throw new GraphQLError("Database operation failed", { extensions: { code: 'DATABASE_OPERATION_FAILED' } });
             }
         }
@@ -173,7 +192,7 @@ export default {
                 });
                 if (!order) throw new GraphQLError("Order not found", { extensions: { code: 'ORDER_NOT_FOUND' } });
                 await tx.order.update({
-                    where: { id: order.id },
+                    where: { id },
                     data: { status: OrderStatus.CANCELLED }
                 });
                 for (const item of order.items) {

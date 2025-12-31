@@ -1,3 +1,24 @@
+/**
+ * @file services/users.server.js
+ * @description Production-ready GraphQL queries and service functions for user-related operations.
+ * This file contains all GraphQL queries and service functions for fetching user data,
+ * including user lists, individual user details, counts, and orders. All queries are aligned
+ * with the backend schemas defined in `app/graphql/TypeDefinitions.js`.
+ *
+ * @exports
+ * - GraphQL Queries: GET_USERS, GET_USER, GET_CUSTOMERS_COUNT, GET_USERS_COUNT, MY_ORDERS
+ * - Service Functions: fetchUsers, fetchUser, fetchCustomersCount, fetchUsersCount, fetchMyOrders
+ *
+ * @dependencies
+ * - @/lib/graphql-server: Provides the `graphqlServerRequest` function for executing GraphQL queries.
+ * - graphql-request: Provides the `gql` template literal tag for defining GraphQL queries.
+ *
+ * @notes
+ * - All functions handle errors by propagating them to the caller.
+ * - Default values are provided for optional parameters (e.g., `cookieHeader`).
+ * - Null checks are implemented to return appropriate defaults (e.g., empty arrays, 0).
+ */
+
 import { graphqlServerRequest } from '@/lib/graphql-server';
 import { gql } from 'graphql-request';
 
@@ -12,7 +33,7 @@ query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate
 }
 `;
 export const GET_USER = gql`
-query GetUser($id: ID!) {
+query GetUser($id: String!) {
     user(id: $id) {
         id
         name
@@ -29,17 +50,6 @@ query GetUsersCount {
     usersCount
 }`;
 
-// export const COMPLETE_SIGNUP = gql`
-// mutation CompleteSignUp($phoneNumber: String!, $address: String!, $role: Role!){
-//     completeSignUp(phoneNumber: $phoneNumber, address: $address, role: $role){
-//         id
-//         name
-//         email
-//         phoneNumber
-//         address
-//         role
-//     }
-// }`;
 export const MY_ORDERS = gql`
 query MyOrders{
     myOrders{
@@ -89,18 +99,6 @@ export async function fetchUsersCount(cookieHeader = '') {
         throw error;
     }
 }
-// export async function completeSignUp(phoneNumber, address, role, cookieHeader = '') {
-//     try {
-//         const data = await graphqlServerRequest(COMPLETE_SIGNUP, {
-//             phoneNumber,
-//             address,
-//             role,
-//         }, cookieHeader);
-//         return data?.completeSignUp ?? null;
-//     } catch (catchError) {
-//         throw catchError;
-//     }
-// }
 export async function fetchMyOrders(cookieHeader) {
     try {
         const data = await graphqlServerRequest(MY_ORDERS, {}, cookieHeader);

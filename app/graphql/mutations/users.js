@@ -8,7 +8,6 @@ import { GraphQLError } from "graphql";
 export default {
     //complete sign up mutation
     completeSignUp: async (parent, args, context) => {
-
         if (!context.session?.user?.id) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
         const validation = CompleteSignUpSchema.safeParse(args);
         if (!validation.success) {
@@ -16,14 +15,13 @@ export default {
             throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
         }
         try {
-            const user = await context.prisma.user.update({
+            return await context.prisma.user.update({
                 where: { id: context.session.user.id },
                 data: validation.data
             });
-            return user;
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2025') throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+                if (error.code === 'P2025') throw new GraphQLError('User not found', { extensions: { code: 'USER_NOT_FOUND' } });
             }
             throw error;
         }
@@ -31,10 +29,10 @@ export default {
 
     updateUserProfile: async (parent, args, context) => {
         if (context.session?.user?.role !== Role.CUSTOMER && context.session?.user?.role !== Role.ADMIN) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
-        const { id, ...updatedUser } = args;
-        if (!id || typeof id !== 'string') throw new GraphQLError('Ivalid user id', { extensions: { code: 'BAD_REQUEST' } });
+        const { id, ...updatedUser } = args; // this is good for the future if you added new filed to be updated this is going to work directly
         let targetId;
         if (context.session?.user?.role === Role.ADMIN) {
+            if (!id || typeof id !== 'string') throw new GraphQLError('Ivalid user id', { extensions: { code: 'BAD_REQUEST' } });
             targetId = id;
         } else {
             targetId = context.session.user.id;
@@ -45,11 +43,10 @@ export default {
             throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
         }
         try {
-            await context.prisma.user.update({
+            return await context.prisma.user.update({
                 where: { id: targetId },
                 data: validation.data
             });
-            return true;
         } catch (prismaError) {
             switch (prismaError.code) {
                 case 'P2025':

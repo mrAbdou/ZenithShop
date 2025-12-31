@@ -83,9 +83,9 @@ type OrderItem {
 
 type Mutation {
     # User Profile ###########################
-    updateUserProfile(id: String!, name: String, address: String, phoneNumber: String): Boolean!
+    updateUserProfile(id: String, name: String, address: String, phoneNumber: String): User!
     deleteCustomerProfile(userId: String): Boolean!
-    completeSignUp(phoneNumber: String!, address: String!, role: Role!): User!
+    completeSignUp(phoneNumber: String!, address: String!): User!
 
     # Product Management (Admin) #############
     addNewProduct(product: ProductInput!): Product!

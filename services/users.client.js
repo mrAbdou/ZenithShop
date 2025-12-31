@@ -2,10 +2,12 @@ import { graphqlRequest } from '@/lib/graphql-client';
 import { UpdateCustomerSchema } from '@/lib/schemas/user.schema';
 import { gql } from 'graphql-request';
 import { authClient } from "@/lib/auth-client";
+import { LIMIT } from '@/lib/constants';
+import ZodValidationError from '@/lib/ZodValidationError';
 
 export const GET_USERS = gql`
-query GetUsers {
-    users {
+query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int!, $limit: Int!) {
+    users(searchQuery: $searchQuery, role: $role, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, currentPage: $currentPage, limit: $limit) {
         id
         name
         email
@@ -14,7 +16,7 @@ query GetUsers {
 }
 `;
 export const GET_USER = gql`
-query GetUser($id: String!) {
+query GetUser($id: String) {
     user(id: $id) {
         id
         name
@@ -60,70 +62,70 @@ query MyOrders{
         }
     }
 }`;
-export async function fetchUsers() {
+export const UPDATE_USER_PROFILE = gql`
+mutation UpdateUserProfile($id: String, $name: String, $phoneNumber: String, $address: String) {
+    updateUserProfile(id: $id, name: $name, phoneNumber: $phoneNumber, address: $address){
+        id
+        name
+        email
+        phoneNumber
+        address
+        role
+    }
+}`;
+export async function fetchUsers(variables = { limit: LIMIT, currentPage: 1 }) {
     try {
-        const data = await graphqlRequest(GET_USERS, {});
+        const data = await graphqlRequest(GET_USERS, variables);
         return data?.users ?? [];
     } catch (err) {
         throw err;
     }
 }
-export async function fetchUser(id) {
+export async function fetchUser(variables) {
     try {
-        const data = await graphqlRequest(GET_USER, { id });
+        const data = await graphqlRequest(GET_USER, variables);
         return data?.user ?? null;
     } catch (err) {
         throw err;
     }
 }
-export async function fetchCustomersCount() {
+export async function fetchCustomersCount(variables = {}) {
     try {
-        const data = await graphqlRequest(GET_CUSTOMERS_COUNT, {});
+        const data = await graphqlRequest(GET_CUSTOMERS_COUNT, variables);
         return data?.customersCount ?? 0;
     } catch (err) {
         throw err;
     }
 }
-export async function fetchUsersCount() {
+export async function fetchUsersCount(variables = {}) {
     try {
-        const data = await graphqlRequest(GET_USERS_COUNT, {});
+        const data = await graphqlRequest(GET_USERS_COUNT, variables);
         return data?.usersCount ?? 0;
     } catch (err) {
         throw err;
     }
 }
-export async function completeSignUp(phoneNumber, address, role) {
+export async function completeSignUp(variables) {
     try {
-        console.log('complete sign up , service level (graphql-request), passed data are : ', { phoneNumber, address, role });
-        const data = await graphqlRequest(COMPLETE_SIGNUP, {
-            phoneNumber,
-            address,
-            role,
-        });
+        const data = await graphqlRequest(COMPLETE_SIGNUP, variables);
         return data?.completeSignUp ?? null;
     } catch (catchError) {
         throw catchError;
     }
 }
-export async function fetchMyOrders() {
+export async function fetchMyOrders(variables = {}) {
     try {
-        const data = await graphqlRequest(MY_ORDERS, {});
+        const data = await graphqlRequest(MY_ORDERS, variables);
         return data?.myOrders ?? [];
     } catch (err) {
         throw err;
     }
 }
 // this function doesn't use the apollo client at all , it uses better auth updateUser because of the fields related to better auth , these fields should be updated in the better auth user, and only by it so the work still be perfect
-export async function updateCustomerProfile(updatedCustomer) {
+export async function updateCustomerProfile(variables) {
     try {
-        console.log('update customer profile , service level (Better Auth), passed data are : ', updatedCustomer);
-        const validation = UpdateCustomerSchema.safeParse(updatedCustomer);
-        if (!validation.success) throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
-        const result = await authClient.updateUser(validation.data);
-        if (result.error) {
-            throw new Error(result.error.message);
-        }
-        return result.data;
+        const data = await graphqlRequest(UPDATE_USER_PROFILE, variables);
+        return data?.updateUserProfile ?? false;
     } catch (err) {
         throw err;
     }

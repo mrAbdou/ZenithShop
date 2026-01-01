@@ -8,10 +8,24 @@ export default {
     // select signed in customer orders
     myOrders: async (parent, args, context) => {
         if (!(context.session?.user?.id && context.session.user.role === Role.CUSTOMER)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        return await context.prisma.order.findMany({
-            where: { userId: context.session.user.id },
-            include: { items: { include: { product: true } } }
-        });
+        try {
+            return await context.prisma.order.findMany({
+                where: { userId: context.session.user.id },
+                include: { items: { include: { product: true } } }
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     },
     // select all orders
     //should only be used by admin because this function is build for the table pagination only
@@ -61,20 +75,34 @@ export default {
                 }
             }
         }
-        if (!validation.data.currentPage && !validation.data.limit) {
+        try {
+            if (!validation.data.currentPage && !validation.data.limit) {
+                return await context.prisma.order.findMany({
+                    include: { user: true, items: true },
+                    where,
+                    orderBy,
+                });
+            }
             return await context.prisma.order.findMany({
                 include: { user: true, items: true },
                 where,
                 orderBy,
+                skip: validation.data.currentPage > 1 ? (validation.data.currentPage - 1) * validation.data.limit : 0,
+                take: validation.data.limit,
             });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
         }
-        return await context.prisma.order.findMany({
-            include: { user: true, items: true },
-            where,
-            orderBy,
-            skip: validation.data.currentPage > 1 ? (validation.data.currentPage - 1) * validation.data.limit : 0,
-            take: validation.data.limit,
-        });
     },
 
     // TODO: Create tests for order resolver in orderQueries.test.js - test valid string id returns order (with access control), invalid id types/null/undefined throw errors, no session throws Unauthorized.
@@ -84,36 +112,74 @@ export default {
         const { id } = args;
         if (!id || typeof id !== 'string') throw new GraphQLError("Invalid order id", { extensions: { code: 'BAD_USER_INPUT' } });
 
-        const order = await context.prisma.order.findUnique({
-            where: { id },
-            include: { user: true, items: { include: { product: true } } }
-        });
+        try {
+            const order = await context.prisma.order.findUnique({
+                where: { id },
+                include: { user: true, items: { include: { product: true } } }
+            });
 
-        if (!order) throw new GraphQLError("Order not found", { extensions: { code: 'NOT_FOUND' } });
+            if (!order) throw new GraphQLError("Order not found", { extensions: { code: 'NOT_FOUND' } });
 
-        if (order.userId !== context.session.user.id && context.session.user.role !== Role.ADMIN) {
-            throw new GraphQLError("Access denied: You can only view your own orders", { extensions: { code: 'FORBIDDEN' } });
+            if (order.userId !== context.session.user.id && context.session.user.role !== Role.ADMIN) {
+                throw new GraphQLError("Access denied: You can only view your own orders", { extensions: { code: 'FORBIDDEN' } });
+            }
+
+            return order;
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Order not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
         }
-
-        return order;
     },
 
     // select the total number of orders
     ordersCount: async (parent, args, context) => {
         if (!context.session || context.session.user.role !== Role.ADMIN) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        return await context.prisma.order.count();
+        try {
+            return await context.prisma.order.count();
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     },
 
     //count active orders
     activeOrdersCount: async (parent, args, context) => {
         if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        return await context.prisma.order.count({
-            where: {
-                status: {
-                    notIn: [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.RETURNED]
+        try {
+            return await context.prisma.order.count({
+                where: {
+                    status: {
+                        notIn: [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.RETURNED]
+                    }
                 }
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-        });
+        }
     },
 
     filteredOrdersCount: async (parent, args, context) => {
@@ -125,7 +191,6 @@ export default {
                 path: issue.path,
                 message: issue.message
             }));
-            console.log('from filteredOrdersCount errors: ', errors);
             throw new GraphQLError("Validation failed", { extensions: { code: 'VALIDATION_FAILED', errors } });
         }
         let where = {};
@@ -148,8 +213,20 @@ export default {
             where.createdAt = { ...where.createdAt, lte: new Date(validation.data.endDate) };
         }
 
-        return await context.prisma.order.count({
-            where,
-        });
+        try {
+            return await context.prisma.order.count({
+                where,
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     }
 }

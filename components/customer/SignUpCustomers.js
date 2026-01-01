@@ -3,42 +3,87 @@ import { useForm } from "react-hook-form";
 import { SignUpCustomerSchema } from "@/lib/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authClient } from "@/lib/auth-client";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { CartContext } from "@/context/CartContext";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useCompleteSignUp } from "@/hooks/users";
-import { Role } from "@/lib/constants";
-export default function SignUpCustomers({ redirectTo }) {
-    const { getCart } = useContext(CartContext);
-    const cart = getCart();
+import { Role } from "@prisma/client";
+import ZodValidationError from "@/lib/ZodValidationError";
+export default function SignUpCustomers({ redirectPath }) {
+    const [errorMessages, setErrorMessages] = useState([]);
+    //const { getCart } = useContext(CartContext);
+    //const cart = getCart();
     const router = useRouter();
-    const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    // form configuration : 
+    const { register, handleSubmit, formState: { errors, isSubmitting, isValid, isDirty }, reset } = useForm({
         resolver: zodResolver(SignUpCustomerSchema),
         mode: 'onChange'
     });
-    const { mutateAsync: completeSignUpAsync } = useCompleteSignUp();
+    //installation of the custom hook that is going to finish the sign up : 
+    const { mutateAsync: completeSignUpAsync, isPending } = useCompleteSignUp();
+    //submit function : 
     const onSubmit = async ({ name, email, password, phoneNumber, address }) => {
+        setErrorMessages([]); // clear the error messages
         try {
-            let user = await authClient.signUp.email({ name, email, password });
-            user = await completeSignUpAsync({ phoneNumber, address, role: Role.CUSTOMER });
-            if (!!user) {
+            const { data, error } = await authClient.signUp.email({ name, email, password });
+            if (error) {
+                const mappedErrors = [];
+                const normalizedError = error.message.toLowerCase();
+                if (normalizedError.includes('email')) {
+                    mappedErrors.push({ field: 'email', message: error.message });
+                } else if (normalizedError.includes('password')) {
+                    mappedErrors.push({ field: 'password', message: error.message });
+                } else if (normalizedError.includes('name')) {
+                    mappedErrors.push({ field: 'name', message: error.message });
+                } else {
+                    mappedErrors.push({ field: 'form', message: error.message });
+                }
+                setErrorMessages(mappedErrors);
+                return;
+            } else {
+                console.log('better auth succeed creating user account : ', data);
+                const user = await completeSignUpAsync({ phoneNumber, address });
+                if (!user) {
+                    setErrorMessages([{ field: 'form', message: 'Account created but profile setup failed. Please try again.' }]);
+                    toast.error('Account created but profile setup failed. Please try again.');
+                    return;
+                }
                 reset();
                 toast.success('Account created successfully!');
-                const redirectPath = redirectTo ? decodeURIComponent(redirectTo) : '/customer-dashboard';
                 router.push(redirectPath);
-            } else {
-                // TODO: bad Error message , needs to be updated
-                throw new Error('Customer completed but failed to set phoneNumber and address');
             }
 
+
         } catch (error) {
-            toast.error(`Sign up failed: ${error.message}`);
+            console.log(JSON.stringify(error, null, 2));
+            if (error instanceof ZodValidationError) {
+                setErrorMessages(error.issues);
+                return;
+            }
+            toast.error('Unexpected error occurred. Please try again.');
         }
     }
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {
+                JSON.stringify(errorMessages, null, 2)
+            }
+            {/* Error Messages Display */}
+            {errorMessages.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                    <h3 className="text-lg font-semibold text-red-800 mb-2">Errors</h3>
+                    <div className="space-y-1">
+                        {errorMessages.map((error, index) => (
+                            <p key={index} className="text-sm text-red-700 font-medium">
+                                {error.field === 'form' ? error.message : `${error.field}: ${error.message}`}
+                            </p>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Name Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -53,8 +98,9 @@ export default function SignUpCustomers({ redirectTo }) {
                     <input
                         type="text"
                         {...register("name")}
+                        disabled={isSubmitting || isPending}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            }`}
+                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="Enter your full name"
                     />
                 </div>
@@ -77,8 +123,9 @@ export default function SignUpCustomers({ redirectTo }) {
                     <input
                         type="email"
                         {...register("email")}
+                        disabled={isSubmitting || isPending}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            }`}
+                            } ${(isSubmitting || isPending) ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="your@email.com"
                     />
                 </div>
@@ -101,8 +148,9 @@ export default function SignUpCustomers({ redirectTo }) {
                     <input
                         type="password"
                         {...register("password")}
+                        disabled={isSubmitting || isPending}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            }`}
+                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="Create a strong password"
                     />
                 </div>
@@ -125,8 +173,9 @@ export default function SignUpCustomers({ redirectTo }) {
                     <input
                         type="text"
                         {...register("phoneNumber")}
+                        disabled={isSubmitting || isPending}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            }`}
+                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="+1 (555) 123-4567"
                     />
                 </div>
@@ -150,8 +199,9 @@ export default function SignUpCustomers({ redirectTo }) {
                     <input
                         type="text"
                         {...register("address")}
+                        disabled={isSubmitting || isPending}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            }`}
+                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="123 Main St, City, State"
                     />
                 </div>
@@ -162,8 +212,9 @@ export default function SignUpCustomers({ redirectTo }) {
 
             {/* Submit Button */}
             <button
+                disabled={isPending || isSubmitting || (!isValid && !isDirty)}
                 type="submit"
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
+                className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3 ${(isPending || isSubmitting) ? 'cursor-not-allowed opacity-50' : ''}`}
             >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />

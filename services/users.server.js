@@ -19,6 +19,7 @@
  * - Null checks are implemented to return appropriate defaults (e.g., empty arrays, 0).
  */
 
+import { LIMIT } from '@/lib/constants';
 import { graphqlServerRequest } from '@/lib/graphql-server';
 import { gql } from 'graphql-request';
 
@@ -67,7 +68,8 @@ query MyOrders{
         }
     }
 }`;
-export async function fetchUsers(variables, cookieHeader = '') {
+
+export async function fetchUsers(variables = { limit: LIMIT, currentPage: 1 }, cookieHeader = '') {
     try {
         const data = await graphqlServerRequest(GET_USERS, variables, cookieHeader);
         return data?.users ?? [];
@@ -75,33 +77,33 @@ export async function fetchUsers(variables, cookieHeader = '') {
         throw err;
     }
 }
-export async function fetchUser(id, cookieHeader = '') {
+export async function fetchUser(variables = {}, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(GET_USER, { id }, cookieHeader);
+        const data = await graphqlServerRequest(GET_USER, variables, cookieHeader);
         return data?.user ?? null;
     } catch (err) {
         throw err;
     }
 }
-export async function fetchCustomersCount(cookieHeader = '') {
+export async function fetchCustomersCount(variables = {}, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(GET_CUSTOMERS_COUNT, {}, cookieHeader);
+        const data = await graphqlServerRequest(GET_CUSTOMERS_COUNT, variables, cookieHeader);
         return data?.customersCount ?? 0;
     } catch (err) {
         throw err;
     }
 }
-export async function fetchUsersCount(cookieHeader = '') {
+export async function fetchUsersCount(variables = {}, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(GET_USERS_COUNT, {}, cookieHeader);
+        const data = await graphqlServerRequest(GET_USERS_COUNT, variables, cookieHeader);
         return data?.usersCount ?? 0;
     } catch (error) {
         throw error;
     }
 }
-export async function fetchMyOrders(cookieHeader) {
+export async function fetchMyOrders(variables = {}, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(MY_ORDERS, {}, cookieHeader);
+        const data = await graphqlServerRequest(MY_ORDERS, variables, cookieHeader);
         return data?.myOrders ?? [];
     } catch (err) {
         throw err;

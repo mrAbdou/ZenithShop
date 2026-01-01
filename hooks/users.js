@@ -8,8 +8,9 @@ import {
     fetchUsersCount,
     updateCustomerProfile
 } from "@/services/users.client";
-import { UpdateCustomerSchema } from "@/lib/schemas/user.schema";
+import { CompleteSignUpSchema, UpdateCustomerSchema } from "@/lib/schemas/user.schema";
 import toast from "react-hot-toast";
+import ZodValidationError from "@/lib/ZodValidationError";
 
 export function useUsers(initialData = []) {
     return useQuery({
@@ -21,7 +22,7 @@ export function useUsers(initialData = []) {
 export function useUser(id) {
     return useQuery({
         queryKey: ['user', id],
-        queryFn: () => fetchUser(id)
+        queryFn: () => fetchUser({ id })
     });
 }
 export function useCustomersCount(initialData) {
@@ -40,10 +41,17 @@ export function useUsersCount(initialData) {
 }
 export function useCompleteSignUp() {
     return useMutation({
-        mutationFn: ({ phoneNumber, address, role }) => {
-            console.log('complete sign up , custom hook level(react-query), passed data are : ', { phoneNumber, address, role });
-            return completeSignUp(phoneNumber, address, role)
-        }
+        mutationFn: (data) => {
+            const validation = CompleteSignUpSchema.safeParse(data);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    path: issue.path[0],
+                    message: issue.message
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return completeSignUp(validation.data)
+        },
     });
 }
 export function useMyOrders(initialData = []) {
@@ -53,15 +61,19 @@ export function useMyOrders(initialData = []) {
         initialData
     })
 }
-import { authClient } from "@/lib/auth-client";
 
 export function useUpdateCustomerProfile() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (updatedCustomer) => {
-            console.log('update customer profile , custom hook level(react-query), passed data are : ', updatedCustomer);
             const validation = UpdateCustomerSchema.safeParse(updatedCustomer);
-            if (!validation.success) throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    path: issue.path[0],
+                    message: issue.message
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            };
             return await updateCustomerProfile(validation.data);
         },
         onSuccess: (data) => {

@@ -8,9 +8,7 @@ export default {
     //select products for table pagination
     paginatedProducts: async (parent, args, context) => {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized access", { extensions: { code: 'UNAUTHORIZED' } });
-        const { searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
-
-        const validation = ProductPaginationSchema.safeParse({ searchQuery, stock, startDate, endDate, sortBy, sortDirection, limit, currentPage });
+        const validation = ProductPaginationSchema.safeParse(args);
         if (!validation.success) {
             const errors = validation.error.issues.map(issue => ({
                 field: issue.path[0],
@@ -81,18 +79,32 @@ export default {
 
 
 
-        if (validation.data.limit && validation.data.currentPage) {
+        try {
+            if (validation.data.limit && validation.data.currentPage) {
+                return await context.prisma.product.findMany({
+                    where,
+                    orderBy,
+                    take: validation.data.limit,
+                    skip: (validation.data.currentPage - 1) * validation.data.limit
+                });
+            }
             return await context.prisma.product.findMany({
                 where,
                 orderBy,
-                take: validation.data.limit,
-                skip: (validation.data.currentPage - 1) * validation.data.limit
             });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
         }
-        return await context.prisma.product.findMany({
-            where,
-            orderBy,
-        });
 
     },
 
@@ -155,46 +167,98 @@ export default {
                 [validation.data.sortBy]: validation.data.sortDirection
             }
         }
-        return await context.prisma.product.findMany({
-            where,
-            orderBy,
-            take: validation.data.limit,
-            skip: validation.data.offset
-        });
+        try {
+            return await context.prisma.product.findMany({
+                where,
+                orderBy,
+                take: validation.data.limit,
+                skip: validation.data.offset
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     },
 
     //select the total number of available products
     availableProductsCount: async (parent, args, context) => {
-        return await context.prisma.product.count({
-            where: {
-                qteInStock: {
-                    gt: 0
+        try {
+            return await context.prisma.product.count({
+                where: {
+                    qteInStock: {
+                        gt: 0
+                    }
                 }
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-        });
+        }
     },
 
     //select the total number of products
     productsCount: async (parent, args, context) => {
-        return await context.prisma.product.count();
+        try {
+            return await context.prisma.product.count();
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     },
 
     //select a product by id
     product: async (parent, args, context) => {
         const { id } = args;
         if (!id || typeof id !== 'string') throw new GraphQLError("Invalid product id", { extensions: { code: 'BAD_REQUEST' } });
-        return await context.prisma.product.findUnique({
-            where: { id },
-            include: {
-                orderItems: {
-                    include: {
-                        order: {
-                            include: { user: true }
+        try {
+            return await context.prisma.product.findUnique({
+                where: { id },
+                include: {
+                    orderItems: {
+                        include: {
+                            order: {
+                                include: { user: true }
+                            }
                         }
                     }
                 }
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Product not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-        });
+        }
     },
 
     filteredProductsCount: async (parent, args, context) => {
@@ -246,8 +310,20 @@ export default {
 
 
 
-        return await context.prisma.product.count({
-            where,
-        });
+        try {
+            return await context.prisma.product.count({
+                where,
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     }
 }

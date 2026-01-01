@@ -1,5 +1,6 @@
 import CartFloatingButton from "@/components/customer/CartFloatingButton";
 import ProductsListing from "@/components/customer/ProductsListing";
+import { LIMIT } from "@/lib/constants";
 import { fetchInfiniteProducts } from "@/services/products.server";
 import { headers } from "next/headers";
 
@@ -21,7 +22,7 @@ export const metadata = {
 export default async function Home() {
   const h = await headers();
   const cookieHeader = h.get('cookie');
-  const products = await fetchInfiniteProducts(cookieHeader);
+  const products = await fetchInfiniteProducts({ limit: LIMIT, offset: 0 }, cookieHeader);
   return (
     <div className="min-h-screen p-6 relative">
       {/* Hero Section */}

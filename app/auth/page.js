@@ -26,7 +26,7 @@ export default async function AuthenticationPage({ searchParams }) {
                         <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome Back</h1>
                         <p className="text-gray-600">Sign in to your account or create a new one</p>
                     </div>
-                    <CheckoutAuth redirectTo={redirectTo} />
+                    <CheckoutAuth redirectTo={redirectPath} />
                 </div>
             </div>
         );

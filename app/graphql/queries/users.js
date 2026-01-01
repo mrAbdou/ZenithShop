@@ -52,36 +52,53 @@ export default {
                 [validation.data.sortBy]: validation.data.sortDirection,
             }
         }
-        if (validation.data.limit && validation.data.currentPage) {
-            return await context.prisma.user.findMany({
-                where,
-                orderBy,
-                take: limit,
-                skip: (currentPage - 1) * limit,
-                include: {
-                    orders: {
-                        include: {
-                            items: {
-                                include: { product: true }
+
+        try {
+            if (validation.data.limit && validation.data.currentPage) {
+                return await context.prisma.user.findMany({
+                    where,
+                    orderBy,
+                    take: limit,
+                    skip: (currentPage - 1) * limit,
+                    include: {
+                        orders: {
+                            include: {
+                                items: {
+                                    include: { product: true }
+                                }
                             }
                         }
                     }
-                }
-            });
-        } else {
-            return await context.prisma.user.findMany({
-                where,
-                orderBy,
-                include: {
-                    orders: {
-                        include: {
-                            items: {
-                                include: { product: true }
+                });
+            } else {
+                return await context.prisma.user.findMany({
+                    where,
+                    orderBy,
+                    include: {
+                        orders: {
+                            include: {
+                                items: {
+                                    include: { product: true }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P2003':
+                    throw new GraphQLError("Foreign key constraint failed", { extensions: { code: 'BAD_REQUEST' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
         }
     },
     //select a user by id
@@ -95,33 +112,79 @@ export default {
         } else {
             targetId = context.session?.user.id;
         }
-        return await context.prisma.user.findUnique({
-            where: { id: targetId },
-            include: {
-                orders: {
-                    include: {
-                        items: {
-                            include: { product: true }
+
+        try {
+            return await context.prisma.user.findUnique({
+                where: { id: targetId },
+                include: {
+                    orders: {
+                        include: {
+                            items: {
+                                include: { product: true }
+                            }
                         }
                     }
                 }
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("User not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P2003':
+                    throw new GraphQLError("Foreign key constraint failed", { extensions: { code: 'BAD_REQUEST' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-        });
+        }
     },
     //count all customers (exclude admins)
     customersCount: async (parent, args, context) => {
         if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        return await context.prisma.user.count({
-            where: {
-                role: {
-                    equals: Role.CUSTOMER
+        try {
+            return await context.prisma.user.count({
+                where: {
+                    role: {
+                        equals: Role.CUSTOMER
+                    }
                 }
+            });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P2003':
+                    throw new GraphQLError("Foreign key constraint failed", { extensions: { code: 'BAD_REQUEST' } });
+                case 'P1000':
+                    throw new GraphQLError("Database authentication failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-        });
+        }
     },
     //count all users
     usersCount: async (parent, args, context) => {
         if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        return await context.prisma.user.count();
+        try {
+            return await context.prisma.user.count();
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     },
 }

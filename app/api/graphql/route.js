@@ -20,7 +20,7 @@ const { handleRequest } = createYoga({
             const cookieHeader = nextHeaders.get('cookie');
             session = await auth.api.getSession({ headers: { cookie: cookieHeader ?? "" } });
         } catch (error) {
-            console.log('GraphQL context: session error:', error);
+            console.error('GraphQL context: session error:', error);
         }
         return {
             prisma,

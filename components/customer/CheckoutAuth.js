@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export default function CheckoutAuth({ redirectTo }) {
     const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
     const [loading, setLoading] = useState(true);
-    const redirectPath = redirectTo ? decodeURIComponent(redirectTo) : '/customer-dashboard';
+    const redirectPath = redirectTo || '/customer-dashboard';
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
@@ -86,7 +86,7 @@ export default function CheckoutAuth({ redirectTo }) {
                         <h3 className="text-xl font-bold text-gray-800 mb-2">Sign In to Your Account</h3>
                         <p className="text-sm text-gray-600">Welcome back! Sign in to complete your order.</p>
                     </div>
-                    <SignInCustomers redirectTo={redirectTo} />
+                    <SignInCustomers redirectPath={redirectPath} />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">
                             New customer?{' '}
@@ -106,7 +106,7 @@ export default function CheckoutAuth({ redirectTo }) {
                         <h3 className="text-xl font-bold text-gray-800 mb-2">Create Your Account</h3>
                         <p className="text-sm text-gray-600">Join us! Create an account to complete your first order.</p>
                     </div>
-                    <SignUpCustomers redirectTo={redirectTo} />
+                    <SignUpCustomers redirectPath={redirectPath} />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">
                             Already have an account?{' '}

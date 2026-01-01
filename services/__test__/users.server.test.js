@@ -14,7 +14,7 @@ import {
 } from '@/services/users.server';
 import { graphqlServerRequest } from '@/lib/graphql-server';
 import { GraphQLError } from 'graphql';
-import { Role } from '@prisma/client';
+import { OrderStatus, Role } from '@prisma/client';
 
 dotenv.config();
 
@@ -80,16 +80,16 @@ describe('users.server.js Service Functions', () => {
         it('should call graphqlServerRequest with correct arguments and return user', async () => {
             graphqlServerRequest.mockResolvedValueOnce({ user: mockUser });
 
-            const userId = 'user1';
+            const variables = { id: 'user1' };
             const cookieHeader = 'auth=token';
-            await fetchUser(userId, cookieHeader);
+            await fetchUser(variables, cookieHeader);
 
-            expect(graphqlServerRequest).toHaveBeenCalledWith(GET_USER, { id: userId }, cookieHeader);
+            expect(graphqlServerRequest).toHaveBeenCalledWith(GET_USER, variables, cookieHeader);
         });
 
         it('should return null if user is not found', async () => {
             graphqlServerRequest.mockResolvedValueOnce({ user: null });
-            const result = await fetchUser('id');
+            const result = await fetchUser({ id: 'id' });
             expect(result).toBeNull();
         });
     });
@@ -125,21 +125,47 @@ describe('users.server.js Service Functions', () => {
     });
 
     describe('fetchMyOrders', () => {
-        const mockOrders = [{ id: 'order1', total: 100 }];
 
         it('should call graphqlServerRequest with correct arguments', async () => {
-            graphqlServerRequest.mockResolvedValueOnce({ myOrders: mockOrders });
+            graphqlServerRequest.mockResolvedValueOnce({
+                myOrders: [
+                    {
+                        id: 'order1',
+                        userId: 'customer1',
+                        status: OrderStatus.PENDING,
+                        items: [{
+                            productId: 'product1',
+                            qte: 2,
+                        }],
+                        total: 20,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    }
+                ]
+            });
             const cookieHeader = 'auth=token';
-
-            const result = await fetchMyOrders(cookieHeader);
-
-            expect(result).toEqual(mockOrders);
-            expect(graphqlServerRequest).toHaveBeenCalledWith(MY_ORDERS, {}, cookieHeader);
+            const variables = {};
+            const result = await fetchMyOrders(variables, cookieHeader);
+            expect(result).toEqual([
+                {
+                    id: 'order1',
+                    userId: 'customer1',
+                    status: OrderStatus.PENDING,
+                    items: [{
+                        productId: 'product1',
+                        qte: 2,
+                    }],
+                    total: 20,
+                    createdAt: expect.any(Date),
+                    updatedAt: expect.any(Date),
+                }
+            ]);
+            expect(graphqlServerRequest).toHaveBeenCalledWith(MY_ORDERS, variables, cookieHeader);
         });
 
         it('should return empty array if no orders found', async () => {
             graphqlServerRequest.mockResolvedValueOnce({});
-            const result = await fetchMyOrders('token');
+            const result = await fetchMyOrders({}, 'token');
             expect(result).toEqual([]);
         });
     });

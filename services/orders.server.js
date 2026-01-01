@@ -1,5 +1,6 @@
 import { graphqlServerRequest } from '@/lib/graphql-server';
-import { OrderFilterSchema, safeValidate } from '@/lib/zodSchemas';
+import { OrderFilterSchema } from '@/lib/schemas/order.schema';
+import ZodValidationError from '@/lib/ZodValidationError';
 import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
@@ -61,9 +62,10 @@ query GetActiveOrdersCount {
 }`;
 export async function fetchOrders(cookieHeader = '', filters = { searchQuery: '', status: OrderStatus.PENDING, startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 1, currentPage: 1 }) {
     try {
-        const validation = safeValidate(OrderFilterSchema, filters)
+        const validation = OrderFilterSchema.safeParse(filters)
         if (!validation.success) {
-            throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
+            const errors = validation.error.issues.map(issue => ({ field: issue.path[0], message: issue.message }));
+            throw new ZodValidationError('Validation failed', errors);
         }
         const data = await graphqlServerRequest(GET_ORDERS, validation.data, cookieHeader);
         return data?.orders ?? [];

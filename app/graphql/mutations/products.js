@@ -17,6 +17,7 @@ export default {
         try {
             return await context.prisma.product.create({ data: validation.data });
         } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {
                 case 'P2002':
                     throw new GraphQLError("Product already exists", { extensions: { code: 'PRODUCT_ALREADY_EXISTS' } });
@@ -49,6 +50,7 @@ export default {
                 data: validation.data
             });
         } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {
                 case 'P2025':
                     throw new GraphQLError("Product not found", { extensions: { code: 'PRODUCT_NOT_FOUND' } });
@@ -75,6 +77,7 @@ export default {
         try {
             return await context.prisma.product.delete({ where: { id: productId } });
         } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {
                 case 'P2025':
                     throw new GraphQLError("Product not found", { extensions: { code: 'PRODUCT_NOT_FOUND' } });

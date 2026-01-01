@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, filteredOrdersCount, updateOrder } from "@/services/orders.client";
 import { CreateOrderSchema, OrderFilterSchema, updateOrderSchema } from "@/lib/schemas/order.schema";
 export function useOrders(initialData = [], filters = {}) {
-    console.log('filters from the custom hook useOrders : ', filters);
 
     return useQuery({
         queryKey: ['orders', filters],
@@ -64,7 +63,6 @@ export function useAddOrder() {
     });
 }
 export function useOrdersCount() {
-    console.log('useOrdersCount hook called');
     return useQuery({
         queryKey: ['ordersCount'],
         queryFn: fetchOrdersCount,
@@ -123,7 +121,6 @@ export function useDeleteOrder() {
     return useMutation({
         mutationFn: (id) => deleteOrder(id),
         onSuccess: (data) => {
-            console.log('data from the deleteOrder mutation : ', data);
             queryClient.setQueryData(['orders'], (oldData) => {
                 if (Array.isArray(oldData)) {
                     return oldData.filter((order) => order.id !== data.id);

@@ -19,15 +19,24 @@ export default {
                 where: { id: context.session.user.id },
                 data: validation.data
             });
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2025') throw new GraphQLError('User not found', { extensions: { code: 'USER_NOT_FOUND' } });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError('User not found', { extensions: { code: 'USER_NOT_FOUND' } });
+                case 'P2002':
+                    throw new GraphQLError('Unique constraint failed', { extensions: { code: 'CONFLICT' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-            throw error;
         }
     },
 
-    updateUserProfile: async (parent, args, context) => {
+    updateCustomerProfile: async (parent, args, context) => {
         if (context.session?.user?.role !== Role.CUSTOMER && context.session?.user?.role !== Role.ADMIN) throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
         const { id, ...updatedUser } = args; // this is good for the future if you added new filed to be updated this is going to work directly
         let targetId;
@@ -81,12 +90,20 @@ export default {
         try {
             await context.prisma.user.delete({ where: { id: targetUserId } });
             return true;
-        } catch (error) {
-            if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2025') throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-                if (error.code === 'P2003') throw new GraphQLError('Foreign key constraint failed', { extensions: { code: 'P2003' } });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+                case 'P2003':
+                    throw new GraphQLError('Foreign key constraint failed', { extensions: { code: 'BAD_REQUEST' } });
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
             }
-            throw error;
         }
     },
 }

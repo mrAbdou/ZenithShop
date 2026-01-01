@@ -224,7 +224,7 @@ describe('User mutations', () => {
                 });
 
                 expect(error.message).toBe('User not found');
-                expect(error.extensions.code).toBe('NOT_FOUND');
+                expect(error.extensions.code).toBe('USER_NOT_FOUND');
             }
         });
 
@@ -538,7 +538,7 @@ describe('User mutations', () => {
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Foreign key constraint failed');
-                expect(error.extensions.code).toBe('P2003');
+                expect(error.extensions.code).toBe('BAD_REQUEST');
                 expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbZ' } });
             }
         })

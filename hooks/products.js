@@ -27,10 +27,10 @@ export function usePaginationProducts(initialData = [], filters) {
     });
 }
 
-export function useInfiniteProducts(initialData = [], limit) {
+export function useInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, initialData = []) {
     return useInfiniteQuery({
-        queryKey: ["products", limit],
-        queryFn: ({ pageParam = 0 }) => fetchInfiniteProducts(limit, pageParam),
+        queryKey: ["products", variables],
+        queryFn: ({ pageParam = 0 }) => fetchInfiniteProducts({ ...variables, offset: pageParam }),
         initialPageParam: 0,
         initialData: {
             pages: [initialData],
@@ -42,7 +42,7 @@ export function useInfiniteProducts(initialData = [], limit) {
                 0
             );
 
-            return lastPage && lastPage.length === limit
+            return lastPage && lastPage.length === variables.limit
                 ? loadedItems   // this becomes the NEXT offset
                 : undefined;    // stop
         }
@@ -51,7 +51,6 @@ export function useInfiniteProducts(initialData = [], limit) {
 }
 /** Fetch a single product by ID */
 export function useProduct(id) {
-    console.log('useProduct hook params: ', id);
     return useQuery({
         queryKey: ["product", id],
         queryFn: () => fetchProduct(id),

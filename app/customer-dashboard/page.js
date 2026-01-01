@@ -33,7 +33,7 @@ export default async function CustomerDashboard() {
     }
     // extract the cookie header, and get the orders list
     const cookieHeader = h.get('cookie') || '';
-    const orders = await fetchMyOrders(cookieHeader);
+    const orders = await fetchMyOrders({}, cookieHeader);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -74,7 +74,7 @@ export default async function CustomerDashboard() {
                         <OrdersTable initialData={orders} />
 
                         {/* Profile Section */}
-                        <UpdateCustomerProfileForm initialData={session?.user} />
+                        <UpdateCustomerProfileForm />
                     </div>
                 </div>
             </div>

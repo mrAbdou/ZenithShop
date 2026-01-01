@@ -147,7 +147,6 @@ export default {
             return await context.prisma.order.delete({ where: { id } });
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
-            console.log(JSON.stringify(prismaError, null, 2));
             switch (prismaError.code) {
                 case 'P2025':
                     throw new GraphQLError("Order not found", { extensions: { code: 'ORDER_NOT_FOUND' } });

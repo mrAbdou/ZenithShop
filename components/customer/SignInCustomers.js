@@ -8,7 +8,7 @@ import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
-export default function SignInCustomers({ redirectTo }) {
+export default function SignInCustomers({ redirectPath }) {
     const { getCart } = useContext(CartContext);
     const cart = getCart();
     const router = useRouter();
@@ -31,7 +31,6 @@ export default function SignInCustomers({ redirectTo }) {
 
         if (data) {
             toast.success('Signed in successfully!');
-            const redirectPath = redirectTo ? decodeURIComponent(redirectTo) : '/customer-dashboard';
             router.push(redirectPath);
         }
     }

@@ -6,17 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { useEffect } from "react";
-export default function UpdateCustomerProfileForm({ initialData = {} }) {
+export default function UpdateCustomerProfileForm() {
+    const { data: session } = authClient.useSession();
+    const { data: user, isLoading } = useUser(session?.user?.id);
     const router = useRouter();
-    const { data: user, isLoading } = useUser(initialData?.id);
-    console.log('user', user);
-    console.log('initial data', initialData);
-    useEffect(() => {
-        if (user) {
-            reset(user);
-        }
-    }, [user]);
     // TODO: email can't be updated, remove this email from all places 
     const { register, handleSubmit, reset, formState: { errors } } = useForm({
         defaultValues: {
@@ -27,17 +22,19 @@ export default function UpdateCustomerProfileForm({ initialData = {} }) {
         resolver: zodResolver(UpdateCustomerSchema),
         mode: 'onChange',
     });
+    useEffect(() => {
+        if (user) {
+            reset({
+                name: user.name,
+                phoneNumber: user.phoneNumber,
+                address: user.address,
+            });
+        }
+    }, [user]);
     const { mutateAsync: updateCustomerProfileAsync } = useUpdateCustomerProfile();
     const onSubmit = async (data) => {
-        const validation = UpdateCustomerSchema.safeParse(data);
-        if (!validation.success) {
-            const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
-            toast.error(`Validation failed: ${errorMessages}`);
-            return;
-        }
         try {
-            await updateCustomerProfileAsync(validation.data);
-            router.refresh(); // Refetch server component with updated session data
+            await updateCustomerProfileAsync(data);
         } catch (error) {
             toast.error(error?.message || 'Failed to update profile');
         }

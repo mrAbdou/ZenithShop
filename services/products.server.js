@@ -2,8 +2,8 @@ import { LIMIT } from '@/lib/constants';
 import { graphqlServerRequest } from '@/lib/graphql-server';
 import { gql } from 'graphql-request';
 export const GET_INFINITE_PRODUCTS = gql`
-query GetInfiniteProducts($limit: Int, $offset: Int) {
-    infiniteProducts(limit: $limit, offset: $offset) {
+query GetInfiniteProducts($limit: Int!, $offset: Int!, $searchQuery: String, $stock: String, $minPrice: Float, $maxPrice: Float, $sortBy: String, $sortDirection: String) {
+    infiniteProducts(limit: $limit, offset: $offset, searchQuery: $searchQuery, stock: $stock, minPrice: $minPrice, maxPrice: $maxPrice, sortBy: $sortBy, sortDirection: $sortDirection) {
         id
         name
         description
@@ -13,7 +13,7 @@ query GetInfiniteProducts($limit: Int, $offset: Int) {
     }
 }`;
 export const GET_PAGINATED_PRODUCTS = gql`
-query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $limit: Int, $currentPage: Int) {
+query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $limit: Int!, $currentPage: Int!) {
     paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name
@@ -50,44 +50,35 @@ query GetProductsInCart($cart: [ID!]!) {
         price
     }
 }`;
-export const ADD_PRODUCT = gql`
-mutation addProduct($newProduct: ProductInput!){
-    addNewProduct(product: $newProduct){
-        id
-        name
-        description
-        price
-        qteInStock
-    }
-}`;
-export async function fetchPaginatedProducts(cookieHeader = '', filters = { searchQuery: '', stock: '', startDate: null, endDate: null, sortBy: null, sortDirection: null, limit: 5, currentPage: 1 }) {
+
+export async function fetchPaginatedProducts(variables = { limit: LIMIT, currentPage: 1 }, cookieHeader = '') {
     try {
         const data = await graphqlServerRequest(GET_PAGINATED_PRODUCTS, {
-            searchQuery: filters.searchQuery,
-            stock: filters.stock,
-            startDate: filters.startDate,
-            endDate: filters.endDate,
-            sortBy: filters.sortBy,
-            sortDirection: filters.sortDirection,
-            limit: filters.limit,
-            currentPage: filters.currentPage
+            searchQuery: variables.searchQuery,
+            stock: variables.stock,
+            startDate: variables.startDate,
+            endDate: variables.endDate,
+            sortBy: variables.sortBy,
+            sortDirection: variables.sortDirection,
+            limit: variables.limit,
+            currentPage: variables.currentPage
         }, cookieHeader);
         return data?.paginatedProducts ?? [];
     } catch (error) {
         throw error;
     }
 }
-export async function fetchInfiniteProducts(cookieHeader = '', limit = LIMIT, offset = 0) {
+export async function fetchInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(GET_INFINITE_PRODUCTS, { limit, offset }, cookieHeader);
+        const data = await graphqlServerRequest(GET_INFINITE_PRODUCTS, variables, cookieHeader);
         return data?.infiniteProducts ?? [];
     } catch (error) {
         throw error;
     }
 }
-export async function fetchProduct(id, cookieHeader = '') {
+export async function fetchProduct(variables, cookieHeader = '') {
     try {
-        const data = await graphqlServerRequest(GET_PRODUCT, { id }, cookieHeader);
+        const data = await graphqlServerRequest(GET_PRODUCT, variables, cookieHeader);
         return data?.product ?? null;
     } catch (error) {
         throw error;
@@ -113,14 +104,6 @@ export async function fetchProductsInCart(cart, cookieHeader = '') {
     try {
         const data = await graphqlServerRequest(GET_PRODUCTS_IN_CART, { cart }, cookieHeader);
         return data?.productsInCart ?? [];
-    } catch (error) {
-        throw error;
-    }
-}
-export async function addProduct(newProduct, cookieHeader = '') {
-    try {
-        const data = await graphqlServerRequest(ADD_PRODUCT, { newProduct }, cookieHeader);
-        return data?.addNewProduct ?? null;
     } catch (error) {
         throw error;
     }

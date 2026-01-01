@@ -13,7 +13,7 @@ export default function ProductsListing({ initialData }) {
         hasNextPage,
         isFetchingNextPage,
         fetchNextPage
-    } = useInfiniteProducts(initialData, LIMIT);
+    } = useInfiniteProducts({ limit: LIMIT }, initialData);
     const products = data?.pages?.flat() || [];
     const { ref, inView } = useInView({
         threshold: 0.1,

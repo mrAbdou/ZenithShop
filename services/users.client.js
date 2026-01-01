@@ -1,9 +1,31 @@
+/**
+ * @file services/users.client.js
+ * @description Production-ready GraphQL queries and service functions for user-related operations.
+ * This file contains all GraphQL queries and service functions for fetching user data,
+ * including user lists, individual user details, counts, and orders. All queries are aligned
+ * with the backend schemas defined in `app/graphql/TypeDefinitions.js`.
+ *
+ * @exports
+ * - GraphQL Queries: GET_USERS, GET_USER, GET_CUSTOMERS_COUNT, GET_USERS_COUNT, MY_ORDERS, COMPLETE_SIGNUP, UPDATE_USER_PROFILE
+ * - Service Functions: fetchUsers, fetchUser, fetchCustomersCount, fetchUsersCount, completeSignUp, fetchMyOrders, updateCustomerProfile
+ *
+ * @dependencies
+ * - @/lib/graphql-client: Provides the `graphqlRequest` function for executing GraphQL queries.
+ * - graphql-request: Provides the `gql` template literal tag for defining GraphQL queries.
+ * - @/lib/auth-client: Provides the `authClient` for handling authentication-related operations.
+ * - @/lib/constants: Provides constants like `LIMIT` for pagination.
+ * - @/lib/ZodValidationError: Provides custom error handling for validation errors.
+ *
+ * @notes
+ * - All functions handle errors by propagating them to the caller.
+ * - Default values are provided for optional parameters (e.g., `variables` objects).
+ * - Null checks are implemented to return appropriate defaults (e.g., empty arrays, 0).
+ * - The `updateCustomerProfile` function now sends a GraphQL request to the backend instead of directly updating the user.
+ */
+
 import { graphqlRequest } from '@/lib/graphql-client';
-import { UpdateCustomerSchema } from '@/lib/schemas/user.schema';
 import { gql } from 'graphql-request';
-import { authClient } from "@/lib/auth-client";
 import { LIMIT } from '@/lib/constants';
-import ZodValidationError from '@/lib/ZodValidationError';
 
 export const GET_USERS = gql`
 query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int!, $limit: Int!) {
@@ -16,7 +38,7 @@ query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate
 }
 `;
 export const GET_USER = gql`
-query GetUser($id: String) {
+query GetUser($id: String!) {
     user(id: $id) {
         id
         name
@@ -35,8 +57,8 @@ query GetUsersCount {
     usersCount
 }`;
 export const COMPLETE_SIGNUP = gql`
-mutation CompleteSignUp($phoneNumber: String!, $address: String!, $role: Role!){
-    completeSignUp(phoneNumber: $phoneNumber, address: $address, role: $role){
+mutation CompleteSignUp($phoneNumber: String!, $address: String!){
+    completeSignUp(phoneNumber: $phoneNumber, address: $address){
         id
         name
         email
@@ -62,9 +84,9 @@ query MyOrders{
         }
     }
 }`;
-export const UPDATE_USER_PROFILE = gql`
-mutation UpdateUserProfile($id: String, $name: String, $phoneNumber: String, $address: String) {
-    updateUserProfile(id: $id, name: $name, phoneNumber: $phoneNumber, address: $address){
+export const UPDATE_CUSTOMER_PROFILE = gql`
+mutation UpdateCustomerProfile($id: String, $name: String, $phoneNumber: String, $address: String) {
+    updateCustomerProfile(id: $id, name: $name, phoneNumber: $phoneNumber, address: $address){
         id
         name
         email
@@ -73,6 +95,8 @@ mutation UpdateUserProfile($id: String, $name: String, $phoneNumber: String, $ad
         role
     }
 }`;
+//TODO: i changed the signature of this function, instead of filters been passed 
+//TODO: fix all the calls to this function to be adjusted to this new definition
 export async function fetchUsers(variables = { limit: LIMIT, currentPage: 1 }) {
     try {
         const data = await graphqlRequest(GET_USERS, variables);
@@ -81,7 +105,7 @@ export async function fetchUsers(variables = { limit: LIMIT, currentPage: 1 }) {
         throw err;
     }
 }
-export async function fetchUser(variables) {
+export async function fetchUser(variables = {}) {
     try {
         const data = await graphqlRequest(GET_USER, variables);
         return data?.user ?? null;
@@ -121,11 +145,11 @@ export async function fetchMyOrders(variables = {}) {
         throw err;
     }
 }
-// this function doesn't use the apollo client at all , it uses better auth updateUser because of the fields related to better auth , these fields should be updated in the better auth user, and only by it so the work still be perfect
+
 export async function updateCustomerProfile(variables) {
     try {
-        const data = await graphqlRequest(UPDATE_USER_PROFILE, variables);
-        return data?.updateUserProfile ?? false;
+        const data = await graphqlRequest(UPDATE_CUSTOMER_PROFILE, variables);
+        return data?.updateCustomerProfile ?? false;
     } catch (err) {
         throw err;
     }

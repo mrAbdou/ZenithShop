@@ -76,7 +76,6 @@ query FilteredOrdersCount($searchQuery: String, $status: OrderStatus, $startDate
     filteredOrdersCount(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate)
 }`;
 export async function fetchOrders(filters) {
-    console.log('filters from the service fetchOrders : ', filters);
     try {
         const validation = OrderFilterSchema.safeParse(filters);
         if (!validation.success) {
@@ -114,7 +113,6 @@ export async function fetchActiveOrdersCount() {
     }
 }
 export async function addOrder(new_order) {
-    console.log('new order from the service addOrder : ', new_order);
     const validation = CreateOrderSchema.safeParse(new_order);
     if (!validation.success) {
         throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
@@ -146,7 +144,6 @@ export async function deleteOrder(id) {
     }
 }
 export async function filteredOrdersCount(filters) {
-    console.log('filters from the service filteredOrdersCount : ', filters);
     try {
         const data = await graphqlRequest(FILTERED_ORDERS_COUNT, filters);
         return data?.filteredOrdersCount ?? 0;

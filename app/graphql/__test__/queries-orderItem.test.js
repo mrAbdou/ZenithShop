@@ -570,13 +570,13 @@ describe("orderItems", () => {
                 id: 'clp293h4r000008l17n9fclbC'
             };
             const result = await orderItems.orderItem(null, args, context);
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 id: 'clp293h4r000008l17n9fclbC',
                 orderId: 'clp293h4r000008l17n9fclbA',
                 productId: 'clp293h4r000008l17n9fclbE',
                 qte: 1,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: expect.any(Date),
+                updatedAt: expect.any(Date),
                 order: {
                     userId: 'clp293h4r000008l17n9fclbB'
                 }

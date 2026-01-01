@@ -20,7 +20,7 @@ export default async function AddProduct() {
             return;
         }
     } catch (error) {
-        console.log('Auth error : ', error);
+        console.error('Auth error : ', error);
         redirect("/");
         return;
     }

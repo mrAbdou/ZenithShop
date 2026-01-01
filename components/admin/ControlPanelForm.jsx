@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client"; // use client auth
-import { Role } from "@/lib/constants";
+import { Role } from "@prisma/client";
 // zod schema for form validation of admin login 
 const schema = z.object({
     email: z

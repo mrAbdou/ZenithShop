@@ -39,21 +39,21 @@ export function useUsersCount(initialData) {
         initialData
     });
 }
-export function useCompleteSignUp() {
-    return useMutation({
-        mutationFn: (data) => {
-            const validation = CompleteSignUpSchema.safeParse(data);
-            if (!validation.success) {
-                const errors = validation.error.issues.map(issue => ({
-                    path: issue.path[0],
-                    message: issue.message
-                }));
-                throw new ZodValidationError('Validation failed', errors);
-            }
-            return completeSignUp(validation.data)
-        },
-    });
-}
+// export function useCompleteSignUp() {
+//     return useMutation({
+//         mutationFn: (data) => {
+//             const validation = CompleteSignUpSchema.safeParse(data);
+//             if (!validation.success) {
+//                 const errors = validation.error.issues.map(issue => ({
+//                     path: issue.path[0],
+//                     message: issue.message
+//                 }));
+//                 throw new ZodValidationError('Validation failed', errors);
+//             }
+//             return completeSignUp(validation.data)
+//         },
+//     });
+// }
 export function useMyOrders(initialData = []) {
     return useQuery({
         queryKey: ['myOrders'],

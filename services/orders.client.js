@@ -124,9 +124,9 @@ export async function addOrder(new_order) {
         throw error;
     }
 }
-export async function updateOrder(id, updatedOrder) {
+export async function updateOrder(variables) {
     try {
-        const data = await graphqlRequest(UPDATE_ORDER, { id, ...updatedOrder });
+        const data = await graphqlRequest(UPDATE_ORDER, variables);
         return data?.updateOrder ?? null;
     } catch (error) {
         throw error

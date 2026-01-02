@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, filteredOrdersCount, updateOrder } from "@/services/orders.client";
 import { CreateOrderSchema, OrderFilterSchema, updateOrderSchema } from "@/lib/schemas/order.schema";
-export function useOrders(initialData = [], filters = {}) {
+import ZodValidationError from "@/lib/ZodValidationError";
+export function useOrders(initialData = [], filters = { limit: LIMIT, currentPage: 1 }) {
 
     return useQuery({
         queryKey: ['orders', filters],
         queryFn: () => {
             const validation = OrderFilterSchema.safeParse(filters)
             if (!validation.success) {
-                throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
+                const errors = validation.error.issues.map(issue => ({ field: issue.path[0], message: issue.message }));
+                throw new ZodValidationError('Validation failed', errors);
             }
             return fetchOrders(validation.data)
         },
@@ -18,7 +20,10 @@ export function useOrders(initialData = [], filters = {}) {
 export function useOrder(id) {
     return useQuery({
         queryKey: ['order', id],
-        queryFn: () => fetchOrder(id),
+        queryFn: () => {
+            if (!id || typeof id !== 'string') throw new Error('Invalid order ID');
+            return fetchOrder({ id });
+        },
     })
 }
 export function useAddOrder() {
@@ -28,8 +33,11 @@ export function useAddOrder() {
         mutationFn: (new_order) => {
             const validation = CreateOrderSchema.safeParse(new_order);
             if (!validation.success) {
-                const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
-                throw new Error(`Validation failed: ${errorMessages}`);
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message
+                }))
+                throw new ZodValidationError('Validation failed', errors);
             }
             return addOrder(validation.data);
         },
@@ -65,13 +73,13 @@ export function useAddOrder() {
 export function useOrdersCount() {
     return useQuery({
         queryKey: ['ordersCount'],
-        queryFn: fetchOrdersCount,
+        queryFn: () => fetchOrdersCount({}),
     })
 }
 export function useActiveOrdersCount(initialData) {
     return useQuery({
         queryKey: ['activeOrdersCount'],
-        queryFn: fetchActiveOrdersCount,
+        queryFn: () => fetchActiveOrdersCount({}),
         initialData
     })
 }
@@ -81,10 +89,13 @@ export function useUpdateOrder(id) {
         mutationFn: (data) => {
             const validation = updateOrderSchema.safeParse(data);
             if (!validation.success) {
-                const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
-                throw new Error(`Validation failed: ${errorMessages}`);
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message
+                }))
+                throw new ZodValidationError('Validation failed', errors);
             }
-            return updateOrder(id, validation.data);
+            return updateOrder({ id, order: validation.data });
         },
         onSuccess: (data) => {
 
@@ -119,7 +130,10 @@ export function useUpdateOrder(id) {
 export function useDeleteOrder() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (id) => deleteOrder(id),
+        mutationFn: (id) => {
+            if (!id || typeof id !== 'string') throw new Error('Invalid order ID');
+            return deleteOrder({ id });
+        },
         onSuccess: (data) => {
             queryClient.setQueryData(['orders'], (oldData) => {
                 if (Array.isArray(oldData)) {

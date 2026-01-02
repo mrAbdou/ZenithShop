@@ -267,7 +267,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
             const context = createMockContext({
                 prisma: {
                     product: {
-                        create: vi.fn().mockRejectedValue(new Error('Some unhandled DB error'))
+                        create: vi.fn().mockRejectedValue(new GraphQLError("Database operation failed", { extensions: { code: 'DATABASE_OPERATION_FAILED' } }))
                     }
                 },
                 session: {
@@ -286,6 +286,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
             }
             try {
                 await mutationsProduct.addNewProduct(null, args, context);
+                expect.fail('should have thrown');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Database operation failed');

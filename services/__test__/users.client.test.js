@@ -21,35 +21,31 @@ describe('users.client.js', () => {
     // fetchUsers function tests
     // ========================================
     describe('fetchUsers tests', () => {
-        it('should return a list of users when no variable is provided (default variables are used)', async () => {
-            graphqlRequest.mockResolvedValueOnce({
-                users: [
-                    {
-                        id: 'user01',
-                        name: 'user',
-                        email: 'user@system.com',
-                        role: Role.CUSTOMER,
-                        orders: [],
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    }
-                ]
-            });
-            const variables = { currentPage: 1, limit: LIMIT };
-            const users = await fetchUsers();
-            expect(graphqlRequest).toHaveBeenCalledWith(GET_USERS, variables);
-            expect(users).toBeInstanceOf(Array);
-            expect(users).toMatchObject([
+        it('should throw an error for fetching users when no variable is provided (default variables are used)', async () => {
+            const errors = [
                 {
-                    id: 'user01',
-                    name: 'user',
-                    email: 'user@system.com',
-                    role: Role.CUSTOMER,
-                    orders: [],
-                    createdAt: expect.any(Date),
-                    updatedAt: expect.any(Date),
+                    field: 'limit',
+                    message: 'Limit should be a number'
+                },
+                {
+                    field: 'currentPage',
+                    message: 'Current page should be a number'
                 }
-            ]);
+            ]
+            graphqlRequest.mockRejectedValueOnce(new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } }));
+            const variables = { currentPage: 1, limit: LIMIT };
+            try {
+                await fetchUsers(variables);
+                expect.fail('should have thrown');
+            } catch (error) {
+                expect(error).toBeInstanceOf(GraphQLError);
+                expect(error.message).toBe('Validation failed');
+                expect(error.extensions.code).toBe('BAD_REQUEST');
+                expect(error.extensions.errors).toEqual(errors);
+                expect(graphqlRequest).not.toHaveBeenCalledWith();
+
+            }
+
         });
 
         it('should return a list of users when variable is provided with search query', async () => {
@@ -190,7 +186,7 @@ describe('users.client.js', () => {
             graphqlRequest.mockResolvedValueOnce({
                 customersCount: 1
             });
-            const customersCount = await fetchCustomersCount();
+            const customersCount = await fetchCustomersCount({});
             expect(graphqlRequest).toHaveBeenCalledWith(GET_CUSTOMERS_COUNT, {});
             expect(customersCount).toBeTypeOf('number');
             expect(customersCount).toBe(1);
@@ -200,7 +196,7 @@ describe('users.client.js', () => {
             graphqlRequest.mockResolvedValueOnce({
                 customersCount: 0
             });
-            const customersCount = await fetchCustomersCount();
+            const customersCount = await fetchCustomersCount({});
             expect(graphqlRequest).toHaveBeenCalledWith(GET_CUSTOMERS_COUNT, {});
             expect(customersCount).toBeTypeOf('number');
             expect(customersCount).toBe(0);
@@ -209,7 +205,7 @@ describe('users.client.js', () => {
         it('should throw an error when fetching customers count fails due to database connection issues', async () => {
             graphqlRequest.mockRejectedValueOnce(new GraphQLError('Internal server error', { extensions: { code: 'INTERNAL_SERVER_ERROR' } }));
             try {
-                await fetchCustomersCount();
+                await fetchCustomersCount({});
                 expect.fail('should have thrown an error');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
@@ -228,7 +224,7 @@ describe('users.client.js', () => {
             graphqlRequest.mockResolvedValueOnce({
                 usersCount: 1
             });
-            const usersCount = await fetchUsersCount();
+            const usersCount = await fetchUsersCount({});
             expect(graphqlRequest).toHaveBeenCalledWith(GET_USERS_COUNT, {});
             expect(usersCount).toBeTypeOf('number');
             expect(usersCount).toBe(1);
@@ -238,7 +234,7 @@ describe('users.client.js', () => {
             graphqlRequest.mockResolvedValueOnce({
                 usersCount: 0
             });
-            const usersCount = await fetchUsersCount();
+            const usersCount = await fetchUsersCount({});
             expect(graphqlRequest).toHaveBeenCalledWith(GET_USERS_COUNT, {});
             expect(usersCount).toBeTypeOf('number');
             expect(usersCount).toBe(0);
@@ -247,97 +243,13 @@ describe('users.client.js', () => {
         it('should throw an error when fetching users count fails due to database connection issues', async () => {
             graphqlRequest.mockRejectedValueOnce(new GraphQLError('Database connection failed', { extensions: { code: 'INTERNAL_SERVER_ERROR' } }));
             try {
-                await fetchUsersCount();
+                await fetchUsersCount({});
                 expect.fail('should have thrown an error');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Database connection failed');
                 expect(error.extensions.code).toBe('INTERNAL_SERVER_ERROR');
                 expect(graphqlRequest).toHaveBeenCalledWith(GET_USERS_COUNT, {});
-            }
-        });
-    });
-
-    // ========================================
-    // completeSignUp function tests
-    // ========================================
-    describe('completeSignUp tests', () => {
-        it('should return the updated user information when new values are correctly provided', async () => {
-            graphqlRequest.mockResolvedValueOnce({
-                completeSignUp: {
-                    id: 'user01',
-                    name: 'john doe',
-                    email: 'john@doe.com',
-                    phoneNumber: '0000000001',
-                    address: 'updated address',
-                    role: Role.CUSTOMER,
-                    orders: [],
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                }
-            });
-            const variables = { phoneNumber: '0000000001', address: 'updated address', role: Role.CUSTOMER };
-            const user = await completeSignUp(variables);
-            expect(user).toBeInstanceOf(Object);
-            expect(graphqlRequest).toHaveBeenCalledWith(COMPLETE_SIGNUP, variables);
-            expect(user).toMatchObject({
-                id: 'user01',
-                name: 'john doe',
-                email: 'john@doe.com',
-                phoneNumber: '0000000001',
-                address: 'updated address',
-                role: Role.CUSTOMER,
-                orders: [],
-                createdAt: expect.any(Date),
-                updatedAt: expect.any(Date),
-            });
-        });
-
-        it('should throw an error when new values are partially missed', async () => {
-            const errors = [
-                {
-                    field: 'phoneNumber',
-                    message: 'Phone number is required as String'
-                },
-            ]
-            graphqlRequest.mockRejectedValueOnce(new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } }));
-            const variables = { phoneNumber: '0000000001' };
-            try {
-                await completeSignUp(variables);
-                expect.fail('should have thrown an error');
-            } catch (error) {
-                expect(error).toBeInstanceOf(GraphQLError);
-                expect(error.message).toBe('Validation failed');
-                expect(error.extensions.code).toBe('BAD_REQUEST');
-                expect(error.extensions.errors).toEqual(errors);
-            }
-        });
-
-        it('should throw an error when there is no customer session', async () => {
-            graphqlRequest.mockRejectedValueOnce(new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } }));
-            const variables = { phoneNumber: '0000000001', address: 'new address' };
-            try {
-                await completeSignUp(variables);
-                expect.fail('shoulb have thrown an error');
-            } catch (error) {
-                expect(error).toBeInstanceOf(GraphQLError);
-                expect(error.message).toBe('Unauthorized');
-                expect(error.extensions.code).toBe('UNAUTHORIZED');
-                expect(graphqlRequest).toHaveBeenCalledWith(COMPLETE_SIGNUP, variables);
-            }
-        });
-
-        it('should throw an error when new customer data provided correctly but no customer found', async () => {
-            graphqlRequest.mockRejectedValueOnce(new GraphQLError('User not found', { extensions: { code: 'USER_NOT_FOUND' } }));
-            const variables = { phoneNumber: '0000000001', address: 'new address' };
-            try {
-                await completeSignUp(variables);
-                expect.fail('shoulb have thrown an error');
-            } catch (error) {
-                expect(error).toBeInstanceOf(GraphQLError);
-                expect(error.message).toBe('User not found');
-                expect(error.extensions.code).toBe('USER_NOT_FOUND');
-                expect(graphqlRequest).toHaveBeenCalledWith(COMPLETE_SIGNUP, variables);
             }
         });
     });

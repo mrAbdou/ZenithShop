@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client";
 export default function CartProductsDisplay() {
     const { getCart, addToCart, removeFromCart } = useCartContext();
     const cart = getCart();
-    const { session } = authClient.getSession();
+    const { data: session } = authClient.useSession();
     const router = useRouter();
     const goToCheckoutPage = () => {
         if (!session) {
@@ -147,7 +147,7 @@ export default function CartProductsDisplay() {
                     {/* Checkout Button */}
                     <div className="flex flex-col justify-center space-y-4">
                         <button onClick={goToCheckoutPage} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg">
-                            Proceed to Account
+                            Proceed to checkout
                         </button>
                         <button onClick={() => router.push('/products')} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200">
                             Continue Shopping

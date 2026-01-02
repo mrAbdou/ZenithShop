@@ -1,23 +1,25 @@
-import { createContext, useContext, useState } from "react";
-import React from 'react';
+import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
+import { createContext, useContext, useState, useMemo, useCallback } from "react";
+
 const ProductContext = createContext();
 
 export default function ProductProvider({ children }) {
     const [filters, setFilters] = useState({
         // filtering props .... 
         searchQuery: '',
-        stock: null,
+        stock: '',
         startDate: '',
         endDate: '',
         // sorting props ...
-        sortBy: null,
-        sortDirection: null,
+        sortBy: '',
+        sortDirection: '',
         // pagination props ...
-        limit: 5,
+        limit: PAGINATION_MIN_LIMIT,
         currentPage: 1
     });
-    const getFilters = React.useCallback(() => filters, [filters]);
-    const setFilteringProps = React.useCallback((filteringProps) => {
+
+    const setFilteringProps = useCallback((filteringProps) => {
+        console.log('setFilteringProps called with:', filteringProps);
         setFilters((prevFilters) => ({
             ...prevFilters,
             searchQuery: filteringProps.searchQuery,
@@ -26,27 +28,39 @@ export default function ProductProvider({ children }) {
             endDate: filteringProps.endDate
         }));
     }, []);
-    const setSortingFilters = React.useCallback((sortingFilters) => {
+
+    const setSortingFilters = useCallback((sortingFilters) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             sortBy: sortingFilters.sortBy,
             sortDirection: sortingFilters.sortDirection
         }));
     }, []);
-    const setPaginationLimit = React.useCallback((limit) => {
+
+    const setPaginationLimit = useCallback((limit) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             limit: limit
         }));
     }, []);
-    const setPaginationCurrentPage = React.useCallback((currentPage) => {
+
+    const setPaginationCurrentPage = useCallback((currentPage) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             currentPage: currentPage
         }));
     }, []);
+
+    const value = useMemo(() => ({
+        filters,
+        setFilteringProps,
+        setSortingFilters,
+        setPaginationLimit,
+        setPaginationCurrentPage
+    }), [filters, setFilteringProps, setSortingFilters, setPaginationLimit, setPaginationCurrentPage]);
+
     return (
-        <ProductContext.Provider value={{ getFilters, setFilteringProps, setSortingFilters, setPaginationLimit, setPaginationCurrentPage }}>
+        <ProductContext.Provider value={value}>
             {children}
         </ProductContext.Provider>
     )

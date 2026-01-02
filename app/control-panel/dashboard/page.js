@@ -48,7 +48,7 @@ export default async function ControlPanelDashboardPage() {
         allUsersCount = await fetchUsersCount(cookieHeader);
         allCustomersCount = await fetchCustomersCount(cookieHeader);
     } catch (error) {
-        console.error(JSON.stringify(error, null, 2));
+        //console.log(JSON.stringify(error, null, 2));
     }
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">

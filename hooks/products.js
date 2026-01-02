@@ -13,16 +13,30 @@ import {
     fetchInfiniteProducts,
     updateProduct,
 } from "@/services/products.client";
-import { LIMIT } from "@/lib/constants";
-
+import { LIMIT, PAGINATION_MIN_LIMIT } from "@/lib/constants";
+import { AddProductSchema, InfiniteProductSchema, ProductPaginationSchema, UpdateProductSchema } from "@/lib/schemas/product.schema";
+import ZodValidationError from "@/lib/ZodValidationError";
 /**
  * Hook to fetch a paginated list of products.
  * Accepts optional initialData (array) from SSR.
  */
-export function usePaginationProducts(initialData = [], filters) {
+export function usePaginationProducts(filters, initialData = []) {
     return useQuery({
         queryKey: ["products", filters],
-        queryFn: () => fetchPaginatedProducts(filters),
+        queryFn: () => {
+            console.log('usePaginationProducts - Input filters:', filters);
+            const validation = ProductPaginationSchema.safeParse(filters);
+            if (!validation.success) {
+                console.error('Validation failed:', validation.error.issues);
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            console.log('usePaginationProducts - Validated data:', validation.data);
+            return fetchPaginatedProducts(validation.data)
+        },
         initialData
     });
 }
@@ -30,7 +44,17 @@ export function usePaginationProducts(initialData = [], filters) {
 export function useInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, initialData = []) {
     return useInfiniteQuery({
         queryKey: ["products", variables],
-        queryFn: ({ pageParam = 0 }) => fetchInfiniteProducts({ ...variables, offset: pageParam }),
+        queryFn: ({ pageParam = 0 }) => {
+            const validation = InfiniteProductSchema.safeParse({ ...variables, offset: pageParam });
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return fetchInfiniteProducts(validation.data)
+        },
         initialPageParam: 0,
         initialData: {
             pages: [initialData],
@@ -53,7 +77,12 @@ export function useInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, ini
 export function useProduct(id) {
     return useQuery({
         queryKey: ["product", id],
-        queryFn: () => fetchProduct(id),
+        queryFn: () => {
+            if (!id || typeof id !== 'string') {
+                throw new Error('Invalid product ID');
+            }
+            return fetchProduct({ id })
+        },
         enabled: !!id,
     });
 }
@@ -62,7 +91,7 @@ export function useProduct(id) {
 export function useProductsCount(initialData) {
     return useQuery({
         queryKey: ["productsCount"],
-        queryFn: fetchProductsCount,
+        queryFn: () => fetchProductsCount({}),
         initialData
     });
 }
@@ -71,7 +100,7 @@ export function useProductsCount(initialData) {
 export function useAvailableProductsCount(initialData) {
     return useQuery({
         queryKey: ["availableProductsCount"],
-        queryFn: fetchAvailableProductsCount,
+        queryFn: () => fetchAvailableProductsCount({}),
         initialData
     });
 }
@@ -80,7 +109,12 @@ export function useAvailableProductsCount(initialData) {
 export function useProductsInCart(cart) {
     return useQuery({
         queryKey: ["productsInCart", cart],
-        queryFn: () => fetchProductsInCart(cart),
+        queryFn: () => {
+            if (!cart || !Array.isArray(cart) || cart.length === 0) {
+                throw new Error('Invalid cart data');
+            }
+            return fetchProductsInCart({ cart })
+        },
         enabled: Array.isArray(cart) && cart.length > 0,
     });
 }
@@ -90,11 +124,18 @@ export function useAddProduct() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data) => {
+            const validation = AddProductSchema.safeParse(data);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
             try {
-                return await addProduct(data)
-            } catch (error) {
-                console.error('Add Product mutation error : ', error);
-                throw error;
+                return await addProduct({ product: validation.data });
+            } catch (gqlError) {
+                throw gqlError;
             }
         },
         onSuccess: (data) => {
@@ -118,14 +159,35 @@ export function useAddProduct() {
 export function useCountFilteredProducts(filters) {
     return useQuery({
         queryKey: ["countFilteredProducts", filters],
-        queryFn: () => filteredProductsCount(filters),
+        queryFn: () => {
+            //TODO: we need a schema only for filtering props not passing the full filters
+            const validation = ProductPaginationSchema.safeParse(filters);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return filteredProductsCount(validation.data)
+        },
     });
 }
 
 export function useUpdateProduct(id) {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (data) => updateProduct(id, data),
+        mutationFn: (data) => {
+            const validation = UpdateProductSchema.safeParse(data);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return updateProduct({ id, product: validation.data })
+        },
         onSuccess: (data) => {
             // Update the specific product cache
             queryClient.setQueryData(['product', id], data);

@@ -19,7 +19,7 @@ export const metadata = {
 export default async function ProductsPage() {
   const h = await headers();
   const cookieHeader = h.get("cookie") || "";
-  const productsCount = await fetchProductsCount(cookieHeader);
+  const productsCount = await fetchProductsCount({}, cookieHeader);
   const products = await fetchInfiniteProducts({ limit: LIMIT, offset: 0 }, cookieHeader);
   return (
     <div className="min-h-screen p-6 relative">

@@ -56,17 +56,7 @@ export const GET_USERS_COUNT = gql`
 query GetUsersCount {
     usersCount
 }`;
-export const COMPLETE_SIGNUP = gql`
-mutation CompleteSignUp($phoneNumber: String!, $address: String!){
-    completeSignUp(phoneNumber: $phoneNumber, address: $address){
-        id
-        name
-        email
-        phoneNumber
-        address
-        role
-    }
-}`;
+
 export const MY_ORDERS = gql`
 query MyOrders{
     myOrders{
@@ -97,7 +87,7 @@ mutation UpdateCustomerProfile($id: String, $name: String, $phoneNumber: String,
 }`;
 //TODO: i changed the signature of this function, instead of filters been passed 
 //TODO: fix all the calls to this function to be adjusted to this new definition
-export async function fetchUsers(variables = { limit: LIMIT, currentPage: 1 }) {
+export async function fetchUsers(variables) {
     try {
         const data = await graphqlRequest(GET_USERS, variables);
         return data?.users ?? [];
@@ -105,7 +95,7 @@ export async function fetchUsers(variables = { limit: LIMIT, currentPage: 1 }) {
         throw err;
     }
 }
-export async function fetchUser(variables = {}) {
+export async function fetchUser(variables) {
     try {
         const data = await graphqlRequest(GET_USER, variables);
         return data?.user ?? null;
@@ -113,7 +103,7 @@ export async function fetchUser(variables = {}) {
         throw err;
     }
 }
-export async function fetchCustomersCount(variables = {}) {
+export async function fetchCustomersCount(variables) {
     try {
         const data = await graphqlRequest(GET_CUSTOMERS_COUNT, variables);
         return data?.customersCount ?? 0;
@@ -121,7 +111,7 @@ export async function fetchCustomersCount(variables = {}) {
         throw err;
     }
 }
-export async function fetchUsersCount(variables = {}) {
+export async function fetchUsersCount(variables) {
     try {
         const data = await graphqlRequest(GET_USERS_COUNT, variables);
         return data?.usersCount ?? 0;
@@ -129,15 +119,8 @@ export async function fetchUsersCount(variables = {}) {
         throw err;
     }
 }
-export async function completeSignUp(variables) {
-    try {
-        const data = await graphqlRequest(COMPLETE_SIGNUP, variables);
-        return data?.completeSignUp ?? null;
-    } catch (catchError) {
-        throw catchError;
-    }
-}
-export async function fetchMyOrders(variables = {}) {
+
+export async function fetchMyOrders(variables) {
     try {
         const data = await graphqlRequest(MY_ORDERS, variables);
         return data?.myOrders ?? [];

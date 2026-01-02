@@ -3,33 +3,27 @@ import { useForm } from "react-hook-form";
 import { SignUpCustomerSchema } from "@/lib/schemas/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authClient } from "@/lib/auth-client";
-import { useContext, useState } from "react";
-import { CartContext } from "@/context/CartContext";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useCompleteSignUp } from "@/hooks/users";
-import { Role } from "@prisma/client";
 import ZodValidationError from "@/lib/ZodValidationError";
 export default function SignUpCustomers({ redirectPath }) {
     const [errorMessages, setErrorMessages] = useState([]);
-    //const { getCart } = useContext(CartContext);
-    //const cart = getCart();
     const router = useRouter();
     // form configuration : 
     const { register, handleSubmit, formState: { errors, isSubmitting, isValid, isDirty }, reset } = useForm({
         resolver: zodResolver(SignUpCustomerSchema),
         mode: 'onChange'
     });
-    //installation of the custom hook that is going to finish the sign up : 
-    const { mutateAsync: completeSignUpAsync, isPending } = useCompleteSignUp();
     //submit function : 
     const onSubmit = async ({ name, email, password, phoneNumber, address }) => {
         setErrorMessages([]); // clear the error messages
         try {
-            const { data, error } = await authClient.signUp.email({ name, email, password });
+            const { data, error } = await authClient.signUp.email({ name, email, password, phoneNumber, address });
             if (error) {
                 const mappedErrors = [];
-                const normalizedError = error.message.toLowerCase();
+                const normalizedError = error?.message?.toLowerCase();
+                // Allow multiple error types to be detected and displayed
                 if (normalizedError.includes('email')) {
                     mappedErrors.push({ field: 'email', message: error.message });
                 } else if (normalizedError.includes('password')) {
@@ -41,22 +35,12 @@ export default function SignUpCustomers({ redirectPath }) {
                 }
                 setErrorMessages(mappedErrors);
                 return;
-            } else {
-                console.log('better auth succeed creating user account : ', data);
-                const user = await completeSignUpAsync({ phoneNumber, address });
-                if (!user) {
-                    setErrorMessages([{ field: 'form', message: 'Account created but profile setup failed. Please try again.' }]);
-                    toast.error('Account created but profile setup failed. Please try again.');
-                    return;
-                }
-                reset();
-                toast.success('Account created successfully!');
-                router.push(redirectPath);
             }
+            toast.success('Account created successfully!');
+            router.push(redirectPath);
 
 
         } catch (error) {
-            console.log(JSON.stringify(error, null, 2));
             if (error instanceof ZodValidationError) {
                 setErrorMessages(error.issues);
                 return;
@@ -67,9 +51,6 @@ export default function SignUpCustomers({ redirectPath }) {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {
-                JSON.stringify(errorMessages, null, 2)
-            }
             {/* Error Messages Display */}
             {errorMessages.length > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
@@ -98,9 +79,9 @@ export default function SignUpCustomers({ redirectPath }) {
                     <input
                         type="text"
                         {...register("name")}
-                        disabled={isSubmitting || isPending}
+                        disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
+                            } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="Enter your full name"
                     />
                 </div>
@@ -123,9 +104,9 @@ export default function SignUpCustomers({ redirectPath }) {
                     <input
                         type="email"
                         {...register("email")}
-                        disabled={isSubmitting || isPending}
+                        disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            } ${(isSubmitting || isPending) ? 'cursor-not-allowed opacity-50' : ''}`}
+                            } ${(isSubmitting) ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="your@email.com"
                     />
                 </div>
@@ -148,9 +129,9 @@ export default function SignUpCustomers({ redirectPath }) {
                     <input
                         type="password"
                         {...register("password")}
-                        disabled={isSubmitting || isPending}
+                        disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
+                            } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="Create a strong password"
                     />
                 </div>
@@ -173,9 +154,9 @@ export default function SignUpCustomers({ redirectPath }) {
                     <input
                         type="text"
                         {...register("phoneNumber")}
-                        disabled={isSubmitting || isPending}
+                        disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
+                            } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="+1 (555) 123-4567"
                     />
                 </div>
@@ -199,9 +180,9 @@ export default function SignUpCustomers({ redirectPath }) {
                     <input
                         type="text"
                         {...register("address")}
-                        disabled={isSubmitting || isPending}
+                        disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
-                            } ${isSubmitting || isPending ? 'cursor-not-allowed opacity-50' : ''}`}
+                            } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
                         placeholder="123 Main St, City, State"
                     />
                 </div>
@@ -212,9 +193,9 @@ export default function SignUpCustomers({ redirectPath }) {
 
             {/* Submit Button */}
             <button
-                disabled={isPending || isSubmitting || (!isValid && !isDirty)}
+                disabled={isSubmitting || !isValid || !isDirty}
                 type="submit"
-                className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3 ${(isPending || isSubmitting) ? 'cursor-not-allowed opacity-50' : ''}`}
+                className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3 ${(isSubmitting || !isValid || !isDirty) ? 'cursor-not-allowed opacity-50' : ''}`}
             >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />

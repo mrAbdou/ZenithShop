@@ -18,13 +18,11 @@ const formatDate = (dateString) => {
 export default function ProductsTable({ initialData = [] }) {
     const router = useRouter();
 
-    const { getFilters, setPaginationCurrentPage, setPaginationLimit, setSortingFilters } = useProductContext();
-    const filters = getFilters();
-
-    const { data: products } = usePaginationProducts(initialData, filters);
-    const { data: filteredProductsCount } = useCountFilteredProducts(filters);
+    const { filters, setPaginationCurrentPage, setPaginationLimit, setSortingFilters } = useProductContext();
+    console.log('ProductsTable render - filters:', filters);
+    const { data: products, error: productsError } = usePaginationProducts(filters, initialData);
+    const { data: filteredProductsCount, error: productsCountError } = useCountFilteredProducts(filters);
     const totalPages = useMemo(() => filteredProductsCount && filteredProductsCount > 0 ? Math.ceil(filteredProductsCount / filters.limit) : 1, [filteredProductsCount, filters.limit]);
-
     const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
         const pages = [];
 
@@ -90,8 +88,8 @@ export default function ProductsTable({ initialData = [] }) {
             if (filters.sortDirection === 'desc') {
                 sortDirection = 'asc';
             } else if (filters.sortDirection === 'asc') {
-                sortDirection = null;
-                sortBy = null;
+                sortDirection = '';
+                sortBy = '';
             } else {
                 sortDirection = 'desc';
             }
@@ -104,6 +102,22 @@ export default function ProductsTable({ initialData = [] }) {
     return (
         <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Products Management</h2>
+            {productsError && <div className='w-full bg-red-300 text-red-700 p-2'>
+                <h1>{`product: ${productsError?.message}`}</h1>
+                <ul>
+                    {productsError?.issues?.map((error, index) => (
+                        <li key={index}>{error.message}</li>
+                    ))}
+                </ul>
+            </div>}
+            {productsCountError && <div className='w-full bg-red-300 text-red-700 p-2'>
+                <h1>{`productCount: ${productsCountError?.message}`}</h1>
+                <ul>
+                    {productsCountError?.issues?.map((error, index) => (
+                        <li key={index}>{error.message}</li>
+                    ))}
+                </ul>
+            </div>}
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">

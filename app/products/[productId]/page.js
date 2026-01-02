@@ -13,7 +13,7 @@ import { fetchProduct } from "@/services/products.client";
 
 export async function generateMetadata({ params }) {
   const { productId } = await params;
-  const product = await fetchProduct(productId);
+  const product = await fetchProduct({ id: productId });
 
   if (!product) {
     return {
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductDetailsPage({ params }) {
   const { productId } = await params;
-  const product = await fetchProduct(productId);
+  const product = await fetchProduct({ id: productId });
 
   // If product not found, show 404
   if (!product) {

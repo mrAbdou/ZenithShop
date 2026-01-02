@@ -78,73 +78,75 @@ mutation updateProduct($id: String!, $product: UpdateProductInput!) {
         qteInStock
     }
 }`;
-export async function fetchPaginatedProducts(variables = { limit: LIMIT, currentPage: 1 }) {
+export async function fetchPaginatedProducts(variables) {
     try {
         const data = await graphqlRequest(GET_PAGINATED_PRODUCTS, variables);
         return data?.paginatedProducts ?? [];
-    } catch (error) {
-        throw error;
+    } catch (gqlError) {
+        throw gqlError;
     }
 }
 export async function fetchInfiniteProducts(variables = { limit: LIMIT, offset: 0 }) {
     try {
         const data = await graphqlRequest(GET_INFINITE_PRODUCTS, variables);
         return data?.infiniteProducts ?? [];
-    } catch (error) {
-        throw error;
+    } catch (gqlError) {
+        throw gqlError;
     }
 }
 export async function fetchProduct(variables) {
     try {
         const data = await graphqlRequest(GET_PRODUCT, variables);
         return data?.product ?? null;
-    } catch (error) {
-        throw error;
-    }
-}
-export async function fetchProductsCount() {
-    const data = await graphqlRequest(GET_PRODUCTS_COUNT, {});
-    return data?.productsCount ?? 0;
-}
-export async function fetchAvailableProductsCount() {
-    const data = await graphqlRequest(GET_AVAILABLE_PRODUCTS_COUNT, {});
-    return data?.availableProductsCount ?? 0;
-}
-export async function fetchProductsInCart(cart) {
-    const data = await graphqlRequest(GET_PRODUCTS_IN_CART, { cart });
-    return data?.productsInCart ?? [];
-}
-export async function addProduct(newProduct) {
-    try {
-        const validation = AddProductSchema.safeParse(newProduct);
-        if (!validation.success) {
-            throw new Error(Object.entries(validation.error.flatten().fieldErrors)
-                .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-                .join('; '));
-        }
-        const data = await graphqlRequest(ADD_PRODUCT, { newProduct: validation.data });
-        return data?.addNewProduct ?? null;
     } catch (gqlError) {
-        console.error('Add Product service error : ', gqlError);
         throw gqlError;
     }
 }
-export async function filteredProductsCount(filters) {
-    const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, {
-        searchQuery: filters.searchQuery,
-        stock: filters.stock,
-        startDate: filters.startDate === '' ? null : filters.startDate,
-        endDate: filters.endDate === '' ? null : filters.endDate
-    });
-    return data?.filteredProductsCount ?? 0;
-}
-export async function updateProduct(id, product) {
-    if (!id || typeof id !== 'string') throw new Error('Invalid product ID');
-    const validation = UpdateProductSchema.safeParse(product);
-    if (!validation.success) {
-        const errorMessage = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
-        throw new Error(`Validation failed: ${errorMessage}`);
+export async function fetchProductsCount(variables) {
+    try {
+        const data = await graphqlRequest(GET_PRODUCTS_COUNT, variables);
+        return data?.productsCount ?? 0;
+    } catch (gqlError) {
+        throw gqlError;
     }
-    const data = await graphqlRequest(UPDATE_PRODUCT, { id, product: validation.data });
-    return data?.updateProduct ?? null;
+}
+export async function fetchAvailableProductsCount(variables) {
+    try {
+        const data = await graphqlRequest(GET_AVAILABLE_PRODUCTS_COUNT, variables);
+        return data?.availableProductsCount ?? 0;
+    } catch (gqlError) {
+        throw gqlError;
+    }
+}
+export async function fetchProductsInCart(variables) {
+    try {
+        const data = await graphqlRequest(GET_PRODUCTS_IN_CART, variables);
+        return data?.productsInCart ?? [];
+    } catch (gqlError) {
+        throw gqlError;
+    }
+}
+export async function addProduct(variables) {
+    try {
+        const data = await graphqlRequest(ADD_PRODUCT, variables);
+        return data?.addNewProduct ?? null;
+    } catch (gqlError) {
+        throw gqlError;
+    }
+}
+export async function filteredProductsCount(variables) {
+    try {
+        const data = await graphqlRequest(FILTERED_PRODUCTS_COUNT, variables);
+        return data?.filteredProductsCount ?? 0;
+    } catch (gqlError) {
+        throw gqlError;
+    }
+}
+export async function updateProduct(variables) {
+    try {
+        const data = await graphqlRequest(UPDATE_PRODUCT, variables);
+        return data?.updateProduct ?? null;
+    } catch (gqlError) {
+        throw gqlError;
+    }
 }

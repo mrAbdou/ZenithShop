@@ -97,14 +97,14 @@ describe('users.server.js Service Functions', () => {
     describe('fetchCustomersCount', () => {
         it('should return the count', async () => {
             graphqlServerRequest.mockResolvedValueOnce({ customersCount: 42 });
-            const result = await fetchCustomersCount();
+            const result = await fetchCustomersCount({}, '');
             expect(result).toBe(42);
             expect(graphqlServerRequest).toHaveBeenCalledWith(GET_CUSTOMERS_COUNT, {}, '');
         });
 
         it('should return 0 if count is missing', async () => {
             graphqlServerRequest.mockResolvedValueOnce({});
-            const result = await fetchCustomersCount();
+            const result = await fetchCustomersCount({}, '');
             expect(result).toBe(0);
         });
     });
@@ -112,14 +112,14 @@ describe('users.server.js Service Functions', () => {
     describe('fetchUsersCount', () => {
         it('should return the count', async () => {
             graphqlServerRequest.mockResolvedValueOnce({ usersCount: 100 });
-            const result = await fetchUsersCount();
+            const result = await fetchUsersCount({}, '');
             expect(result).toBe(100);
             expect(graphqlServerRequest).toHaveBeenCalledWith(GET_USERS_COUNT, {}, '');
         });
 
         it('should return 0 if count is missing', async () => {
             graphqlServerRequest.mockResolvedValueOnce({});
-            const result = await fetchUsersCount();
+            const result = await fetchUsersCount({}, '');
             expect(result).toBe(0);
         });
     });

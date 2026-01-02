@@ -1,5 +1,5 @@
 'use client';
-import { OrderStatus } from "@/lib/constants";
+import { OrderStatus, PAGINATION_MIN_LIMIT } from "@/lib/constants";
 import { createContext, useState, useContext } from "react";
 
 //this is the context that i will use to share the filter values between the OrdersFilters and OrdersTable components
@@ -18,7 +18,7 @@ export default function OrderFiltersProvider({ children }) {
         sortBy: null,
         sortDirection: null,
         //pagination props .....
-        limit: 5,
+        limit: PAGINATION_MIN_LIMIT,
         currentPage: 1,
     });
     const getFilters = () => filters;

@@ -51,24 +51,25 @@ query GetProductsInCart($cart: [ID!]!) {
     }
 }`;
 
-export async function fetchPaginatedProducts(variables = { limit: LIMIT, currentPage: 1 }, cookieHeader = '') {
+export async function fetchPaginatedProducts(variables, cookieHeader) {
     try {
-        const data = await graphqlServerRequest(GET_PAGINATED_PRODUCTS, {
-            searchQuery: variables.searchQuery,
-            stock: variables.stock,
-            startDate: variables.startDate,
-            endDate: variables.endDate,
-            sortBy: variables.sortBy,
-            sortDirection: variables.sortDirection,
-            limit: variables.limit,
-            currentPage: variables.currentPage
-        }, cookieHeader);
+        // const data = await graphqlServerRequest(GET_PAGINATED_PRODUCTS, {
+        //     searchQuery: variables.searchQuery,
+        //     stock: variables.stock,
+        //     startDate: variables.startDate,
+        //     endDate: variables.endDate,
+        //     sortBy: variables.sortBy,
+        //     sortDirection: variables.sortDirection,
+        //     limit: variables.limit,
+        //     currentPage: variables.currentPage
+        // }, cookieHeader);
+        const data = await graphqlServerRequest(GET_PAGINATED_PRODUCTS, variables, cookieHeader);
         return data?.paginatedProducts ?? [];
     } catch (error) {
         throw error;
     }
 }
-export async function fetchInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, cookieHeader = '') {
+export async function fetchInfiniteProducts(variables, cookieHeader) {
     try {
         const data = await graphqlServerRequest(GET_INFINITE_PRODUCTS, variables, cookieHeader);
         return data?.infiniteProducts ?? [];
@@ -76,7 +77,7 @@ export async function fetchInfiniteProducts(variables = { limit: LIMIT, offset: 
         throw error;
     }
 }
-export async function fetchProduct(variables, cookieHeader = '') {
+export async function fetchProduct(variables, cookieHeader) {
     try {
         const data = await graphqlServerRequest(GET_PRODUCT, variables, cookieHeader);
         return data?.product ?? null;
@@ -84,25 +85,25 @@ export async function fetchProduct(variables, cookieHeader = '') {
         throw error;
     }
 }
-export async function fetchProductsCount(cookieHeader = '') {
+export async function fetchProductsCount(variables, cookieHeader) {
     try {
-        const data = await graphqlServerRequest(GET_PRODUCTS_COUNT, {}, cookieHeader);
+        const data = await graphqlServerRequest(GET_PRODUCTS_COUNT, variables, cookieHeader);
         return data?.productsCount ?? 0;
     } catch (error) {
         throw error;
     }
 }
-export async function fetchAvailableProductsCount(cookieHeader = '') {
+export async function fetchAvailableProductsCount(variables, cookieHeader) {
     try {
-        const data = await graphqlServerRequest(GET_AVAILABLE_PRODUCTS_COUNT, {}, cookieHeader);
+        const data = await graphqlServerRequest(GET_AVAILABLE_PRODUCTS_COUNT, variables, cookieHeader);
         return data?.availableProductsCount ?? 0;
     } catch (error) {
         throw error;
     }
 }
-export async function fetchProductsInCart(cart, cookieHeader = '') {
+export async function fetchProductsInCart(variables, cookieHeader) {
     try {
-        const data = await graphqlServerRequest(GET_PRODUCTS_IN_CART, { cart }, cookieHeader);
+        const data = await graphqlServerRequest(GET_PRODUCTS_IN_CART, variables, cookieHeader);
         return data?.productsInCart ?? [];
     } catch (error) {
         throw error;

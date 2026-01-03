@@ -1,6 +1,6 @@
 // PRODUCTION-READY: This file has been thoroughly tested and is ready for production use. 😎
 
-import { InfiniteProductSchema, ProductPaginationSchema } from "@/lib/schemas/product.schema";
+import { FilteringProductPaginationSchema, InfiniteProductSchema, ProductPaginationSchema } from "@/lib/schemas/product.schema";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 // all of these queries are tested and proven to work
@@ -263,17 +263,24 @@ export default {
 
     filteredProductsCount: async (parent, args, context) => {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized");
-        const { searchQuery, stock, startDate, endDate } = args;
+        const validation = FilteringProductPaginationSchema.safeParse(args);
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({
+                field: issue.path[0],
+                message: issue.message
+            }));
+            throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
+        }
         let where = {};
-        if (searchQuery) {
+        if (validation.data.searchQuery) {
             where.OR = [
-                { id: { contains: searchQuery, mode: "insensitive" } },
-                { name: { contains: searchQuery, mode: "insensitive" } },
-                { description: { contains: searchQuery, mode: "insensitive" } },
+                { id: { contains: validation.data.searchQuery, mode: "insensitive" } },
+                { name: { contains: validation.data.searchQuery, mode: "insensitive" } },
+                { description: { contains: validation.data.searchQuery, mode: "insensitive" } },
             ]
         }
-        if (stock) {
-            const stockStatus = stock.trim();
+        if (validation.data.stock) {
+            const stockStatus = validation.data.stock.trim();
             switch (stockStatus) {
                 case 'In Stock':
                     where.qteInStock = {
@@ -295,16 +302,16 @@ export default {
                     break;
             }
         }
-        if (startDate) {
+        if (validation.data.startDate) {
             where.createdAt = {
                 ...where.createdAt,
-                gte: startDate
+                gte: validation.data.startDate
             }
         }
-        if (endDate) {
+        if (validation.data.endDate) {
             where.createdAt = {
                 ...where.createdAt,
-                lte: endDate
+                lte: validation.data.endDate
             }
         }
 

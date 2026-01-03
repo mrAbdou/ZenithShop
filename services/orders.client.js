@@ -2,8 +2,8 @@ import { graphqlRequest } from '@/lib/graphql-client';
 import { CreateOrderSchema, OrderFilterSchema } from '@/lib/schemas/order.schema';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
-query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int, $limit: Int, $totalPages: Int) {
-    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, currentPage: $currentPage, limit: $limit, totalPages: $totalPages) {
+query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int!, $limit: Int!) {
+    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, currentPage: $currentPage, limit: $limit) {
         id
         status
         total
@@ -75,50 +75,41 @@ export const FILTERED_ORDERS_COUNT = gql`
 query FilteredOrdersCount($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime){
     filteredOrdersCount(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate)
 }`;
-export async function fetchOrders(filters) {
+export async function fetchOrders(variables) {
     try {
-        const validation = OrderFilterSchema.safeParse(filters);
-        if (!validation.success) {
-            throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
-        }
-        const { searchQuery, status, startDate, endDate, sortBy, sortDirection, currentPage, limit, totalPages } = validation.data;
-        const data = await graphqlRequest(GET_ORDERS, { searchQuery, status, startDate, endDate, sortBy, sortDirection, currentPage, limit, totalPages });
+        const data = await graphqlRequest(GET_ORDERS, variables);
         return data?.orders ?? [];
     } catch (error) {
         throw error;
     }
 }
-export async function fetchOrder(id) {
+export async function fetchOrder(variables) {
     try {
-        const data = await graphqlRequest(GET_ORDER, { id });
+        const data = await graphqlRequest(GET_ORDER, variables);
         return data?.order ?? null;
     } catch (error) {
         throw error;
     }
 }
-export async function fetchOrdersCount() {
+export async function fetchOrdersCount(variables = {}) {
     try {
-        const data = await graphqlRequest(GET_ORDERS_COUNT, {});
+        const data = await graphqlRequest(GET_ORDERS_COUNT, variables);
         return data?.ordersCount ?? 0;
     } catch (error) {
         throw error;
     }
 }
-export async function fetchActiveOrdersCount() {
+export async function fetchActiveOrdersCount(variables = {}) {
     try {
-        const data = await graphqlRequest(GET_ACTIVE_ORDERS_COUNT, {});
+        const data = await graphqlRequest(GET_ACTIVE_ORDERS_COUNT, variables);
         return data?.activeOrdersCount ?? 0;
     } catch (error) {
         throw error;
     }
 }
-export async function addOrder(new_order) {
-    const validation = CreateOrderSchema.safeParse(new_order);
-    if (!validation.success) {
-        throw new Error(Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; '));
-    }
+export async function addOrder(variables) {
     try {
-        const data = await graphqlRequest(ADD_ORDER, validation.data);
+        const data = await graphqlRequest(ADD_ORDER, variables);
         return data?.addOrder ?? null;
     } catch (error) {
         throw error;
@@ -132,20 +123,17 @@ export async function updateOrder(variables) {
         throw error
     }
 }
-export async function deleteOrder(id) {
+export async function deleteOrder(variables) {
     try {
-        if (!id || typeof id !== 'string') {
-            throw new Error('Order ID is not valid');
-        }
-        const data = await graphqlRequest(DELETE_ORDER, { id });
+        const data = await graphqlRequest(DELETE_ORDER, variables);
         return data?.deleteOrder ?? null;
     } catch (error) {
         throw error;
     }
 }
-export async function filteredOrdersCount(filters) {
+export async function filteredOrdersCount(variables) {
     try {
-        const data = await graphqlRequest(FILTERED_ORDERS_COUNT, filters);
+        const data = await graphqlRequest(FILTERED_ORDERS_COUNT, variables);
         return data?.filteredOrdersCount ?? 0;
     } catch (error) {
         throw error;

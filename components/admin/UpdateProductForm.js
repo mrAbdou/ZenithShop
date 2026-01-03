@@ -1,7 +1,7 @@
 'use client';
 
 import { useProduct, useUpdateProduct } from "@/hooks/products";
-import { UpdateProductSchema } from "@/lib/zodSchemas";
+import { UpdateProductSchema } from "@/lib/schemas/product.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

@@ -7,16 +7,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client"; // use client auth
 import { Role } from "@prisma/client";
+import { SignInAdminSchema } from "@/lib/schemas/auth.schema";
 // zod schema for form validation of admin login 
-const schema = z.object({
-    email: z
-        .string()
-        .min(1, "Email is required")
-        .email("Invalid email address"),
-    password: z
-        .string()
-        .min(6, "Password must be at least 6 characters long")
-});
+
 export default function ControlPanelForm() {
     //errors returned from the better-auth/client package goes in here
     const [error, setError] = useState(null);
@@ -31,8 +24,8 @@ export default function ControlPanelForm() {
         checkAuth();
     }, []);
     /// react-hook-form setup for login admin form with zod validation
-    const { register, handleSubmit, formState: { errors } } = useForm({
-        resolver: zodResolver(schema),
+    const { register, handleSubmit, formState: { errors, isSubmitting, isValid, isDirty } } = useForm({
+        resolver: zodResolver(SignInAdminSchema),
         mode: "onChange",
     });
     const onSubmit = async (formData) => {
@@ -87,17 +80,20 @@ export default function ControlPanelForm() {
                     </div>
                     <input
                         {...register("email")}
+                        disabled={isSubmitting}
                         id="email"
                         type="email"
                         placeholder="Enter your email"
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
                     />
                 </div>
-                {errors.email && (
-                    <p className="text-red-500 text-sm mt-2">
-                        {errors.email.message}
-                    </p>
-                )}
+                {
+                    errors.email && (
+                        <p className="text-red-500 text-sm mt-2">
+                            {errors.email.message}
+                        </p>
+                    )
+                }
             </div>
 
             {/* Password Field */}
@@ -126,22 +122,25 @@ export default function ControlPanelForm() {
                     </div>
                     <input
                         {...register("password")}
+                        disabled={isSubmitting}
                         placeholder="Enter your password"
                         id="password"
                         type="password"
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
                     />
                 </div>
-                {errors.password && (
-                    <p className="text-red-500 text-sm mt-2">
-                        {errors.password.message}
-                    </p>
-                )}
+                {
+                    errors.password && (
+                        <p className="text-red-500 text-sm mt-2">
+                            {errors.password.message}
+                        </p>
+                    )
+                }
             </div>
 
             {/* Submit Button */}
             <button
-                disabled={Object.keys(errors).length > 0}
+                disabled={isSubmitting || !isValid || !isDirty}
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >

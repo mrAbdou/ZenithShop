@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-    completeSignUp,
     fetchCustomersCount,
     fetchMyOrders,
     fetchUser,
@@ -8,57 +7,58 @@ import {
     fetchUsersCount,
     updateCustomerProfile
 } from "@/services/users.client";
-import { CompleteSignUpSchema, UpdateCustomerSchema } from "@/lib/schemas/user.schema";
+import { FilteringUserPaginationSchema, UpdateCustomerSchema, UserPaginationSchema } from "@/lib/schemas/user.schema";
 import toast from "react-hot-toast";
 import ZodValidationError from "@/lib/ZodValidationError";
 
-export function useUsers(initialData = []) {
+export function useUsers(variables, initialData) {
     return useQuery({
-        queryKey: ['users'],
-        queryFn: fetchUsers,
-        initialData
+        queryKey: ['users', variables],
+        queryFn: () => {
+            const validation = UserPaginationSchema.safeParse(variables);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return fetchUsers(validation.data)
+        },
+        initialData: initialData ? initialData : []
     });
 }
 export function useUser(id) {
     return useQuery({
         queryKey: ['user', id],
-        queryFn: () => fetchUser({ id })
+        queryFn: () => {
+            if (!id || typeof id !== 'string') {
+                return null;
+            }
+            return fetchUser({ id })
+        },
+        enabled: id && typeof id === 'string',
     });
 }
 export function useCustomersCount(initialData) {
     return useQuery({
         queryKey: ['customersCount'],
         queryFn: fetchCustomersCount,
-        initialData
+        initialData: initialData ? initialData : 0
     });
 }
 export function useUsersCount(initialData) {
     return useQuery({
         queryKey: ['usersCount'],
         queryFn: fetchUsersCount,
-        initialData
+        initialData: initialData ? initialData : 0
     });
 }
-// export function useCompleteSignUp() {
-//     return useMutation({
-//         mutationFn: (data) => {
-//             const validation = CompleteSignUpSchema.safeParse(data);
-//             if (!validation.success) {
-//                 const errors = validation.error.issues.map(issue => ({
-//                     path: issue.path[0],
-//                     message: issue.message
-//                 }));
-//                 throw new ZodValidationError('Validation failed', errors);
-//             }
-//             return completeSignUp(validation.data)
-//         },
-//     });
-// }
-export function useMyOrders(initialData = []) {
+export function useMyOrders(initialData) {
     return useQuery({
         queryKey: ['myOrders'],
         queryFn: fetchMyOrders,
-        initialData
+        initialData: initialData ? initialData : []
     })
 }
 

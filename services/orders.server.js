@@ -5,8 +5,8 @@ import ZodValidationError from '@/lib/ZodValidationError';
 import { OrderStatus } from '@prisma/client';
 import { gql } from 'graphql-request';
 export const GET_ORDERS = gql`
-query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String) {
-    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection) {
+query GetOrders($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $currentPage: Int!, $limit: Int!) {
+    orders(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, currentPage: $currentPage, limit: $limit) {
         id
         status
         total
@@ -61,6 +61,10 @@ export const GET_ACTIVE_ORDERS_COUNT = gql`
 query GetActiveOrdersCount {
     activeOrdersCount
 }`;
+export const FILTERED_ORDERS_COUNT = gql`
+query FilteredOrdersCount($searchQuery: String, $status: OrderStatus, $startDate: DateTime, $endDate: DateTime){
+    filteredOrdersCount(searchQuery: $searchQuery, status: $status, startDate: $startDate, endDate: $endDate)
+}`;
 export async function fetchOrders(variables, cookieHeader = '') {
     try {
         const data = await graphqlServerRequest(GET_ORDERS, variables, cookieHeader);
@@ -77,7 +81,7 @@ export async function fetchOrder(variables, cookieHeader = '') {
         throw error;
     }
 }
-export async function fetchOrdersCount(variables, cookieHeader = '') {
+export async function fetchOrdersCount(variables = {}, cookieHeader = '') {
     try {
         const data = await graphqlServerRequest(GET_ORDERS_COUNT, variables, cookieHeader);
         return data?.ordersCount ?? 0;
@@ -85,10 +89,18 @@ export async function fetchOrdersCount(variables, cookieHeader = '') {
         throw error;
     }
 }
-export async function fetchActiveOrdersCount(variables, cookieHeader = '') {
+export async function fetchActiveOrdersCount(variables = {}, cookieHeader = '') {
     try {
         const data = await graphqlServerRequest(GET_ACTIVE_ORDERS_COUNT, variables, cookieHeader);
         return data?.activeOrdersCount ?? 0;
+    } catch (error) {
+        throw error;
+    }
+}
+export async function filteredOrdersCount(variables, cookieHeader = '') {
+    try {
+        const data = await graphqlServerRequest(FILTERED_ORDERS_COUNT, variables, cookieHeader);
+        return data?.filteredOrdersCount ?? 0;
     } catch (error) {
         throw error;
     }

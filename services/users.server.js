@@ -39,6 +39,8 @@ query GetUser($id: String!) {
         id
         name
         email
+        phoneNumber
+        address
         role
     }
 }`;
@@ -85,7 +87,7 @@ export async function fetchUser(variables, cookieHeader) {
         throw err;
     }
 }
-export async function fetchCustomersCount(variables, cookieHeader) {
+export async function fetchCustomersCount(variables = {}, cookieHeader) {
     try {
         const data = await graphqlServerRequest(GET_CUSTOMERS_COUNT, variables, cookieHeader);
         return data?.customersCount ?? 0;
@@ -93,7 +95,7 @@ export async function fetchCustomersCount(variables, cookieHeader) {
         throw err;
     }
 }
-export async function fetchUsersCount(variables, cookieHeader) {
+export async function fetchUsersCount(variables = {}, cookieHeader) {
     try {
         const data = await graphqlServerRequest(GET_USERS_COUNT, variables, cookieHeader);
         return data?.usersCount ?? 0;
@@ -101,7 +103,7 @@ export async function fetchUsersCount(variables, cookieHeader) {
         throw error;
     }
 }
-export async function fetchMyOrders(variables, cookieHeader) {
+export async function fetchMyOrders(variables = {}, cookieHeader) {
     try {
         const data = await graphqlServerRequest(MY_ORDERS, variables, cookieHeader);
         return data?.myOrders ?? [];

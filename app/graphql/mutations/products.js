@@ -72,10 +72,10 @@ export default {
 
     deleteProduct: async (parent, args, context) => {
         if (context?.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        const { productId } = args;
-        if (!productId || typeof productId !== 'string') throw new GraphQLError("Invalid product id", { extensions: { code: 'BAD_REQUEST' } });
+        const { id } = args;
+        if (!id || typeof id !== 'string') throw new GraphQLError("Invalid product id", { extensions: { code: 'BAD_REQUEST' } });
         try {
-            return await context.prisma.product.delete({ where: { id: productId } });
+            return await context.prisma.product.delete({ where: { id } });
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {

@@ -1,10 +1,11 @@
 'use client';
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
 import { useCountFilteredOrders, useDeleteOrder, useOrders } from "@/hooks/orders";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { OrderStatus } from "@prisma/client";
+import { MAX_VISIBLE_NAVIGATION_BTN } from "@/lib/constants";
 const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
@@ -17,20 +18,19 @@ const formatDate = (dateString) => {
 };
 
 export default function OrdersTable({ initialData }) {
-    const { getFilters, updateSortingProps, setPaginationCurrentPage, setPaginationLimit } = useOrderFiltersContext();
-    const filters = getFilters();
+    const { filters, updateSortingProps, setPaginationCurrentPage, setPaginationLimit } = useOrderFiltersContext();
     const { data: filteredOrdersCount } = useCountFilteredOrders({
         searchQuery: filters.searchQuery,
-        status: filters.status ? filters.status : null,
-        startDate: filters.startDate ? new Date(filters.startDate) : null,
-        endDate: filters.endDate ? new Date(filters.endDate) : null,
+        status: filters.status,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
     });
     const router = useRouter();
-    const { data: orders, isLoading, error } = useOrders(initialData, filters);
+    const { data: orders, isLoading, error } = useOrders(filters, initialData);
     const { mutateAsync: deleteOrderAsync } = useDeleteOrder();
     const totalPages = useMemo(() => Math.ceil(filteredOrdersCount / filters.limit), [filteredOrdersCount, filters.limit]);
 
-    const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
+    const getVisiblePages = useCallback((currentPage, totalPages, maxVisible = MAX_VISIBLE_NAVIGATION_BTN) => {
         const pages = [];
 
         // Always show first page
@@ -63,7 +63,7 @@ export default function OrdersTable({ initialData }) {
             // Remove consecutive ellipsis
             !(page === '...' && arr[index - 1] === '...')
         );
-    };
+    }, [filters.currentPage, totalPages]); // Only depends on currentPage and totalPages
     const headersMapping = {
         'Order ID': 'id',
         'Customer': 'user.name',
@@ -93,8 +93,8 @@ export default function OrdersTable({ initialData }) {
                 newSortDirection = 'asc';
                 newSortBy = field;
             } else if (filters.sortDirection === 'asc') {
-                newSortDirection = null;
-                newSortBy = null;
+                newSortDirection = '';
+                newSortBy = '';
             } else {
                 newSortDirection = 'desc';
                 newSortBy = field;
@@ -141,6 +141,11 @@ export default function OrdersTable({ initialData }) {
             <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-4">Order History</h2>
                 <div className="text-red-600">Error loading orders: {error.message}</div>
+                <ul>
+                    {
+                        console.log('error', error)
+                    }
+                </ul>
             </div>
         );
     }

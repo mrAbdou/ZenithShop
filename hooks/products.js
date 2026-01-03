@@ -12,36 +12,70 @@ import {
     fetchPaginatedProducts,
     fetchInfiniteProducts,
     updateProduct,
+    deleteProduct,
 } from "@/services/products.client";
-import { LIMIT, PAGINATION_MIN_LIMIT } from "@/lib/constants";
-import { AddProductSchema, InfiniteProductSchema, ProductPaginationSchema, UpdateProductSchema } from "@/lib/schemas/product.schema";
+import { AddProductSchema, FilteringProductPaginationSchema, InfiniteProductSchema, ProductPaginationSchema, UpdateProductSchema } from "@/lib/schemas/product.schema";
 import ZodValidationError from "@/lib/ZodValidationError";
+
+/** Count of all products */
+export function useProductsCount(initialData) {
+    return useQuery({
+        queryKey: ["productsCount"],
+        queryFn: () => fetchProductsCount(),
+        initialData: initialData ? initialData : 0,
+    });
+}
+
+/** Count of available (in‑stock) products */
+export function useAvailableProductsCount(initialData) {
+    return useQuery({
+        queryKey: ["availableProductsCount"],
+        queryFn: () => fetchAvailableProductsCount(),
+        initialData: initialData ? initialData : 0,
+    });
+}
+
+export function useCountFilteredProducts(filters) {
+    return useQuery({
+        queryKey: ["countFilteredProducts", filters],
+        queryFn: () => {
+            //TODO: we need a schema only for filtering props not passing the full variables
+            const validation = FilteringProductPaginationSchema.safeParse(filters);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return filteredProductsCount(validation.data)
+        },
+    });
+}
+
 /**
  * Hook to fetch a paginated list of products.
  * Accepts optional initialData (array) from SSR.
  */
-export function usePaginationProducts(filters, initialData = []) {
+export function usePaginationProducts(variables, initialData) {
     return useQuery({
-        queryKey: ["products", filters],
+        queryKey: ["products", variables],
         queryFn: () => {
-            console.log('usePaginationProducts - Input filters:', filters);
-            const validation = ProductPaginationSchema.safeParse(filters);
+            const validation = ProductPaginationSchema.safeParse(variables);
             if (!validation.success) {
-                console.error('Validation failed:', validation.error.issues);
                 const errors = validation.error.issues.map(issue => ({
                     field: issue.path[0],
                     message: issue.message
                 }));
                 throw new ZodValidationError('Validation failed', errors);
             }
-            console.log('usePaginationProducts - Validated data:', validation.data);
             return fetchPaginatedProducts(validation.data)
         },
         initialData
     });
 }
 
-export function useInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, initialData = []) {
+export function useInfiniteProducts(variables, initialData) {
     return useInfiniteQuery({
         queryKey: ["products", variables],
         queryFn: ({ pageParam = 0 }) => {
@@ -56,10 +90,10 @@ export function useInfiniteProducts(variables = { limit: LIMIT, offset: 0 }, ini
             return fetchInfiniteProducts(validation.data)
         },
         initialPageParam: 0,
-        initialData: {
+        initialData: initialData ? {
             pages: [initialData],
             pageParams: [0],
-        },
+        } : undefined,
         getNextPageParam: (lastPage, allPages) => {
             const loadedItems = allPages.reduce(
                 (acc, page) => acc + (page?.length || 0),
@@ -79,7 +113,7 @@ export function useProduct(id) {
         queryKey: ["product", id],
         queryFn: () => {
             if (!id || typeof id !== 'string') {
-                throw new Error('Invalid product ID');
+                return null;
             }
             return fetchProduct({ id })
         },
@@ -87,23 +121,6 @@ export function useProduct(id) {
     });
 }
 
-/** Count of all products */
-export function useProductsCount(initialData) {
-    return useQuery({
-        queryKey: ["productsCount"],
-        queryFn: () => fetchProductsCount({}),
-        initialData
-    });
-}
-
-/** Count of available (in‑stock) products */
-export function useAvailableProductsCount(initialData) {
-    return useQuery({
-        queryKey: ["availableProductsCount"],
-        queryFn: () => fetchAvailableProductsCount({}),
-        initialData
-    });
-}
 
 /** Fetch products that are currently in the cart */
 export function useProductsInCart(cart) {
@@ -111,7 +128,7 @@ export function useProductsInCart(cart) {
         queryKey: ["productsInCart", cart],
         queryFn: () => {
             if (!cart || !Array.isArray(cart) || cart.length === 0) {
-                throw new Error('Invalid cart data');
+                return [];
             }
             return fetchProductsInCart({ cart })
         },
@@ -141,11 +158,7 @@ export function useAddProduct() {
         onSuccess: (data) => {
             try {
                 queryClient.setQueryData(['product', data.id], data);
-                queryClient.setQueryData(['products'], (oldData) => {
-                    if (!oldData) return [data];
-                    return [...oldData, data];
-                });
-
+                queryClient.invalidateQueries({ queryKey: ['products'] });
                 queryClient.invalidateQueries({ queryKey: ['productsCount'] });
                 queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
                 queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
@@ -154,24 +167,6 @@ export function useAddProduct() {
             }
         }
     })
-}
-
-export function useCountFilteredProducts(filters) {
-    return useQuery({
-        queryKey: ["countFilteredProducts", filters],
-        queryFn: () => {
-            //TODO: we need a schema only for filtering props not passing the full filters
-            const validation = ProductPaginationSchema.safeParse(filters);
-            if (!validation.success) {
-                const errors = validation.error.issues.map(issue => ({
-                    field: issue.path[0],
-                    message: issue.message,
-                }));
-                throw new ZodValidationError('Validation failed', errors);
-            }
-            return filteredProductsCount(validation.data)
-        },
-    });
 }
 
 export function useUpdateProduct(id) {
@@ -193,19 +188,23 @@ export function useUpdateProduct(id) {
             queryClient.setQueryData(['product', id], data);
 
             // Update the product in the products list if it exists
-            queryClient.setQueryData(['products'], (oldData) => {
-                if (!oldData) return [data];
-                return oldData.map((product) => (product.id === id ? data : product));
-            });
-
-            // Invalidate related queries
+            queryClient.invalidateQueries({ queryKey: ['products'] });
             queryClient.invalidateQueries({ queryKey: ['productsCount'] });
             queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
             queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
-            queryClient.invalidateQueries({
-                queryKey: ["products"],
-                predicate: (query) => query.queryKey.length > 1 // Invalidate filtered queries
-            });
+        }
+    })
+}
+
+export function useDeleteProduct() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id) => deleteProduct({ id }),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            queryClient.invalidateQueries({ queryKey: ['productsCount'] });
+            queryClient.invalidateQueries({ queryKey: ['availableProductsCount'] });
+            queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
         }
     })
 }

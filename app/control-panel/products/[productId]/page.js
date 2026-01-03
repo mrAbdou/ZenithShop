@@ -29,8 +29,7 @@ export default async function ProductDetails({ params }) {
     if (!productId || typeof productId !== 'string') {
         notFound();
     }
-    const product = await fetchProduct(productId, cookieHeader);
-
+    const product = await fetchProduct({ id: productId }, cookieHeader);
     if (!product) {
         return notFound();
     }

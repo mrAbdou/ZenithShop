@@ -7,7 +7,6 @@ import { useProductContext } from "@/context/ProductContext";
 
 export default function ProductsFilters() {
     const { filters, setFilteringProps } = useProductContext();
-    console.log('ProductsFilters render - filters:', filters);
 
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
@@ -21,7 +20,6 @@ export default function ProductsFilters() {
     });
 
     const onSubmit = (data) => {
-        console.log('Form submitted with data:', data);
         setFilteringProps(data);
     };
 

@@ -1,6 +1,7 @@
 'use client';
-import { OrderStatus, PAGINATION_MIN_LIMIT } from "@/lib/constants";
-import { createContext, useState, useContext } from "react";
+import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
+import { OrderStatus } from "@prisma/client";
+import { createContext, useState, useContext, useCallback, useMemo } from "react";
 
 //this is the context that i will use to share the filter values between the OrdersFilters and OrdersTable components
 const OrderFiltersContext = createContext();
@@ -10,24 +11,60 @@ export { OrderFiltersContext };
 // it provides the filter values to the OrdersFilters and OrdersTable components
 export default function OrderFiltersProvider({ children }) {
     const [filters, setFilters] = useState({
-        searchQuery: '',
-        status: OrderStatus.PENDING,
-        startDate: null,
-        endDate: null,
+        searchQuery: undefined,
+        status: undefined,
+        startDate: undefined,
+        endDate: undefined,
         //sorting props .....
-        sortBy: null,
-        sortDirection: null,
+        sortBy: undefined,
+        sortDirection: undefined,
         //pagination props .....
         limit: PAGINATION_MIN_LIMIT,
         currentPage: 1,
     });
-    const getFilters = () => filters;
-    const updateFilters = (newFilters) => setFilters(prev => ({ ...prev, searchQuery: newFilters.searchQuery, status: newFilters.status, startDate: newFilters.startDate, endDate: newFilters.endDate }));
-    const updateSortingProps = (newSortingProps) => setFilters(prev => ({ ...prev, sortBy: newSortingProps.sortBy, sortDirection: newSortingProps.sortDirection }));
-    const setPaginationLimit = (limit) => setFilters(prev => ({ ...prev, limit, currentPage: 1 }));
-    const setPaginationCurrentPage = (page) => setFilters(prev => ({ ...prev, currentPage: page }));
+    const updateFilters = useCallback((newFilters) => {
+        setFilters(prev => ({
+            ...prev,
+            searchQuery: newFilters.searchQuery,
+            status: newFilters.status,
+            startDate: newFilters.startDate,
+            endDate: newFilters.endDate
+        }));
+    }, []);
+
+    const updateSortingProps = useCallback((newSortingProps) => {
+        setFilters(prev => ({
+            ...prev,
+            sortBy: newSortingProps.sortBy,
+            sortDirection: newSortingProps.sortDirection
+        }));
+    }, []);
+
+    const setPaginationLimit = useCallback((limit) => {
+        setFilters(prev => ({
+            ...prev,
+            limit,
+            currentPage: 1
+        }));
+    }, []);
+
+    const setPaginationCurrentPage = useCallback((page) => {
+        setFilters(prev => ({
+            ...prev,
+            currentPage: page
+        }));
+    }, []);
+
+    const value = useMemo(() => ({
+        filters,
+        updateFilters,
+        updateSortingProps,
+        setPaginationLimit,
+        setPaginationCurrentPage
+    }), [filters, updateFilters, updateSortingProps, setPaginationLimit, setPaginationCurrentPage]);
+
     return (
-        <OrderFiltersContext.Provider value={{ getFilters, updateFilters, updateSortingProps, setPaginationLimit, setPaginationCurrentPage }}>
+        <OrderFiltersContext.Provider value={value}>
             {children}
         </OrderFiltersContext.Provider>
     );

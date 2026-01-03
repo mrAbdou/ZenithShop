@@ -90,7 +90,7 @@ type Mutation {
     # Product Management (Admin) #############
     addNewProduct(product: ProductInput!): Product!
     updateProduct(id: String!, product: UpdateProductInput!): Product!
-    deleteProduct(productId: String!): Boolean!
+    deleteProduct(id: String!): Product!
 
     # Order & Cart Management ################
     addOrder(items: [OrderItemInput!]!, total: Decimal!): Order!

@@ -50,6 +50,10 @@ query GetProductsInCart($cart: [ID!]!) {
         price
     }
 }`;
+export const FILTERED_PRODUCTS_COUNT = gql`
+query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime) {
+    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate)
+}`;
 
 export async function fetchPaginatedProducts(variables, cookieHeader) {
     try {
@@ -85,7 +89,7 @@ export async function fetchProduct(variables, cookieHeader) {
         throw error;
     }
 }
-export async function fetchProductsCount(variables, cookieHeader) {
+export async function fetchProductsCount(variables = {}, cookieHeader) {
     try {
         const data = await graphqlServerRequest(GET_PRODUCTS_COUNT, variables, cookieHeader);
         return data?.productsCount ?? 0;
@@ -93,7 +97,7 @@ export async function fetchProductsCount(variables, cookieHeader) {
         throw error;
     }
 }
-export async function fetchAvailableProductsCount(variables, cookieHeader) {
+export async function fetchAvailableProductsCount(variables = {}, cookieHeader) {
     try {
         const data = await graphqlServerRequest(GET_AVAILABLE_PRODUCTS_COUNT, variables, cookieHeader);
         return data?.availableProductsCount ?? 0;
@@ -107,5 +111,13 @@ export async function fetchProductsInCart(variables, cookieHeader) {
         return data?.productsInCart ?? [];
     } catch (error) {
         throw error;
+    }
+}
+export async function filteredProductsCount(variables, cookieHeader) {
+    try {
+        const data = await graphqlServerRequest(FILTERED_PRODUCTS_COUNT, variables, cookieHeader);
+        return data?.filteredProductsCount ?? 0;
+    } catch (gqlError) {
+        throw gqlError;
     }
 }

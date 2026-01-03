@@ -37,7 +37,7 @@ export default async function OrderView({ params }) {
     if (!session || session?.user?.role !== Role.ADMIN) {
         return redirect("/");
     }
-    const order = await fetchOrder(orderId, cookieHeader);
+    const order = await fetchOrder({ id: orderId }, cookieHeader);
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
             <div className="max-w-7xl mx-auto p-6 md:p-10">

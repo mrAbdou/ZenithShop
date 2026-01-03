@@ -1,7 +1,7 @@
 'use client';
 
 import { useOrder, useUpdateOrder } from "@/hooks/orders";
-import { updateOrderSchema } from "@/lib/zodSchemas";
+import { updateOrderSchema } from "@/lib/schemas/order.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { OrderStatus } from "@prisma/client";
 import { useForm } from "react-hook-form";
@@ -173,8 +173,8 @@ export default function UpdateOrderForm({ id }) {
                                         disabled={isSubmitting}
                                         {...register('status')}
                                         className={`w-full pl-12 pr-12 py-4 text-lg border-2 rounded-xl focus:ring-4 transition-all duration-300 outline-none appearance-none cursor-pointer ${errors.status
-                                                ? 'border-red-500 focus:border-red-500 focus:ring-red-100 bg-red-50 text-red-700'
-                                                : `${currentStatusStyling.border} focus:border-${orderStatusOptions.find(opt => opt.value === currentStatus)?.color || 'gray'}-500 focus:ring-${orderStatusOptions.find(opt => opt.value === currentStatus)?.color || 'gray'}-100 ${currentStatusStyling.bg} ${currentStatusStyling.text} hover:border-${orderStatusOptions.find(opt => opt.value === currentStatus)?.color || 'gray'}-600`
+                                            ? 'border-red-500 focus:border-red-500 focus:ring-red-100 bg-red-50 text-red-700'
+                                            : `${currentStatusStyling.border} focus:border-${orderStatusOptions.find(opt => opt.value === currentStatus)?.color || 'gray'}-500 focus:ring-${orderStatusOptions.find(opt => opt.value === currentStatus)?.color || 'gray'}-100 ${currentStatusStyling.bg} ${currentStatusStyling.text} hover:border-${orderStatusOptions.find(opt => opt.value === currentStatus)?.color || 'gray'}-600`
                                             } ${isSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}
                                     >
                                         {orderStatusOptions.map((option) => (
@@ -246,8 +246,8 @@ export default function UpdateOrderForm({ id }) {
                                     type="submit"
                                     disabled={isSubmitting || !isValid || !isDirty}
                                     className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-300 font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-3 min-w-[280px] ${isSubmitting || !isValid || !isDirty
-                                            ? 'opacity-60 cursor-not-allowed'
-                                            : 'hover:shadow-2xl'
+                                        ? 'opacity-60 cursor-not-allowed'
+                                        : 'hover:shadow-2xl'
                                         }`}
                                 >
                                     {isSubmitting ? (

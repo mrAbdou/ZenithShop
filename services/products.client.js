@@ -1,8 +1,5 @@
 import { graphqlRequest } from '@/lib/graphql-client';
 import { gql } from 'graphql-request';
-import { AddProductSchema, InfiniteProductSchema, ProductPaginationSchema, UpdateProductSchema } from '@/lib/schemas/product.schema';
-import { LIMIT } from '@/lib/constants';
-import ZodValidationError from '@/lib/ZodValidationError';
 export const GET_INFINITE_PRODUCTS = gql`
 query GetInfiniteProducts($limit: Int!, $offset: Int!, $searchQuery: String, $stock: String, $minPrice: Float, $maxPrice: Float, $sortBy: String, $sortDirection: String) {
     infiniteProducts(limit: $limit, offset: $offset, searchQuery: $searchQuery, stock: $stock, minPrice: $minPrice, maxPrice: $maxPrice, sortBy: $sortBy, sortDirection: $sortDirection) {
@@ -55,8 +52,8 @@ query GetProductsInCart($cart: [ID!]!) {
     }
 }`;
 export const ADD_PRODUCT = gql`
-mutation addProduct($newProduct: ProductInput!){
-    addNewProduct(product: $newProduct){
+mutation addProduct($product: ProductInput!){
+    addNewProduct(product: $product){
         id
         name
         description
@@ -78,6 +75,13 @@ mutation updateProduct($id: String!, $product: UpdateProductInput!) {
         qteInStock
     }
 }`;
+
+export const DELETE_PRODUCT = gql`
+mutation deleteProduct($id: String!) {
+    deleteProduct(id: $id){
+        id
+    }
+}`;
 export async function fetchPaginatedProducts(variables) {
     try {
         const data = await graphqlRequest(GET_PAGINATED_PRODUCTS, variables);
@@ -86,7 +90,7 @@ export async function fetchPaginatedProducts(variables) {
         throw gqlError;
     }
 }
-export async function fetchInfiniteProducts(variables = { limit: LIMIT, offset: 0 }) {
+export async function fetchInfiniteProducts(variables) {
     try {
         const data = await graphqlRequest(GET_INFINITE_PRODUCTS, variables);
         return data?.infiniteProducts ?? [];
@@ -102,7 +106,7 @@ export async function fetchProduct(variables) {
         throw gqlError;
     }
 }
-export async function fetchProductsCount(variables) {
+export async function fetchProductsCount(variables = {}) {
     try {
         const data = await graphqlRequest(GET_PRODUCTS_COUNT, variables);
         return data?.productsCount ?? 0;
@@ -110,7 +114,7 @@ export async function fetchProductsCount(variables) {
         throw gqlError;
     }
 }
-export async function fetchAvailableProductsCount(variables) {
+export async function fetchAvailableProductsCount(variables = {}) {
     try {
         const data = await graphqlRequest(GET_AVAILABLE_PRODUCTS_COUNT, variables);
         return data?.availableProductsCount ?? 0;
@@ -146,6 +150,15 @@ export async function updateProduct(variables) {
     try {
         const data = await graphqlRequest(UPDATE_PRODUCT, variables);
         return data?.updateProduct ?? null;
+    } catch (gqlError) {
+        throw gqlError;
+    }
+}
+
+export async function deleteProduct(variables) {
+    try {
+        const data = await graphqlRequest(DELETE_PRODUCT, variables);
+        return data?.deleteProduct ?? null;
     } catch (gqlError) {
         throw gqlError;
     }

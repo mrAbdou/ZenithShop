@@ -1,8 +1,9 @@
 "use client";
-import { useCountFilteredProducts, usePaginationProducts } from "@/hooks/products";
+import { useCountFilteredProducts, useDeleteProduct, usePaginationProducts } from "@/hooks/products";
 import { useRouter } from "next/navigation";
 import { useProductContext } from "@/context/ProductContext";
 import { useMemo } from "react";
+import toast from "react-hot-toast";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -19,9 +20,9 @@ export default function ProductsTable({ initialData = [] }) {
     const router = useRouter();
 
     const { filters, setPaginationCurrentPage, setPaginationLimit, setSortingFilters } = useProductContext();
-    console.log('ProductsTable render - filters:', filters);
     const { data: products, error: productsError } = usePaginationProducts(filters, initialData);
     const { data: filteredProductsCount, error: productsCountError } = useCountFilteredProducts(filters);
+    const { mutateAsync: deleteProduct } = useDeleteProduct();
     const totalPages = useMemo(() => filteredProductsCount && filteredProductsCount > 0 ? Math.ceil(filteredProductsCount / filters.limit) : 1, [filteredProductsCount, filters.limit]);
     const getVisiblePages = (currentPage, totalPages, maxVisible = 7) => {
         const pages = [];
@@ -58,17 +59,21 @@ export default function ProductsTable({ initialData = [] }) {
         );
     };
 
-    const onViewProduct = (productId) => {
-        router.push(`/control-panel/products/${productId}`);
+    const onViewProduct = (id) => {
+        router.push(`/control-panel/products/${id}`);
     };
 
-    const onEditProduct = (productId) => {
-        router.push(`/control-panel/products/${productId}/edit`);
+    const onEditProduct = (id) => {
+        router.push(`/control-panel/products/${id}/edit`);
     };
 
-    const onDeleteProduct = async (productId) => {
+    const onDeleteProduct = async (id) => {
         if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-            // Delete logic will be implemented later
+            await deleteProduct(id, {
+                onSuccess: () => {
+                    toast.success('Product has been deleted successfully');
+                }
+            });
         }
     };
     const onChangeLimit = (e) => {

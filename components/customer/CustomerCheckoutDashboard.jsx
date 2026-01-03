@@ -6,6 +6,7 @@ import { useAddOrder } from '@/hooks/orders';
 import toast from 'react-hot-toast';
 import { CreateOrderSchema } from '@/lib/schemas/order.schema';
 import { useCartContext } from '@/context/CartContext';
+import ZodValidationError from '@/lib/ZodValidationError';
 
 export default function CustomerCheckoutDashboard() {
     const { getCart, clearCart } = useCartContext(); // here i get what user select to order
@@ -40,9 +41,11 @@ export default function CustomerCheckoutDashboard() {
 
         const validation = CreateOrderSchema.safeParse(new_order);
         if (!validation.success) {
-            const errorMessages = Object.entries(validation.error.flatten().fieldErrors).map(([field, messages]) => `${field}: ${messages.join(', ')}`).join('; ');
-            toast.error(`Validation failed: ${errorMessages}`);
-            return;
+            const errors = validation.error.issues.map(issue => ({
+                field: issue.path[0],
+                message: issue.message
+            }));
+            throw new ZodValidationError('Validation failed', errors);
         }
 
         setIsProcessing(true);

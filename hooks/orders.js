@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addOrder, deleteOrder, fetchActiveOrdersCount, fetchOrder, fetchOrders, fetchOrdersCount, filteredOrdersCount, updateOrder } from "@/services/orders.client";
-import { CreateOrderSchema, OrderFilterSchema, updateOrderSchema } from "@/lib/schemas/order.schema";
+import { CreateOrderSchema, FilteredOrdersCountSchema, OrderFilterSchema, updateOrderSchema } from "@/lib/schemas/order.schema";
 import ZodValidationError from "@/lib/ZodValidationError";
-export function useOrders(initialData = [], filters = { limit: LIMIT, currentPage: 1 }) {
+export function useOrders(filters, initialData) {
 
     return useQuery({
         queryKey: ['orders', filters],
@@ -14,7 +14,7 @@ export function useOrders(initialData = [], filters = { limit: LIMIT, currentPag
             }
             return fetchOrders(validation.data)
         },
-        initialData
+        initialData: initialData ? initialData : []
     })
 }
 export function useOrder(id) {
@@ -73,14 +73,14 @@ export function useAddOrder() {
 export function useOrdersCount() {
     return useQuery({
         queryKey: ['ordersCount'],
-        queryFn: () => fetchOrdersCount({}),
+        queryFn: () => fetchOrdersCount(),
     })
 }
 export function useActiveOrdersCount(initialData) {
     return useQuery({
         queryKey: ['activeOrdersCount'],
-        queryFn: () => fetchActiveOrdersCount({}),
-        initialData
+        queryFn: () => fetchActiveOrdersCount(),
+        initialData: initialData ? initialData : 0,
     })
 }
 export function useUpdateOrder(id) {
@@ -163,9 +163,19 @@ export function useDeleteOrder() {
         }
     })
 }
-export function useCountFilteredOrders(filters = {}) {
+export function useCountFilteredOrders(filters) {
     return useQuery({
         queryKey: ['countFilteredOrders', filters],
-        queryFn: () => filteredOrdersCount(filters),
+        queryFn: () => {
+            const validation = FilteredOrdersCountSchema.safeParse(filters)
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message
+                }))
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return filteredOrdersCount(validation.data)
+        },
     })
 }

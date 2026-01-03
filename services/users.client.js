@@ -103,7 +103,7 @@ export async function fetchUser(variables) {
         throw err;
     }
 }
-export async function fetchCustomersCount(variables) {
+export async function fetchCustomersCount(variables = {}) {
     try {
         const data = await graphqlRequest(GET_CUSTOMERS_COUNT, variables);
         return data?.customersCount ?? 0;
@@ -111,7 +111,7 @@ export async function fetchCustomersCount(variables) {
         throw err;
     }
 }
-export async function fetchUsersCount(variables) {
+export async function fetchUsersCount(variables = {}) {
     try {
         const data = await graphqlRequest(GET_USERS_COUNT, variables);
         return data?.usersCount ?? 0;
@@ -120,7 +120,7 @@ export async function fetchUsersCount(variables) {
     }
 }
 
-export async function fetchMyOrders(variables) {
+export async function fetchMyOrders(variables = {}) {
     try {
         const data = await graphqlRequest(MY_ORDERS, variables);
         return data?.myOrders ?? [];

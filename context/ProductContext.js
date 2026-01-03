@@ -19,7 +19,6 @@ export default function ProductProvider({ children }) {
     });
 
     const setFilteringProps = useCallback((filteringProps) => {
-        console.log('setFilteringProps called with:', filteringProps);
         setFilters((prevFilters) => ({
             ...prevFilters,
             searchQuery: filteringProps.searchQuery,
@@ -40,7 +39,8 @@ export default function ProductProvider({ children }) {
     const setPaginationLimit = useCallback((limit) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
-            limit: limit
+            limit: limit,
+            currentPage: 1,
         }));
     }, []);
 

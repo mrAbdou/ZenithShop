@@ -17,6 +17,7 @@ import { Role } from "@prisma/client";
 // start next import ---------------------------------------------
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
 // end next import -----------------------------------------------
 
 export const metadata = {
@@ -37,8 +38,9 @@ export default async function OrdersManagementPage() {
     let ordersCount = 0;
     try {
         // filters has a default value in fetchOrders so there is no need to pass it
-        orders = await fetchOrders(cookieHeader);
-        ordersCount = await fetchOrdersCount(cookieHeader);
+        const variables = { currentPage: 1, limit: PAGINATION_MIN_LIMIT };
+        orders = await fetchOrders(variables, cookieHeader);
+        ordersCount = await fetchOrdersCount(variables, cookieHeader);
     } catch (error) {
         error = error.message;
     }

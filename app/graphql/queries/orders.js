@@ -31,7 +31,6 @@ export default {
     //should only be used by admin because this function is build for the table pagination only
     orders: async (parent, args, context) => {
         if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        const { searchQuery, status, startDate, endDate, sortBy, sortDirection, currentPage, limit } = args;
         const validation = OrderFilterSchema.safeParse(args);
         if (!validation.success) {
             const errors = validation.error.issues.map(issue => ({

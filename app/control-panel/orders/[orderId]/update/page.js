@@ -30,7 +30,7 @@ export default async function UpdateOrder({ params }) {
     if (!session || session.user.role !== Role.ADMIN) {
         return redirect('/');
     }
-    const order = await fetchOrder(orderId, cookieHeader);
+    const order = await fetchOrder({ id: orderId }, cookieHeader);
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}

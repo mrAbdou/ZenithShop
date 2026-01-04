@@ -95,7 +95,7 @@ export function useUpdateOrder(id) {
                 }))
                 throw new ZodValidationError('Validation failed', errors);
             }
-            return updateOrder({ id, order: validation.data });
+            return updateOrder({ id, ...validation.data });
         },
         onSuccess: (data) => {
 

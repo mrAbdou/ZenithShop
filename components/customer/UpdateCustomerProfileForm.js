@@ -43,7 +43,8 @@ export default function UpdateCustomerProfileForm() {
                 address: updatedUser.address,
             });
             if (error) {
-                const normalizedError = error.message.toLowerCase();
+                console.log(error);
+                const normalizedError = error?.message?.toLowerCase();
                 const mappedErrors = [];
                 if (normalizedError.includes('name')) {
                     mappedErrors.push({ field: 'name', message: error.message });
@@ -58,6 +59,11 @@ export default function UpdateCustomerProfileForm() {
                 return;
             }
             toast.success('Profile updated successfully');
+            reset({
+                name: data?.name,
+                phoneNumber: data?.phoneNumber,
+                address: data?.address,
+            });
             router.refresh();
         } catch (error) {
             toast.error(error?.message || 'Failed to update profile');

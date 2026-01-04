@@ -231,10 +231,20 @@ describe('Product Mutation Resolver Functions Tests', () => {
             }
         });
         it('should throw an error when create a new product with missing name and wrong price', async () => {
+            const errors = [
+                {
+                    field: 'name',
+                    message: 'Name is required as string'
+                },
+                {
+                    field: 'price',
+                    message: `Price must be a positive number`
+                }
+            ]
             const context = createMockContext({
                 prisma: {
                     product: {
-                        create: vi.fn().mockResolvedValue()
+                        create: vi.fn().mockResolvedValue(new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } }))
                     }
                 },
                 session: {
@@ -258,7 +268,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 expect(error.extensions.code).toBe('BAD_REQUEST')
                 expect(error.extensions.errors).toEqual([
                     { field: 'name', message: 'Name is required as string' },
-                    { field: 'price', message: `Price must be a positive number` },
+                    { field: 'price', message: `Price must be greater than 0` },
                 ])
                 expect(context.prisma.product.create).not.toHaveBeenCalled();
             }
@@ -706,7 +716,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 expect(error.extensions.errors).toEqual([
                     {
                         field: 'price',
-                        message: 'Price must be a positive number'
+                        message: 'Price must be greater than 0'
                     }
                 ]);
                 expect(context.prisma.product.update).not.toHaveBeenCalled();
@@ -866,7 +876,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: 'clp293h4r000008l17n9fclbE'
+                id: 'clp293h4r000008l17n9fclbE'
             };
             const result = await mutationsProduct.deleteProduct(null, args, context);
             expect(context.prisma.product.delete).toBeCalledWith({
@@ -899,7 +909,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: 'clp293h4r000008l17n9fclbE'
+                id: 'clp293h4r000008l17n9fclbE'
             }
             try {
                 await mutationsProduct.deleteProduct(null, args, context);
@@ -920,7 +930,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: 'clp293h4r000008l17n9fclbE'
+                id: 'clp293h4r000008l17n9fclbE'
             }
             try {
                 await mutationsProduct.deleteProduct(null, args, context);
@@ -933,13 +943,10 @@ describe('Product Mutation Resolver Functions Tests', () => {
         })
         // TODO: Test deleting product with wrong productId (non-existent) and admin session - should fail with PRODUCT_NOT_FOUND
         it('should throw an error when you try to delete product with wrong productId (non-existent) and admin session', async () => {
-            const { PrismaClientKnownRequestError } = await import('@prisma/client');
+            const { PrismaClientKnownRequestError } = require('@prisma/client');
             const P2025Error = new PrismaClientKnownRequestError('P2025', {
                 code: 'P2025',
-                meta: {
-                    code: 'P2025',
-                    message: 'Product not found'
-                }
+                clientVersion: '5.1.1',
             });
             const context = createMockContext({
                 prisma: {
@@ -955,18 +962,17 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: 'clp293h4r000008l17n9fclbE'
+                id: 'clp293h4r000008l17n9fclbE'
             }
             try {
                 await mutationsProduct.deleteProduct(null, args, context);
+                expect.fail('should have thrown');
             } catch (error) {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Product not found');
                 expect(error.extensions.code).toBe('PRODUCT_NOT_FOUND');
                 expect(context.prisma.product.delete).toHaveBeenCalledWith({
-                    where: {
-                        id: 'clp293h4r000008l17n9fclbE'
-                    }
+                    where: { id: 'clp293h4r000008l17n9fclbE' }
                 });
             }
         })
@@ -986,7 +992,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: null
+                id: null
             }
             try {
                 await mutationsProduct.deleteProduct(null, args, context);
@@ -1013,7 +1019,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: undefined
+                id: undefined
             }
             try {
                 await mutationsProduct.deleteProduct(null, args, context);
@@ -1040,7 +1046,7 @@ describe('Product Mutation Resolver Functions Tests', () => {
                 }
             });
             const args = {
-                productId: 123
+                id: 123
             }
             try {
                 await mutationsProduct.deleteProduct(null, args, context);

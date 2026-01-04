@@ -14,8 +14,8 @@ export default function AddProductForm() {
         defaultValues: {
             name: "",
             description: "",
-            price: 0,
-            qteInStock: 0,
+            price: 0.01,
+            qteInStock: 1,
         },
         resolver: zodResolver(AddProductSchema),
         mode: "onChange",
@@ -180,9 +180,9 @@ export default function AddProductForm() {
                                         id="price"
                                         name="price"
                                         type="number"
-                                        placeholder="0.00"
+                                        placeholder="0.01"
                                         step="0.01"
-                                        min="0"
+                                        min="0.01"
                                         className={`w-full pl-8 pr-4 py-4 text-xl font-bold border-2 rounded-xl focus:ring-4 transition-all duration-300 outline-none text-center ${errors.price
                                             ? 'border-red-500 focus:border-red-500 focus:ring-red-100 bg-red-50 text-red-700'
                                             : 'border-green-500 focus:border-green-500 focus:ring-green-100 bg-green-50 text-green-700 hover:border-green-600'
@@ -223,8 +223,8 @@ export default function AddProductForm() {
                                         id="qteInStock"
                                         name="qteInStock"
                                         type="number"
-                                        placeholder="0"
-                                        min="0"
+                                        placeholder="1"
+                                        min="1"
                                         className={`w-full pl-12 pr-4 py-4 text-xl font-bold border-2 rounded-xl focus:ring-4 transition-all duration-300 outline-none text-center ${errors.qteInStock
                                             ? 'border-red-500 focus:border-red-500 focus:ring-red-100 bg-red-50 text-red-700'
                                             : 'border-green-500 focus:border-green-500 focus:ring-green-100 bg-green-50 text-green-700 hover:border-green-600'

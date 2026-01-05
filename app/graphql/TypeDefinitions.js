@@ -84,7 +84,7 @@ type OrderItem {
 type Mutation {
     # User Profile ###########################
     updateCustomerProfile(id: String, name: String, address: String, phoneNumber: String): User!
-    deleteCustomerProfile(userId: String): Boolean!
+    deleteCustomerProfile(userId: String!): User!
     completeSignUp(phoneNumber: String!, address: String!): User!
 
     # Product Management (Admin) #############
@@ -161,6 +161,7 @@ type Query {
     user(id: String): User
     customersCount: Int!
     usersCount: Int!
+    filteredUsersCount(searchQuery: String, role: Role, startDate: DateTime, endDate: DateTime): Int!
     
     orders(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, currentPage: Int, limit: Int): [Order!]!
     myOrders: [Order!]!

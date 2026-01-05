@@ -34,6 +34,7 @@ query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate
         name
         email
         role
+        createdAt
     }
 }
 `;
@@ -55,6 +56,10 @@ query GetCustomersCount {
 export const GET_USERS_COUNT = gql`
 query GetUsersCount {
     usersCount
+}`;
+export const FILTERED_USERS_COUNT = gql`
+query GetFilteredUsersCount($searchQuery: String, $role: Role, $startDate: DateTime, $endDate: DateTime) {
+    filteredUsersCount(searchQuery: $searchQuery, role: $role, startDate: $startDate, endDate: $endDate)
 }`;
 
 export const MY_ORDERS = gql`
@@ -82,6 +87,16 @@ mutation UpdateCustomerProfile($id: String, $name: String, $phoneNumber: String,
         email
         phoneNumber
         address
+        role
+    }
+}`;
+
+export const DELETE_CUSTOMER_PROFILE = gql`
+mutation DeleteCustomerProfile($userId: String!) {
+    deleteCustomerProfile(userId: $userId) {
+        id
+        name
+        email
         role
     }
 }`;
@@ -119,6 +134,14 @@ export async function fetchUsersCount(variables = {}) {
         throw err;
     }
 }
+export async function filteredUsersCount(variables) {
+    try {
+        const data = await graphqlRequest(FILTERED_USERS_COUNT, variables);
+        return data?.filteredUsersCount ?? 0;
+    } catch (err) {
+        throw err;
+    }
+}
 
 export async function fetchMyOrders(variables = {}) {
     try {
@@ -133,6 +156,15 @@ export async function updateCustomerProfile(variables) {
     try {
         const data = await graphqlRequest(UPDATE_CUSTOMER_PROFILE, variables);
         return data?.updateCustomerProfile ?? false;
+    } catch (err) {
+        throw err;
+    }
+}
+
+export async function deleteUser(variables) {
+    try {
+        const data = await graphqlRequest(DELETE_CUSTOMER_PROFILE, variables);
+        return data?.deleteCustomerProfile ?? null;
     } catch (err) {
         throw err;
     }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { fetchUsers, fetchUsersCount } from "@/services/users.server";
 import { minLimit } from "@/lib/constants";
+import UsersManagement from "@/components/admin/UsersManagement";
 
 export const metadata = {
     title: "Users Management | ZenithShop Admin",
@@ -62,68 +63,8 @@ export default async function UsersManagementPage() {
 
             {error && <p className="text-red-500">{error}</p>}
 
-            {/* Users Management Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Users List</h2>
-                        {/* TODO: here you can put your CSR components that I'm going to create later */}
-                    </div>
-
-                    {/* Users Table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {users.length > 0 ? (
-                                    users.map((user) => (
-                                        <tr key={user.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.id}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                {/* TODO: here you can put your CSR components that I'm going to create later */}
-                                                <span className="text-blue-600 hover:text-blue-900 cursor-pointer">View</span>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
-                                            No users found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="mt-6 flex justify-between items-center">
-                        <div className="text-sm text-gray-500">
-                            Showing {users.length} of {usersCount} users
-                        </div>
-                        <div className="flex gap-2">
-                            {/* TODO: here you can put your CSR components that I'm going to create later */}
-                            <button
-                                disabled={users.length === 0 || usersCount <= minLimit}
-                                className={`px-4 py-2 rounded-md text-sm font-medium ${users.length === 0 || usersCount <= minLimit ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {/* Users Management Component */}
+            <UsersManagement users={users} />
         </div>
     )
 }

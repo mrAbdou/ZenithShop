@@ -88,8 +88,27 @@ export default {
             throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
         }
         try {
-            await context.prisma.user.delete({ where: { id: targetUserId } });
-            return true;
+            // First, find the user to return for cache management
+            const userToDelete = await context.prisma.user.findUnique({
+                where: { id: targetUserId },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true
+                }
+            });
+
+            if (!userToDelete) {
+                throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+            }
+
+            // Delete the user with cascade to remove associated orders and order items
+            await context.prisma.user.delete({
+                where: { id: targetUserId }
+            });
+
+            return userToDelete;
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {

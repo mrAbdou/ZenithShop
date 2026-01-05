@@ -5,7 +5,9 @@ import {
     fetchUser,
     fetchUsers,
     fetchUsersCount,
-    updateCustomerProfile
+    filteredUsersCount,
+    updateCustomerProfile,
+    deleteUser
 } from "@/services/users.client";
 import { FilteringUserPaginationSchema, UpdateCustomerSchema, UserPaginationSchema } from "@/lib/schemas/user.schema";
 import toast from "react-hot-toast";
@@ -26,6 +28,22 @@ export function useUsers(variables, initialData) {
             return fetchUsers(validation.data)
         },
         initialData: initialData ? initialData : []
+    });
+}
+export function useCountFilteredUsers(filters) {
+    return useQuery({
+        queryKey: ["countFilteredUsers", filters],
+        queryFn: () => {
+            const validation = FilteringUserPaginationSchema.safeParse(filters);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return filteredUsersCount(validation.data)
+        },
     });
 }
 export function useUser(id) {
@@ -52,6 +70,34 @@ export function useUsersCount(initialData) {
         queryKey: ['usersCount'],
         queryFn: fetchUsersCount,
         initialData: initialData ? initialData : 0
+    });
+}
+
+export function useDeleteUser() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (userId) => {
+            // Validate userId as string
+            if (!userId || typeof userId !== 'string') {
+                throw new Error('Invalid user ID');
+            }
+            return await deleteUser({ userId });
+        },
+        onSuccess: (deletedUser) => {
+            toast.success('User deleted successfully');
+            // Remove the deleted user from the users list cache
+            queryClient.setQueryData(['users'], (oldData) => {
+                if (!oldData || !Array.isArray(oldData)) return oldData;
+                return oldData.filter(user => user.id !== deletedUser.id);
+            });
+            // Invalidate queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['usersCount'] });
+            queryClient.invalidateQueries({ queryKey: ['countFilteredUsers'] });
+        },
+        onError: (error) => {
+            toast.error(`Failed to delete user: ${error.message}`);
+        }
     });
 }
 export function useMyOrders(initialData) {

@@ -30,6 +30,7 @@ query GetUsers($searchQuery: String, $role: Role, $startDate: DateTime, $endDate
         name
         email
         role
+        createdAt
     }
 }
 `;

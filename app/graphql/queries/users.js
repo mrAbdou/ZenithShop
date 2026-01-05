@@ -1,6 +1,6 @@
 // PRODUCTION-READY: This file has been thoroughly tested and is ready for production use. 😎
 
-import { UserPaginationSchema } from "@/lib/schemas/user.schema";
+import { FilteringUserPaginationSchema, UserPaginationSchema } from "@/lib/schemas/user.schema";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 
@@ -8,19 +8,9 @@ export default {
     //select All users
     users: async (parent, args, context) => {
         if (context.session?.user?.role !== Role.ADMIN) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
-        const { searchQuery, role, startDate, endDate, sortBy, sortDirection, limit, currentPage } = args;
         let where = {};
         let orderBy = {};
-        const validation = UserPaginationSchema.safeParse({
-            searchQuery,
-            role,
-            startDate,
-            endDate,
-            sortBy,
-            sortDirection,
-            limit,
-            currentPage
-        });
+        const validation = UserPaginationSchema.safeParse(args);
         if (!validation.success) {
             const errors = validation.error.issues.map(issue => ({ field: issue.path[0], message: issue.message }));
             throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
@@ -58,8 +48,8 @@ export default {
                 return await context.prisma.user.findMany({
                     where,
                     orderBy,
-                    take: limit,
-                    skip: (currentPage - 1) * limit,
+                    take: validation.data.limit,
+                    skip: (validation.data.currentPage - 1) * validation.data.limit,
                     include: {
                         orders: {
                             include: {
@@ -178,6 +168,54 @@ export default {
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
+    },
+    //count filtered users
+    filteredUsersCount: async (parent, args, context) => {
+        if (!context.session || !(context.session?.user?.role === Role.ADMIN)) throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
+        let where = {};
+        const validation = FilteringUserPaginationSchema.safeParse(args);
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({ field: issue.path[0], message: issue.message }));
+            throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
+        }
+        if (validation.data.searchQuery) {
+            where.OR = [
+                { name: { contains: validation.data.searchQuery, mode: 'insensitive' } },
+                { email: { contains: validation.data.searchQuery, mode: 'insensitive' } }
+            ]
+        }
+        if (validation.data.role) {
+            where.role = validation.data.role;
+        }
+        if (validation.data.startDate) {
+            where.createdAt = {
+                ...where.createdAt,
+                gte: validation.data.startDate,
+            }
+        }
+        if (validation.data.endDate) {
+            where.createdAt = {
+                ...where.createdAt,
+                lte: validation.data.endDate,
+            }
+        }
+        try {
+            return await context.prisma.user.count({ where });
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
+                case 'P2003':
+                    throw new GraphQLError("Foreign key constraint failed", { extensions: { code: 'BAD_REQUEST' } });
                 case 'P1000':
                 case 'P1001':
                     throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });

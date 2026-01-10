@@ -21,14 +21,12 @@ export default function UsersFilters() {
 
     const onSubmit = (data) => {
         // Convert empty strings to undefined to match the schema expectations
-        console.log('before porcessing data : ', data);
         const processedData = {
             searchQuery: data.searchQuery || undefined,
             role: data.role || undefined,
             startDate: data.startDate || undefined,
             endDate: data.endDate || undefined,
         };
-        console.log('after processing data : ', processedData);
         setFilteringProps(processedData);
     };
 

@@ -34,7 +34,7 @@ export default async function ProductDetailsPage({ params }) {
 
   // If product not found, show 404
   if (!product) {
-    notFound();
+    return notFound();
   }
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -77,7 +77,7 @@ export default async function ProductDetailsPage({ params }) {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full mb-3">
-                    {product.category}
+                    {product.category.name}
                   </span>
                   <h1 className="text-3xl font-bold text-gray-800 mb-2">{product.name}</h1>
                   {/* TODO: Rating section - Commented out as 5-star rating system is not currently used */}
@@ -147,6 +147,6 @@ export default async function ProductDetailsPage({ params }) {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

@@ -141,11 +141,6 @@ export default function OrdersTable({ initialData }) {
             <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-4">Order History</h2>
                 <div className="text-red-600">Error loading orders: {error.message}</div>
-                <ul>
-                    {
-                        console.log('error', error)
-                    }
-                </ul>
             </div>
         );
     }

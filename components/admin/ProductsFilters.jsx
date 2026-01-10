@@ -2,25 +2,39 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FilteringProductPaginationSchema, ProductPaginationSchema } from "@/lib/schemas/product.schema";
+import { FilteringProductPaginationSchema } from "@/lib/schemas/product.schema";
 import { useProductContext } from "@/context/ProductContext";
+import { useEffect } from "react";
+import { useCategories } from "@/hooks/categories";
 
-export default function ProductsFilters() {
-    const { filters, setFilteringProps } = useProductContext();
-
-    const { register, handleSubmit, formState: { errors } } = useForm({
+export default function ProductsFilters({ initialCategories }) {
+    const { filters, setFilteringProps, setPaginationCurrentPage } = useProductContext();
+    const { data: categories } = useCategories({}, initialCategories);
+    const { register, handleSubmit, formState: { errors }, reset } = useForm({
         defaultValues: {
             searchQuery: filters.searchQuery,
             stock: filters.stock,
             startDate: filters.startDate,
             endDate: filters.endDate,
+            categoryId: filters.categoryId
         },
         resolver: zodResolver(FilteringProductPaginationSchema),
         mode: 'onChange',
     });
 
+    useEffect(() => {
+        reset({
+            searchQuery: filters.searchQuery,
+            stock: filters.stock,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+            categoryId: filters.categoryId
+        });
+    }, [filters])
+
     const onSubmit = (data) => {
         setFilteringProps(data);
+        setPaginationCurrentPage(1);
     };
 
     return (
@@ -57,6 +71,38 @@ export default function ProductsFilters() {
                             <p className="text-red-600 text-xs font-medium mt-1.5 flex items-center gap-1">
                                 <span className="text-lg leading-none">⚠</span>
                                 {errors.searchQuery.message}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Category */}
+                    <div className="space-y-2">
+                        <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-700">
+                            Category
+                        </label>
+                        <div className="relative">
+                            <select
+                                id="categoryId"
+                                {...register("categoryId")}
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none bg-white cursor-pointer"
+                            >
+                                <option value="">All Categories</option>
+                                {categories?.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                        {errors.categoryId && (
+                            <p className="text-red-600 text-xs font-medium mt-1.5 flex items-center gap-1">
+                                <span className="text-lg leading-none">⚠</span>
+                                {errors.categoryId.message}
                             </p>
                         )}
                     </div>

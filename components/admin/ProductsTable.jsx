@@ -139,6 +139,9 @@ export default function ProductsTable({ initialData = [] }) {
                             <th onClick={() => onHeaderClick('qteInStock')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {getHeaderText('Stock', 'qteInStock')}
                             </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Category
+                            </th>
                             <th onClick={() => onHeaderClick('createdAt')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 {getHeaderText('Created', 'createdAt')}
                             </th>
@@ -169,6 +172,9 @@ export default function ProductsTable({ initialData = [] }) {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {product.category?.name || 'N/A'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {formatDate(product.createdAt)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -197,7 +203,7 @@ export default function ProductsTable({ initialData = [] }) {
                         ))}
                         {(!products || products.length === 0) && (
                             <tr>
-                                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
                                     No products found
                                 </td>
                             </tr>

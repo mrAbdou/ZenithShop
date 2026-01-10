@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import { describe, vi, expect, it, beforeEach } from 'vitest';
-import { fetchUsers, fetchUser, fetchCustomersCount, fetchUsersCount, completeSignUp, fetchMyOrders, updateCustomerProfile, MY_ORDERS } from '@/services/users.client';
-import { GET_USERS, GET_USER, GET_CUSTOMERS_COUNT, GET_USERS_COUNT, COMPLETE_SIGNUP, UPDATE_CUSTOMER_PROFILE } from '@/services/users.client';
+import { fetchUsers, fetchUser, fetchCustomersCount, fetchUsersCount, fetchMyOrders, updateCustomerProfile, MY_ORDERS } from '@/services/users.client';
+import { GET_USERS, GET_USER, GET_CUSTOMERS_COUNT, GET_USERS_COUNT, UPDATE_CUSTOMER_PROFILE } from '@/services/users.client';
 import { graphqlRequest } from '@/lib/graphql-client';
 import { Role } from '@prisma/client';
 import { LIMIT } from '@/lib/constants';

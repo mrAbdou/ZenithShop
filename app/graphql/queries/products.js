@@ -1,6 +1,6 @@
 // PRODUCTION-READY: This file has been thoroughly tested and is ready for production use. 😎
 
-import { FilteringProductPaginationSchema, InfiniteProductSchema, ProductPaginationSchema } from "@/lib/schemas/product.schema";
+import { FilteringProductPaginationSchema, InfiniteProductSchema, ProductPaginationSchema, FeaturedProductsSchema } from "@/lib/schemas/product.schema";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
 // all of these queries are tested and proven to work
@@ -61,7 +61,21 @@ export default {
                 lte: validation.data.endDate
             }
         }
-
+        if (validation.data.categoryId) {
+            where.categoryId = validation.data.categoryId;
+        }
+        if (validation.data.minPrice) {
+            where.price = {
+                ...where.price,
+                gte: validation.data.minPrice
+            }
+        }
+        if (validation.data.maxPrice) {
+            where.price = {
+                ...where.price,
+                lte: validation.data.maxPrice
+            }
+        }
         if (validation.data.sortBy && validation.data.sortDirection) {
             if (validation.data.sortBy.includes('.')) {
                 const [field, subField] = validation.data.sortBy.split('.');
@@ -85,12 +99,18 @@ export default {
                     where,
                     orderBy,
                     take: validation.data.limit,
-                    skip: (validation.data.currentPage - 1) * validation.data.limit
+                    skip: (validation.data.currentPage - 1) * validation.data.limit,
+                    include: {
+                        category: true,
+                    }
                 });
             }
             return await context.prisma.product.findMany({
                 where,
                 orderBy,
+                include: {
+                    category: true
+                }
             });
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
@@ -110,8 +130,7 @@ export default {
 
     //select products for infinite scroll
     infiniteProducts: async (parent, args, context) => {
-        const { limit, offset, searchQuery, stock, minPrice, maxPrice, sortBy, sortDirection } = args;
-        const validation = InfiniteProductSchema.safeParse({ limit, offset, searchQuery, stock, minPrice, maxPrice, sortBy, sortDirection });
+        const validation = InfiniteProductSchema.safeParse(args);
         if (!validation.success) {
             const errors = validation.error.issues.map(issue => ({
                 field: issue.path[0],
@@ -121,47 +140,79 @@ export default {
         }
         let where = {};
         let orderBy = {};
+
+        // Combine all filters into a single AND condition
+
         if (validation.data.searchQuery) {
-            where.OR = [
-                { name: { contains: validation.data.searchQuery, mode: 'insensitive' } },
-                { description: { contains: validation.data.searchQuery, mode: 'insensitive' } }
-            ]
+            where = {
+                OR: [
+                    { name: { contains: validation.data.searchQuery, mode: 'insensitive' } },
+                    { description: { contains: validation.data.searchQuery, mode: 'insensitive' } }
+                ]
+            };
         }
+
         if (validation.data.stock) {
             const stockStatus = validation.data.stock;
             switch (stockStatus) {
                 case 'In Stock':
-                    where.qteInStock = {
-                        gt: 10
+                    where = {
+                        ...where,
+                        qteInStock: {
+                            gt: 10
+                        }
                     }
                     break;
                 case 'Low Stock':
-                    where.qteInStock = {
-                        gt: 0,
-                        lte: 10
+                    where = {
+                        ...where,
+                        qteInStock: {
+                            gt: 0,
+                            lte: 10
+                        }
                     }
                     break;
                 case 'Out Stock':
-                    where.qteInStock = {
-                        equals: 0
+                    where = {
+                        ...where,
+                        qteInStock: {
+                            equals: 0
+                        }
                     }
                     break;
                 default:
                     break;
             }
         }
-        if (validation.data.minPrice) {
-            where.price = {
-                ...where.price,
-                gte: validation.data.minPrice
+
+        if (validation.data.minPrice || validation.data.maxPrice) {
+            if (validation.data.minPrice) {
+                where = {
+                    ...where,
+                    price: {
+                        ...where.price,
+                        gte: validation.data.minPrice
+                    }
+                }
+            }
+            if (validation.data.maxPrice) {
+                where = {
+                    ...where,
+                    price: {
+                        ...where.price,
+                        lte: validation.data.maxPrice
+                    }
+                }
             }
         }
-        if (validation.data.maxPrice) {
-            where.price = {
-                ...where.price,
-                lte: validation.data.maxPrice
+
+        if (validation.data.categoryId) {
+            where = {
+                ...where,
+                categoryId: validation.data.categoryId
             }
         }
+
         if (validation.data.sortBy && validation.data.sortDirection) {
             orderBy = {
                 [validation.data.sortBy]: validation.data.sortDirection
@@ -172,7 +223,10 @@ export default {
                 where,
                 orderBy,
                 take: validation.data.limit,
-                skip: validation.data.offset
+                skip: validation.data.offset,
+                include: {
+                    category: true
+                }
             });
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
@@ -243,7 +297,8 @@ export default {
                                 include: { user: true }
                             }
                         }
-                    }
+                    },
+                    category: true
                 }
             });
         } catch (prismaError) {
@@ -314,7 +369,9 @@ export default {
                 lte: validation.data.endDate
             }
         }
-
+        if (validation.data.categoryId) {
+            where.categoryId = validation.data.categoryId;
+        }
 
 
         try {
@@ -324,6 +381,38 @@ export default {
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
+    },
+
+    featuredProducts: async (parent, args, context) => {
+        const validation = FeaturedProductsSchema.safeParse(args);
+        if (!validation.success) {
+            const errors = validation.error.issues.map(issue => ({
+                field: issue.path[0],
+                message: issue.message,
+            }));
+            throw new GraphQLError('Validation failed', { extensions: { code: 'BAD_REQUEST', errors } });
+        }
+        try {
+            const products = await context.prisma.product.findMany({
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: validation.data.head,
+            });
+            return products;
+        } catch (prismaError) {
+            if (prismaError instanceof GraphQLError) throw prismaError;
+            switch (prismaError.code) {
+                case 'P2025':
+                    throw new GraphQLError("Record not found", { extensions: { code: 'NOT_FOUND' } });
                 case 'P1000':
                 case 'P1001':
                     throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });

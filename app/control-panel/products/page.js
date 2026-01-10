@@ -5,7 +5,8 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { fetchPaginatedProducts, fetchProductsCount } from "@/services/products.server";
 import ProductsManagement from "@/components/admin/ProductsManagement";
-import { PAGINATION_MIN_LIMIT } from "../../../lib/constants";
+import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
+import { fetchCategories } from "@/services/categories.server";
 export const metadata = {
     title: "Products Management | ZenithShop Admin",
     description: "Admin interface for managing ZenithShop product catalog. Add, edit, delete, and organize products efficiently with real-time updates and analytics.",
@@ -18,6 +19,7 @@ export default async function ProductsManagementPage() {
     });
 
     if (!session || !(session?.user?.role === Role.ADMIN)) return redirect("/");
+    const categories = await fetchCategories({}, cookieHeader);
     const products = await fetchPaginatedProducts({ limit: PAGINATION_MIN_LIMIT, currentPage: 1 }, cookieHeader);
     const totalProducts = await fetchProductsCount({ limit: PAGINATION_MIN_LIMIT, currentPage: 1 }, cookieHeader); // needs to count the filtered data not the full products available !!
     return (
@@ -48,7 +50,7 @@ export default async function ProductsManagementPage() {
                     </div>
                 </div>
             </div>
-            <ProductsManagement products={products} />
+            <ProductsManagement products={products} categories={categories} />
 
             {/* Floating Action Button */}
             <Link

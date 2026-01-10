@@ -13,6 +13,24 @@ import { FilteringUserPaginationSchema, UpdateCustomerSchema, UserPaginationSche
 import toast from "react-hot-toast";
 import ZodValidationError from "@/lib/ZodValidationError";
 
+export function useFeaturedUsers(variables, initialData) {
+    return useQuery({
+        queryKey: ['featuredUsers', variables],
+        queryFn: () => {
+            const validation = UserPaginationSchema.safeParse(variables);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message,
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return fetchUsers(validation.data)
+        },
+        initialData: initialData ? initialData : []
+    })
+}
+
 export function useUsers(variables, initialData) {
     return useQuery({
         queryKey: ['users', variables],

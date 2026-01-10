@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { fetchProduct } from "@/services/products.server";
 import UpdateProductForm from "@/components/admin/UpdateProductForm";
 import Link from "next/link";
+import { fetchCategories } from "@/services/categories.server";
 
 export default async function EditProduct({ params }) {
     const h = await headers();
@@ -22,7 +23,7 @@ export default async function EditProduct({ params }) {
     if (!product) {
         notFound();
     }
-
+    const categories = await fetchCategories({}, cookieHeader);
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Modern Gradient Header */}
@@ -91,7 +92,7 @@ export default async function EditProduct({ params }) {
 
             {/* Form Container */}
             <div className="max-w-4xl mx-auto">
-                <UpdateProductForm productId={product.id} />
+                <UpdateProductForm productId={product.id} initialCategories={categories} />
             </div>
         </div>
     );

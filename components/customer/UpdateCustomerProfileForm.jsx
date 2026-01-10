@@ -43,7 +43,6 @@ export default function UpdateCustomerProfileForm() {
                 address: updatedUser.address,
             });
             if (error) {
-                console.log(error);
                 const normalizedError = error?.message?.toLowerCase();
                 const mappedErrors = [];
                 if (normalizedError.includes('name')) {

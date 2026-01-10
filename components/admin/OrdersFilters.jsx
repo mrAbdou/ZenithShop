@@ -20,7 +20,6 @@ export default function OrdersFilters() {
         resolver: zodResolver(FilteredOrdersCountSchema),
         mode: 'onChange'
     });
-    console.log(errors);
     // all available order status options with visual indicators
     const statusOptions = [
         { value: '', label: "📋 All Options", color: "text-gray-700" },

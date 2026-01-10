@@ -28,7 +28,9 @@ const { handleRequest } = createYoga({
         };
     },
     graphqlEndpoint: 'api/graphql',
-    fetchAPI: { Response }
+    fetchAPI: { Response },
+    // Enable multipart handling for file uploads
+    multipart: true
 });
 
 export { handleRequest as GET, handleRequest as POST, handleRequest as OPTIONS }

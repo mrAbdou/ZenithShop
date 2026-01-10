@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import AddProductForm from "@/components/admin/AddProductForm";
+import { fetchCategories } from "@/services/categories.server";
 
 export const metadata = {
     title: "Add Product | ZenithShop Admin",
@@ -10,17 +11,15 @@ export const metadata = {
 };
 
 export default async function AddProduct() {
-    try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        });
+    const h = await headers();
+    const cookieHeader = h.get("cookie");
+    const categories = await fetchCategories({}, cookieHeader);
 
-        if (!session || !(session?.user?.role === Role.ADMIN)) {
-            redirect("/");
-            return;
-        }
-    } catch (error) {
-        console.error('Auth error : ', error);
+    const session = await auth.api.getSession({
+        headers: h
+    });
+
+    if (!session || !(session?.user?.role === Role.ADMIN)) {
         redirect("/");
         return;
     }
@@ -55,7 +54,7 @@ export default async function AddProduct() {
 
             {/* Form Container */}
             <div className="max-w-4xl mx-auto">
-                <AddProductForm />
+                <AddProductForm initialCategories={categories} />
             </div>
         </div>
     );

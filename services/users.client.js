@@ -6,8 +6,8 @@
  * with the backend schemas defined in `app/graphql/TypeDefinitions.js`.
  *
  * @exports
- * - GraphQL Queries: GET_USERS, GET_USER, GET_CUSTOMERS_COUNT, GET_USERS_COUNT, MY_ORDERS, COMPLETE_SIGNUP, UPDATE_USER_PROFILE
- * - Service Functions: fetchUsers, fetchUser, fetchCustomersCount, fetchUsersCount, completeSignUp, fetchMyOrders, updateCustomerProfile
+ * - GraphQL Queries: GET_USERS, GET_USER, GET_CUSTOMERS_COUNT, GET_USERS_COUNT, MY_ORDERS, UPDATE_USER_PROFILE
+ * - Service Functions: fetchUsers, fetchUser, fetchCustomersCount, fetchUsersCount, fetchMyOrders, updateCustomerProfile
  *
  * @dependencies
  * - @/lib/graphql-client: Provides the `graphqlRequest` function for executing GraphQL queries.

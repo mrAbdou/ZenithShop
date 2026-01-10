@@ -91,7 +91,7 @@ model Verification {
 model Order {
   id        String      @id @default(cuid())
   userId    String
-  user      User        @relation(fields: [userId], references: [id])
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   status    OrderStatus @default(PENDING)
   items     OrderItem[]
   total     Decimal     @default(0)
@@ -108,12 +108,23 @@ enum OrderStatus {
   RETURNED
 }
 
+model Category {
+  id       String    @id @default(cuid())
+  name     String
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Product {
   id          String      @id @default(cuid())
   name        String
   description String
   price       Float
+  images      String[]    // Array of image URLs - first image is the primary/main image
   qteInStock  Int
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -124,7 +135,7 @@ model OrderItem {
     orderId   String
     order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
     productId String
-    product   Product  @relation(fields: [productId], references: [id])
+    product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
     qte       Int      @default(1)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

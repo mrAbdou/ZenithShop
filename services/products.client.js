@@ -1,26 +1,34 @@
 import { graphqlRequest } from '@/lib/graphql-client';
 import { gql } from 'graphql-request';
 export const GET_INFINITE_PRODUCTS = gql`
-query GetInfiniteProducts($limit: Int!, $offset: Int!, $searchQuery: String, $stock: String, $minPrice: Float, $maxPrice: Float, $sortBy: String, $sortDirection: String) {
-    infiniteProducts(limit: $limit, offset: $offset, searchQuery: $searchQuery, stock: $stock, minPrice: $minPrice, maxPrice: $maxPrice, sortBy: $sortBy, sortDirection: $sortDirection) {
+query GetInfiniteProducts($limit: Int!, $offset: Int!, $searchQuery: String, $stock: String, $minPrice: Float, $maxPrice: Float, $categoryId: String, $sortBy: String, $sortDirection: String) {
+    infiniteProducts(limit: $limit, offset: $offset, searchQuery: $searchQuery, stock: $stock, minPrice: $minPrice, maxPrice: $maxPrice, categoryId: $categoryId, sortBy: $sortBy, sortDirection: $sortDirection) {
         id
         name
         description
         qteInStock
         price
         createdAt
+        category {
+            id
+            name
+        }
     }
 }`;
 
 export const GET_PAGINATED_PRODUCTS = gql`
-query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $sortBy: String, $sortDirection: String, $limit: Int!, $currentPage: Int!) {
-    paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
+query GetPaginatedProducts($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $categoryId: String, $sortBy: String, $sortDirection: String, $limit: Int!, $currentPage: Int!) {
+    paginatedProducts(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, categoryId: $categoryId, sortBy: $sortBy, sortDirection: $sortDirection, limit: $limit, currentPage: $currentPage) {
         id
         name
         description
         qteInStock
         price
         createdAt
+        category {
+            id
+            name
+        }
     }
 }`;
 export const GET_PRODUCT = gql`
@@ -32,6 +40,11 @@ query GetProduct($id: String!) {
         price
         qteInStock
         createdAt
+        images
+        category {
+            id
+            name
+        }
     }
 }`;
 export const GET_PRODUCTS_COUNT = gql`
@@ -52,18 +65,33 @@ query GetProductsInCart($cart: [ID!]!) {
     }
 }`;
 export const ADD_PRODUCT = gql`
-mutation addProduct($product: ProductInput!){
-    addNewProduct(product: $product){
+mutation addProduct($product: ProductInput!, $images: [Upload!]!){
+    addNewProduct(product: $product, images: $images){
         id
         name
         description
         price
+        images
         qteInStock
+        category {
+            id
+            name
+        }
     }
 }`;
 export const FILTERED_PRODUCTS_COUNT = gql`
-query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime) {
-    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate)
+query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $categoryId: String) {
+    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, categoryId: $categoryId)
+}`;
+
+export const GET_FEATURED_PRODUCTS = gql`
+query GetFeaturedProducts($head: Int!) {
+    featuredProducts(head: $head) {
+        id
+        name
+        price
+        qteInStock
+    }
 }`;
 export const UPDATE_PRODUCT = gql`
 mutation updateProduct($id: String!, $product: UpdateProductInput!) {
@@ -73,6 +101,9 @@ mutation updateProduct($id: String!, $product: UpdateProductInput!) {
         description
         price
         qteInStock
+        category {
+            name
+        }
     }
 }`;
 
@@ -159,6 +190,15 @@ export async function deleteProduct(variables) {
     try {
         const data = await graphqlRequest(DELETE_PRODUCT, variables);
         return data?.deleteProduct ?? null;
+    } catch (gqlError) {
+        throw gqlError;
+    }
+}
+
+export async function fetchFeaturedProducts(variables) {
+    try {
+        const data = await graphqlRequest(GET_FEATURED_PRODUCTS, variables);
+        return data?.featuredProducts ?? [];
     } catch (gqlError) {
         throw gqlError;
     }

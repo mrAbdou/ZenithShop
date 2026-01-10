@@ -1,48 +1,130 @@
 'use client';
 
+import { useCategories } from "@/hooks/categories";
 import { useProduct, useUpdateProduct } from "@/hooks/products";
 import { UpdateProductSchema } from "@/lib/schemas/product.schema";
+import { validateImage } from "@/lib/supabase";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
-export default function UpdateProductForm({ productId }) {
+export default function UpdateProductForm({ productId, initialCategories }) {
     const router = useRouter();
     const { data: product, isLoading } = useProduct(productId);
+    const { data: categories } = useCategories({}, initialCategories);
     const { mutateAsync: updateProductAsync } = useUpdateProduct(productId);
-    const { register, handleSubmit, reset, formState: { isSubmitting, isValid, errors, isDirty } } = useForm({
+
+    // Image upload state
+    const [selectedImages, setSelectedImages] = useState(product?.images || []);
+    const [imagePreviews, setImagePreviews] = useState([]);
+
+    const { register, handleSubmit, reset, setValue, formState: { isSubmitting, isValid, errors, isDirty } } = useForm({
         defaultValues: {
             name: product?.name || '',
             description: product?.description || '',
             price: product?.price || 0,
-            qteInStock: product?.qteInStock || 0
+            qteInStock: product?.qteInStock || 0,
+            categoryId: product?.category?.id || '',
+            images: product?.images || []
         },
         resolver: zodResolver(UpdateProductSchema),
         mode: 'onChange',
     });
+
     useEffect(() => {
         if (product) {
+            setSelectedImages(product?.images || []);
+            setImagePreviews(product?.images || []);
             reset({
                 name: product?.name,
                 description: product?.description,
                 price: product?.price,
-                qteInStock: product?.qteInStock
+                qteInStock: product?.qteInStock,
+                categoryId: product?.category?.id,
+                images: product?.images || [],
             });
         }
-    }, [product]);
+    }, [product, reset]);
+
+    // Image handling functions
+    const handleImageSelect = (event) => {
+        const files = Array.from(event.target.files);
+        if (files.length > 0) {
+            // Check total images limit (existing + new)
+            const totalImages = (product?.images?.length || 0) + selectedImages.length + files.length;
+            if (totalImages > 10) {
+                toast.error('Maximum 10 images allowed total');
+                return;
+            }
+
+            // Validate each file
+            const validFiles = [];
+            const validPreviews = [];
+
+            for (const file of files) {
+                // Basic validation - you can add more validation here
+                validateImage(file);
+
+                validFiles.push(file);
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setImagePreviews(prev => [...prev, e.target.result]);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            if (validFiles.length > 0) {
+                setSelectedImages(prev => [...prev, ...validFiles]);
+                // Update form to mark as dirty by modifying the images array
+                const currentImages = product?.images || [];
+                setValue('images', [...currentImages, 'placeholder-for-new-image'], { shouldDirty: true });
+            }
+        }
+        // Reset file input
+        event.target.value = '';
+    };
+
+    const removeNewImage = (index) => {
+        const newSelectedImages = selectedImages.filter((_, i) => i !== index);
+        const newImagePreviews = imagePreviews.filter((_, i) => i !== index);
+
+        setSelectedImages(newSelectedImages);
+        setImagePreviews(newImagePreviews);
+
+        // Update form to reflect the change and mark as dirty
+        const currentImages = product?.images || [];
+        const updatedImages = newSelectedImages.length > 0 ? [...currentImages, 'placeholder-for-new-image'] : currentImages;
+        setValue('images', updatedImages, { shouldDirty: true });
+    };
 
     const onSubmit = async (data) => {
-        await updateProductAsync(data, {
-            onSuccess: () => {
-                toast.success('Product updated successfully');
-                router.push('/control-panel/products');
-            },
-            onError: (error) => {
-                toast.error(error?.message || 'Failed to update product');
-            }
-        });
+        try {
+            // Prepare product data with new images
+            const productData = {
+                name: data.name,
+                description: data.description,
+                price: data.price,
+                qteInStock: data.qteInStock,
+                categoryId: data.categoryId,
+                images: selectedImages // Pass new images directly from state
+            };
+
+            await updateProductAsync(productData, {
+                onSuccess: () => {
+                    toast.success('Product updated successfully');
+                    router.push('/control-panel/products');
+                },
+                onError: (error) => {
+                    toast.error(error?.message || 'Failed to update product');
+                }
+            });
+        } catch (error) {
+            toast.error('An unexpected error occurred');
+        }
     };
 
     // Loading skeleton component
@@ -76,6 +158,12 @@ export default function UpdateProductForm({ productId }) {
                                 <div className="relative">
                                     <div className="h-4 bg-gray-200 rounded w-40 mb-3 animate-pulse"></div>
                                     <div className="h-32 bg-gray-100 rounded-xl animate-pulse"></div>
+                                </div>
+
+                                {/* Category Select Skeleton */}
+                                <div className="relative">
+                                    <div className="h-4 bg-gray-200 rounded w-36 mb-3 animate-pulse"></div>
+                                    <div className="h-16 bg-gray-100 rounded-xl animate-pulse"></div>
                                 </div>
                             </div>
 
@@ -229,6 +317,180 @@ export default function UpdateProductForm({ productId }) {
                                     </p>
                                 )}
                             </div>
+
+                            {/* Product Category */}
+                            <div className="relative">
+                                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    Product Category
+                                    <span className="text-red-500 ml-1">*</span>
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        id="categoryId"
+                                        name="categoryId"
+                                        {...register('categoryId')}
+                                        disabled={isSubmitting}
+                                        className={`w-full pl-12 pr-4 py-4 text-lg border-2 rounded-xl focus:ring-4 transition-all duration-300 outline-none appearance-none ${errors.categoryId
+                                            ? 'border-red-500 focus:border-red-500 focus:ring-red-100 bg-red-50 text-red-700'
+                                            : 'border-green-500 focus:border-green-500 focus:ring-green-100 bg-green-50 text-green-700 hover:border-green-600'
+                                            } ${isSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                    >
+                                        <option value="">Select a category</option>
+                                        {categories?.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                        </svg>
+                                    </div>
+                                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                {errors.categoryId && (
+                                    <p className="mt-2 text-sm text-red-600 font-medium flex items-center">
+                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {errors.categoryId.message}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Product Images Section */}
+                        <div className="space-y-8">
+                            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 rounded-2xl border border-purple-100">
+                                <div className="flex items-center">
+                                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
+                                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900">Product Images</h3>
+                                        <p className="text-gray-600 text-sm">Manage product photos (max 10 images)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* All Images Display */}
+                            {(product?.images && product.images.length > 0) || imagePreviews.length > 0 ? (
+                                <div className="space-y-4">
+                                    <h4 className="text-lg font-semibold text-gray-900">
+                                        Product Images ({(product?.images?.length || 0) + imagePreviews.length}/10)
+                                    </h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {/* Existing Images */}
+                                        {product?.images && product.images.map((image, index) => (
+                                            <div key={`existing-${index}`} className="relative group">
+                                                <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+                                                    <img
+                                                        src={image}
+                                                        alt={`Existing product image ${index + 1}`}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                    />
+                                                </div>
+                                                {/* Delete Button */}
+                                                <button
+                                                    type="button"
+                                                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                    title="Remove existing image"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                                <div className="absolute bottom-1 left-1 bg-gray-800 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                                    Existing
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* New Image Previews */}
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={`new-${index}`} className="relative group">
+                                                <div className="aspect-square rounded-lg overflow-hidden border-2 border-purple-200 bg-gray-100 shadow-md">
+                                                    <img
+                                                        src={preview}
+                                                        alt={`New product preview ${index + 1}`}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeNewImage(index)}
+                                                    disabled={isSubmitting}
+                                                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 disabled:opacity-50"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                                <div className="absolute bottom-1 left-1 bg-purple-600 bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                                                    New
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Status Message */}
+                                    {selectedImages.length > 0 && (
+                                        <p className="text-xs text-green-600 mt-2 flex items-center justify-center">
+                                            <svg className="w-3 h-3 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            {selectedImages.length} new image(s) selected and ready to upload
+                                        </p>
+                                    )}
+                                </div>
+                            ) : null}
+
+                            {/* Upload New Images - Only show if there's space */}
+                            {((product?.images?.length || 0) + imagePreviews.length) < 10 && (
+                                <div className="relative">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                        <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Add New Images ({10 - ((product?.images?.length || 0) + imagePreviews.length)} slots remaining)
+                                    </label>
+
+                                    <div className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImageSelect}
+                                            disabled={isSubmitting}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            id="image-upload"
+                                        />
+                                        <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${isSubmitting
+                                            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                                            : 'border-purple-300 bg-purple-50 hover:border-purple-400 hover:bg-purple-100'
+                                            }`}>
+                                            <div className="flex flex-col items-center">
+                                                <svg className="w-12 h-12 text-purple-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                </svg>
+                                                <div className="text-lg font-semibold text-gray-700 mb-2">Upload Product Images</div>
+                                                <p className="text-gray-500 text-sm mb-4">Drag and drop images here, or click to browse</p>
+                                                <p className="text-xs text-gray-400">Supported formats: JPG, PNG, GIF, WebP (Max 5MB each)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Pricing & Inventory Section */}

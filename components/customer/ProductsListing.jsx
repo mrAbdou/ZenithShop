@@ -4,7 +4,14 @@ import Product from "../Product";
 import { useInfiniteProducts } from "@/hooks/products";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
+import { useProductContext } from "@/context/ProductContext";
 export default function ProductsListing({ initialData }) {
+    const { filters, setPaginationLimit } = useProductContext();
+
+    useEffect(() => {
+        setPaginationLimit(LIMIT);
+    }, [setPaginationLimit]);
+
     const {
         data,
         error,
@@ -13,7 +20,17 @@ export default function ProductsListing({ initialData }) {
         hasNextPage,
         isFetchingNextPage,
         fetchNextPage
-    } = useInfiniteProducts({ limit: LIMIT }, initialData);
+    } = useInfiniteProducts(
+        {
+            limit: filters.limit,
+            offset: 0,
+            searchQuery: filters.searchQuery,
+            categoryId: filters.categoryId,
+            minPrice: filters.minPrice,
+            maxPrice: filters.maxPrice
+        },
+        initialData
+    );
     const products = data?.pages?.flat() || [];
     const { ref, inView } = useInView({
         threshold: 0.1,

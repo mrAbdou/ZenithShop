@@ -1,8 +1,12 @@
 import CartFloatingButton from "@/components/customer/CartFloatingButton";
+import FeaturedCategories from "@/components/FeaturedCategories";
+import FeaturedProducts from "@/components/FeaturedProducts";
 import ProductsListing from "@/components/customer/ProductsListing";
 import { LIMIT } from "@/lib/constants";
-import { fetchInfiniteProducts } from "@/services/products.server";
+import { fetchInfiniteProducts, fetchFeaturedProducts } from "@/services/products.server";
 import { headers } from "next/headers";
+import { fetchFeaturedCategories } from "@/services/categories.client";
+import NewsletterSignup from "@/components/NewsletterSignup";
 
 export const metadata = {
   title: "ZenithShop",
@@ -22,7 +26,9 @@ export const metadata = {
 export default async function Home() {
   const h = await headers();
   const cookieHeader = h.get('cookie');
-  const products = await fetchInfiniteProducts({ limit: LIMIT, offset: 0 }, cookieHeader);
+  const featuredCategories = await fetchFeaturedCategories({ head: 4 }, cookieHeader);
+  const featuredProducts = await fetchFeaturedProducts({ head: 4 }, cookieHeader);
+
   return (
     <div className="min-h-screen p-6 relative">
       {/* Hero Section */}
@@ -58,10 +64,14 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Products Section */}
-      <ProductsListing initialData={products} />
+      {/* Featured Categories Section */}
+      <FeaturedCategories initialData={featuredCategories} />
 
-      {/* Floating Cart Button */}
+      {/* Featured Products Section */}
+      <FeaturedProducts initialData={featuredProducts} />
+
+      <NewsletterSignup />
+
       <CartFloatingButton />
     </div>
   );

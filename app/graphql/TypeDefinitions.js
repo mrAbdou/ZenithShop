@@ -4,6 +4,7 @@ const typeDefs = `
 #################################################
 scalar DateTime
 scalar Decimal
+scalar Upload
 
 #################################################
 #                     User Type                 #
@@ -52,12 +53,23 @@ enum OrderStatus {
 #################################################
 #                     Product Type              #
 #################################################
+type Category {
+    id: String!
+    name: String!
+    products: [Product!]!
+    createdAt: DateTime!
+    updatedAt: DateTime
+}
+
 type Product {
     id: String!
     name: String!
     description: String
     price: Float!
+    images: [String!]!     # Array of product image URLs - first image is primary
     qteInStock: Int!
+    categoryId: String!
+    category: Category!
     createdAt: DateTime!
     updatedAt: DateTime
     orderItems: [OrderItem!]!
@@ -84,11 +96,11 @@ type OrderItem {
 type Mutation {
     # User Profile ###########################
     updateCustomerProfile(id: String, name: String, address: String, phoneNumber: String): User!
+    updateUserImage(imageUrl: String!): User!
     deleteCustomerProfile(userId: String!): User!
-    completeSignUp(phoneNumber: String!, address: String!): User!
 
     # Product Management (Admin) #############
-    addNewProduct(product: ProductInput!): Product!
+    addNewProduct(product: ProductInput!, images: [Upload!]!): Product!
     updateProduct(id: String!, product: UpdateProductInput!): Product!
     deleteProduct(id: String!): Product!
 
@@ -111,7 +123,9 @@ input UpdateProductInput {
     name: String
     description: String
     price: Float
+    images: [String!]
     qteInStock: Int
+    categoryId: String
 }
 
 input ProductInput {
@@ -119,6 +133,7 @@ input ProductInput {
     description: String
     price: Float!
     qteInStock: Int!
+    categoryId: String!
 }
 
 
@@ -170,13 +185,17 @@ type Query {
     ordersCount: Int!
     filteredOrdersCount(searchQuery: String, status: OrderStatus, startDate: DateTime, endDate: DateTime): Int!
 
-    paginatedProducts(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime, sortBy: String, sortDirection: String, limit: Int!, currentPage: Int!): [Product!]!
-    infiniteProducts(limit: Int!, offset: Int!, searchQuery: String, stock: String, minPrice: Float, maxPrice: Float, sortBy: String, sortDirection: String): [Product!]!
+    paginatedProducts(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime,categoryId: String, sortBy: String, sortDirection: String, limit: Int!, currentPage: Int!): [Product!]!
+    infiniteProducts(limit: Int!, offset: Int!, searchQuery: String, stock: String, minPrice: Float, maxPrice: Float, categoryId: String, sortBy: String, sortDirection: String): [Product!]!
     product(id: String!): Product
     productsCount: Int!
     availableProductsCount: Int!
-    filteredProductsCount(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime): Int!
+    filteredProductsCount(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime, categoryId: String): Int!
     
+    categories: [Category!]!
+    featuredCategories(head: Int!): [Category!]!
+    featuredProducts(head: Int!): [Product!]!
+    countFilteredCategories(searchQuery: String!): Int!
     orderItems(orderId: String!): [OrderItem!]!
     orderItem(id: String!): OrderItem
 }

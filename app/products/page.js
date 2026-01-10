@@ -1,10 +1,11 @@
 //start components import -----------------------------------------
-import ProductsListing from "@/components/customer/ProductsListing";
 import CartFloatingButton from "@/components/customer/CartFloatingButton";
+import ProductsPageClientWrapper from "@/components/customer/ProductsPageClientWrapper";
 //end components import -------------------------------------------
 
 //start services import -------------------------------------------
 import { fetchInfiniteProducts, fetchProductsCount } from "@/services/products.server";
+import { fetchCategories } from "@/services/categories.server";
 //end services import ---------------------------------------------
 
 //start next imports ---------------------------------------------
@@ -21,6 +22,7 @@ export default async function ProductsPage() {
   const cookieHeader = h.get("cookie") || "";
   const productsCount = await fetchProductsCount({}, cookieHeader);
   const products = await fetchInfiniteProducts({ limit: LIMIT, offset: 0 }, cookieHeader);
+  const categories = await fetchCategories({}, cookieHeader);
   return (
     <div className="min-h-screen p-6 relative">
       {/* Header Section */}
@@ -43,7 +45,7 @@ export default async function ProductsPage() {
           </div>
         </div>
       </div>
-      <ProductsListing initialData={products} />
+      <ProductsPageClientWrapper initialProducts={products} initialCategories={categories} />
 
       {/* Floating Cart Button */}
       <CartFloatingButton />

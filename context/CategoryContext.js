@@ -1,36 +1,24 @@
 import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
-import { createContext, useContext, useState, useMemo, useCallback } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-const ProductContext = createContext();
-
-export default function ProductProvider({ children }) {
+const CategoryContext = createContext();
+export function CategoryProvider({ children }) {
     const [filters, setFilters] = useState({
-        // filtering props ....
+        //filtering props
         searchQuery: '',
-        stock: '',
-        startDate: '',
-        endDate: '',
-        categoryId: '',
-        minPrice: '',
-        maxPrice: '',
-        // sorting props ...
+        //Sorting props
         sortBy: '',
         sortDirection: '',
-        // pagination props ...
+        //Pagination props
         limit: PAGINATION_MIN_LIMIT,
-        currentPage: 1
+        currentPage: 1,
     });
 
     const setFilteringProps = useCallback((filteringProps) => {
         setFilters((prevFilters) => ({
             ...prevFilters,
             searchQuery: filteringProps.searchQuery ?? undefined,
-            stock: filteringProps.stock ?? undefined,
-            startDate: filteringProps.startDate ?? undefined,
-            endDate: filteringProps.endDate ?? undefined,
-            categoryId: filteringProps.categoryId ?? undefined,
-            minPrice: filteringProps.minPrice ?? undefined,
-            maxPrice: filteringProps.maxPrice ?? undefined
+            currentPage: 1 // Reset to first page when filters change
         }));
     }, []);
 
@@ -38,7 +26,8 @@ export default function ProductProvider({ children }) {
         setFilters((prevFilters) => ({
             ...prevFilters,
             sortBy: sortingFilters.sortBy,
-            sortDirection: sortingFilters.sortDirection
+            sortDirection: sortingFilters.sortDirection,
+            currentPage: 1 // Reset to first page when sorting changes
         }));
     }, []);
 
@@ -46,7 +35,7 @@ export default function ProductProvider({ children }) {
         setFilters((prevFilters) => ({
             ...prevFilters,
             limit: limit,
-            currentPage: 1,
+            currentPage: 1, // Reset to first page when limit changes
         }));
     }, []);
 
@@ -66,10 +55,10 @@ export default function ProductProvider({ children }) {
     }), [filters, setFilteringProps, setSortingFilters, setPaginationLimit, setPaginationCurrentPage]);
 
     return (
-        <ProductContext.Provider value={value}>
+        <CategoryContext.Provider value={value}>
             {children}
-        </ProductContext.Provider>
-    )
+        </CategoryContext.Provider>
+    );
 }
 
-export const useProductContext = () => useContext(ProductContext);
+export const useCategoryContext = () => useContext(CategoryContext);

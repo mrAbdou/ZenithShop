@@ -109,7 +109,6 @@ export async function fetchActiveOrdersCount(variables = {}) {
 }
 export async function addOrder(variables) {
     try {
-        console.log(variables);
         const data = await graphqlRequest(ADD_ORDER, variables);
         return data?.addOrder ?? null;
     } catch (error) {

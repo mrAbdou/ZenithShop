@@ -13,8 +13,9 @@ import {
     fetchInfiniteProducts,
     updateProduct,
     deleteProduct,
+    fetchFeaturedProducts,
 } from "@/services/products.client";
-import { AddProductSchema, FilteringProductPaginationSchema, InfiniteProductSchema, ProductPaginationSchema, UpdateProductSchema } from "@/lib/schemas/product.schema";
+import { AddProductSchema, FeaturedProductsSchema, FilteringProductPaginationSchema, InfiniteProductSchema, ProductPaginationSchema, UpdateProductSchema } from "@/lib/schemas/product.schema";
 import ZodValidationError from "@/lib/ZodValidationError";
 
 /** Count of all products */
@@ -141,7 +142,11 @@ export function useAddProduct() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data) => {
-            const validation = AddProductSchema.safeParse(data);
+            // Separate images from product data
+            const { images, ...productData } = data;
+
+            // Validate product data (without images)
+            const validation = AddProductSchema.safeParse(productData);
             if (!validation.success) {
                 const errors = validation.error.issues.map(issue => ({
                     field: issue.path[0],
@@ -150,7 +155,10 @@ export function useAddProduct() {
                 throw new ZodValidationError('Validation failed', errors);
             }
             try {
-                return await addProduct({ product: validation.data });
+                return await addProduct({
+                    product: validation.data,
+                    images: images || []
+                });
             } catch (gqlError) {
                 throw gqlError;
             }
@@ -207,4 +215,22 @@ export function useDeleteProduct() {
             queryClient.invalidateQueries({ queryKey: ['countFilteredProducts'] });
         }
     })
+}
+
+export function useFeaturedProducts(variables, initialData) {
+    return useQuery({
+        queryKey: ['featuredProducts', variables],
+        queryFn: () => {
+            const validation = FeaturedProductsSchema.safeParse(variables);
+            if (!validation.success) {
+                const errors = validation.error.issues.map(issue => ({
+                    field: issue.path[0],
+                    message: issue.message
+                }));
+                throw new ZodValidationError('Validation failed', errors);
+            }
+            return fetchFeaturedProducts(validation.data);
+        },
+        initialData: initialData ?? []
+    });
 }

@@ -101,7 +101,7 @@ type Mutation {
 
     # Product Management (Admin) #############
     addNewProduct(product: ProductInput!, images: [Upload!]!): Product!
-    updateProduct(id: String!, product: UpdateProductInput!): Product!
+    updateProduct(id: String!, product: UpdateProductInput!, existingImagesToKeep: [Upload!], newImagesToUpload: [Upload!]): Product!
     deleteProduct(id: String!): Product!
 
     # Order & Cart Management ################
@@ -123,7 +123,6 @@ input UpdateProductInput {
     name: String
     description: String
     price: Float
-    images: [String!]
     qteInStock: Int
     categoryId: String
 }

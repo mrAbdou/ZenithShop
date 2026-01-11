@@ -94,8 +94,8 @@ query GetFeaturedProducts($head: Int!) {
     }
 }`;
 export const UPDATE_PRODUCT = gql`
-mutation updateProduct($id: String!, $product: UpdateProductInput!) {
-    updateProduct(id: $id, product: $product) {
+mutation updateProduct($id: String!, $product: UpdateProductInput!, $existingImagesToKeep: [Upload!]!, $newImagesToUpload: [Upload!]!) {
+    updateProduct(id: $id, product: $product, existingImagesToKeep: $existingImagesToKeep, newImagesToUpload: $newImagesToUpload) {
         id
         name
         description

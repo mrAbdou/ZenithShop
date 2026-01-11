@@ -12,15 +12,11 @@ import toast from "react-hot-toast";
 
 export default function UpdateProductForm({ productId, initialCategories }) {
     const router = useRouter();
-    const { data: product, isLoading } = useProduct(productId);
     const { data: categories } = useCategories({}, initialCategories);
+    const { data: product, isLoading } = useProduct(productId);
     const { mutateAsync: updateProductAsync } = useUpdateProduct(productId);
 
-    // Image upload state
-    const [selectedImages, setSelectedImages] = useState(product?.images || []);
-    const [imagePreviews, setImagePreviews] = useState([]);
-
-    const { register, handleSubmit, reset, setValue, formState: { isSubmitting, isValid, errors, isDirty } } = useForm({
+    const { register, handleSubmit, reset, formState: { isSubmitting, isValid, errors, isDirty } } = useForm({
         defaultValues: {
             name: product?.name || '',
             description: product?.description || '',
@@ -33,17 +29,21 @@ export default function UpdateProductForm({ productId, initialCategories }) {
         mode: 'onChange',
     });
 
+    // Image management state
+    const [existingImagesToKeep, setExistingImagesToKeep] = useState(product?.images || []);
+    const [newImagesToUpload, setNewImagesToUpload] = useState([]);
+    const [newImagePreviews, setNewImagePreviews] = useState([]);
+
+
     useEffect(() => {
         if (product) {
-            setSelectedImages(product?.images || []);
-            setImagePreviews(product?.images || []);
+            setExistingImagesToKeep(product?.images || []);
             reset({
                 name: product?.name,
                 description: product?.description,
                 price: product?.price,
                 qteInStock: product?.qteInStock,
                 categoryId: product?.category?.id,
-                images: product?.images || [],
             });
         }
     }, [product, reset]);
@@ -53,9 +53,8 @@ export default function UpdateProductForm({ productId, initialCategories }) {
         const files = Array.from(event.target.files);
         if (files.length > 0) {
             // Check total images limit (existing + new)
-            const totalImages = (product?.images?.length || 0) + selectedImages.length + files.length;
-            if (totalImages > 10) {
-                toast.error('Maximum 10 images allowed total');
+            if (existingImagesToKeep.length + files.length > 10) {
+                toast.error('Maximum 10 images allowed');
                 return;
             }
 
@@ -72,33 +71,29 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                 // Create preview
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    setImagePreviews(prev => [...prev, e.target.result]);
+                    setNewImagePreviews(prev => [...prev, e.target.result]);
                 };
                 reader.readAsDataURL(file);
             }
 
             if (validFiles.length > 0) {
-                setSelectedImages(prev => [...prev, ...validFiles]);
-                // Update form to mark as dirty by modifying the images array
-                const currentImages = product?.images || [];
-                setValue('images', [...currentImages, 'placeholder-for-new-image'], { shouldDirty: true });
+                setNewImagesToUpload(prev => [...prev, ...validFiles]);
             }
         }
-        // Reset file input
-        event.target.value = '';
     };
 
     const removeNewImage = (index) => {
-        const newSelectedImages = selectedImages.filter((_, i) => i !== index);
-        const newImagePreviews = imagePreviews.filter((_, i) => i !== index);
+        const newSelectedImages = newImagesToUpload.filter((_, i) => i !== index);
+        const newPreviews = newImagePreviews.filter((_, i) => i !== index);
 
-        setSelectedImages(newSelectedImages);
-        setImagePreviews(newImagePreviews);
+        setNewImagesToUpload(newSelectedImages);
+        setNewImagePreviews(newPreviews);
+    };
 
-        // Update form to reflect the change and mark as dirty
-        const currentImages = product?.images || [];
-        const updatedImages = newSelectedImages.length > 0 ? [...currentImages, 'placeholder-for-new-image'] : currentImages;
-        setValue('images', updatedImages, { shouldDirty: true });
+    const removeExistingImage = (index) => {
+        const newSelectedImages = existingImagesToKeep.filter((_, i) => i !== index);
+
+        setExistingImagesToKeep(newSelectedImages);
     };
 
     const onSubmit = async (data) => {
@@ -110,7 +105,8 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                 price: data.price,
                 qteInStock: data.qteInStock,
                 categoryId: data.categoryId,
-                images: selectedImages // Pass new images directly from state
+                existingImagesToKeep: existingImagesToKeep,
+                newImagesToUpload: newImagesToUpload
             };
 
             await updateProductAsync(productData, {
@@ -384,14 +380,14 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                             </div>
 
                             {/* All Images Display */}
-                            {(product?.images && product.images.length > 0) || imagePreviews.length > 0 ? (
+                            {(product?.images && product.images.length > 0) || newImagePreviews.length > 0 ? (
                                 <div className="space-y-4">
                                     <h4 className="text-lg font-semibold text-gray-900">
-                                        Product Images ({(product?.images?.length || 0) + imagePreviews.length}/10)
+                                        Product Images ({(product?.images?.length || 0) + newImagePreviews.length}/10)
                                     </h4>
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                         {/* Existing Images */}
-                                        {product?.images && product.images.map((image, index) => (
+                                        {existingImagesToKeep && existingImagesToKeep.map((image, index) => (
                                             <div key={`existing-${index}`} className="relative group">
                                                 <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
                                                     <img
@@ -403,6 +399,7 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                                                 {/* Delete Button */}
                                                 <button
                                                     type="button"
+                                                    onClick={() => removeExistingImage(index)}
                                                     className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                                                     title="Remove existing image"
                                                 >
@@ -417,7 +414,7 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                                         ))}
 
                                         {/* New Image Previews */}
-                                        {imagePreviews.map((preview, index) => (
+                                        {newImagePreviews.map((preview, index) => (
                                             <div key={`new-${index}`} className="relative group">
                                                 <div className="aspect-square rounded-lg overflow-hidden border-2 border-purple-200 bg-gray-100 shadow-md">
                                                     <img
@@ -444,25 +441,25 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                                     </div>
 
                                     {/* Status Message */}
-                                    {selectedImages.length > 0 && (
+                                    {newImagesToUpload.length > 0 && (
                                         <p className="text-xs text-green-600 mt-2 flex items-center justify-center">
                                             <svg className="w-3 h-3 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
                                             </svg>
-                                            {selectedImages.length} new image(s) selected and ready to upload
+                                            {newImagesToUpload.length} new image(s) selected and ready to upload
                                         </p>
                                     )}
                                 </div>
                             ) : null}
 
                             {/* Upload New Images - Only show if there's space */}
-                            {((product?.images?.length || 0) + imagePreviews.length) < 10 && (
+                            {((product?.images?.length || 0) + newImagePreviews.length) < 10 && (
                                 <div className="relative">
                                     <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
                                         <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
-                                        Add New Images ({10 - ((product?.images?.length || 0) + imagePreviews.length)} slots remaining)
+                                        Add New Images ({10 - ((product?.images?.length || 0) + newImagePreviews.length)} slots remaining)
                                     </label>
 
                                     <div className="relative">
@@ -636,8 +633,8 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting || !isValid || !isDirty}
-                                    className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-300 font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-3 min-w-[280px] ${isSubmitting || !isValid || !isDirty
+                                    disabled={isSubmitting || !isValid || (!isDirty && newImagesToUpload.length === 0 && existingImagesToKeep.length === (product?.images?.length || 0))}
+                                    className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-300 font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-3 min-w-[280px] ${isSubmitting || !isValid || (!isDirty && newImagesToUpload.length === 0 && existingImagesToKeep.length === (product?.images?.length || 0))
                                         ? 'opacity-60 cursor-not-allowed'
                                         : 'hover:shadow-2xl'
                                         }`}

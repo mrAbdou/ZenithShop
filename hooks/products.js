@@ -180,8 +180,11 @@ export function useAddProduct() {
 export function useUpdateProduct(id) {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: (data) => {
-            const validation = UpdateProductSchema.safeParse(data);
+        mutationFn: async (data) => {
+            // Separate images from product data
+            const { existingImagesToKeep, newImagesToUpload, ...productData } = data;
+
+            const validation = UpdateProductSchema.safeParse(productData);
             if (!validation.success) {
                 const errors = validation.error.issues.map(issue => ({
                     field: issue.path[0],
@@ -189,7 +192,11 @@ export function useUpdateProduct(id) {
                 }));
                 throw new ZodValidationError('Validation failed', errors);
             }
-            return updateProduct({ id, product: validation.data })
+            try {
+                return await updateProduct({ id, product: validation.data, existingImagesToKeep, newImagesToUpload })
+            } catch (gqlError) {
+                throw gqlError;
+            }
         },
         onSuccess: (data) => {
             // Update the specific product cache

@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import ProductImageCarousel from "@/components/admin/ProductImageCarousel";
+import ProductDeleteButton from "@/components/admin/ProductDeleteButton";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -101,152 +103,7 @@ export default async function ProductDetails({ params }) {
             {/* Product Information Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Product Images Carousel */}
-                {product.images && product.images.length > 0 && (
-                    <div className="lg:col-span-3 mb-8">
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                            <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-100">
-                                <div className="flex items-center">
-                                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900">Product Images</h3>
-                                    <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                                        {product.images.length} image{product.images.length > 1 ? 's' : ''}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <div className="relative">
-                                    {/* Main Image Display */}
-                                    <div className="relative overflow-hidden rounded-xl bg-white border-4 border-gray-200 shadow-inner p-4" style={{ height: '500px' }}>
-                                        <div className="absolute inset-4 rounded-lg overflow-hidden bg-gray-50 border-2 border-gray-100 shadow-sm">
-                                            {product.images.map((image, index) => (
-                                                <img
-                                                    key={index}
-                                                    src={image}
-                                                    alt={`${product.name} - Image ${index + 1}`}
-                                                    className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ${index === 0 ? 'opacity-100' : 'opacity-0'
-                                                        }`}
-                                                    style={{ imageRendering: 'auto' }}
-                                                    id={`product-image-${index}`}
-                                                />
-                                            ))}
-                                        </div>
-
-                                        {/* Navigation Arrows */}
-                                        {product.images.length > 1 && (
-                                            <>
-                                                <button
-                                                    onClick={() => navigateImage(-1)}
-                                                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
-                                                    id="prev-btn"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={() => navigateImage(1)}
-                                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
-                                                    id="next-btn"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Thumbnail Strip */}
-                                    {product.images.length > 1 && (
-                                        <div className="mt-4 flex space-x-2 overflow-x-auto pb-2">
-                                            {product.images.map((image, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => setCurrentImage(index)}
-                                                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${index === 0
-                                                        ? 'border-purple-500 ring-2 ring-purple-200'
-                                                        : 'border-gray-300 hover:border-gray-400'
-                                                        }`}
-                                                >
-                                                    <img
-                                                        src={image}
-                                                        alt={`Thumbnail ${index + 1}`}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Image Counter */}
-                                    {product.images.length > 1 && (
-                                        <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                            <span id="current-image">1</span> / {product.images.length}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Add JavaScript for carousel functionality */}
-                        <script
-                            dangerouslySetInnerHTML={{
-                                __html: `
-                                    let currentImageIndex = 0;
-                                    const images = ${JSON.stringify(product.images)};
-                                    const totalImages = images.length;
-
-                                    function setCurrentImage(index) {
-                                        currentImageIndex = index;
-                                        updateCarousel();
-                                    }
-
-                                    function navigateImage(direction) {
-                                        currentImageIndex = (currentImageIndex + direction + totalImages) % totalImages;
-                                        updateCarousel();
-                                    }
-
-                                    function updateCarousel() {
-                                        // Update main images
-                                        images.forEach((_, index) => {
-                                            const img = document.getElementById('product-image-' + index);
-                                            if (img) {
-                                                img.style.opacity = index === currentImageIndex ? '1' : '0';
-                                            }
-                                        });
-
-                                        // Update thumbnails
-                                        const thumbnailButtons = document.querySelectorAll('[onclick*="setCurrentImage"]');
-                                        thumbnailButtons.forEach((button, index) => {
-                                            if (index === currentImageIndex) {
-                                                button.className = button.className.replace('border-gray-300 hover:border-gray-400', 'border-purple-500 ring-2 ring-purple-200');
-                                            } else {
-                                                button.className = button.className.replace('border-purple-500 ring-2 ring-purple-200', 'border-gray-300 hover:border-gray-400');
-                                            }
-                                        });
-
-                                        // Update counter
-                                        const counter = document.getElementById('current-image');
-                                        if (counter) {
-                                            counter.textContent = currentImageIndex + 1;
-                                        }
-                                    }
-
-                                    // Make functions global
-                                    window.setCurrentImage = setCurrentImage;
-                                    window.navigateImage = navigateImage;
-
-                                    // Initialize
-                                    updateCarousel();
-                                `
-                            }}
-                        />
-                    </div>
-                )}
+                <ProductImageCarousel images={product.images} productName={product.name} />
 
                 {/* Main Product Info */}
                 <div className="lg:col-span-2 space-y-8">
@@ -420,14 +277,7 @@ export default async function ProductDetails({ params }) {
                                 Edit Product
                             </Link>
 
-                            <button
-                                className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-                            >
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Delete Product
-                            </button>
+                            <ProductDeleteButton productId={product.id} productName={product.name} />
                         </div>
                     </div>
                 </div>

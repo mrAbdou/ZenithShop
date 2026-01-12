@@ -1,9 +1,10 @@
 "use client";
 import { useCountFilteredUsers, useUsers } from "@/hooks/users";
 import { useUserContext } from "@/context/usersContext";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDeleteUser } from "@/hooks/users";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -21,6 +22,28 @@ export default function UsersTable({ initialData = [] }) {
     const { data: users, error: usersError } = useUsers(filters, initialData);
     const { data: filteredUsersCount, error: usersCountError } = useCountFilteredUsers(filters);
     const { mutate: deleteUser } = useDeleteUser();
+
+    // Delete modal state
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
+
+    const openDeleteModal = (user) => {
+        setUserToDelete(user);
+        setDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteModalOpen(false);
+        setUserToDelete(null);
+    };
+
+    const handleDeleteUser = () => {
+        if (!userToDelete) return;
+
+        deleteUser(userToDelete.id);
+        toast.success('User deleted successfully');
+        closeDeleteModal();
+    };
     const totalPages = useMemo(() => filteredUsersCount && filteredUsersCount > 0 ? Math.ceil(filteredUsersCount / filters.limit) : 1, [filteredUsersCount, filters.limit]);
 
     const getVisiblePages = useCallback((currentPage, totalPages, maxVisible = 7) => {
@@ -84,11 +107,6 @@ export default function UsersTable({ initialData = [] }) {
         setSortingFilters({ sortBy, sortDirection });
     };
 
-    const onDeleteUser = (userId) => {
-        if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-            deleteUser(userId);
-        }
-    };
 
     const onChangeLimit = (e) => {
         const limit = parseInt(e.target.value.trim());
@@ -167,7 +185,7 @@ export default function UsersTable({ initialData = [] }) {
                                             View
                                         </Link>
                                         <button
-                                            onClick={() => onDeleteUser(user.id)}
+                                            onClick={() => openDeleteModal(user)}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                                         >
                                             Delete
@@ -230,6 +248,60 @@ export default function UsersTable({ initialData = [] }) {
                     </button>
                 </div>
             </section>
+
+            {/* Delete Confirmation Modal */}
+            {deleteModalOpen && userToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-lg font-medium text-gray-900">Delete User</h3>
+                                <p className="text-sm text-gray-500">Are you sure you want to delete this user?</p>
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-700">
+                                User: <span className="font-semibold">{userToDelete.name}</span>
+                            </p>
+                            <p className="text-sm text-gray-700">
+                                Email: <span className="font-semibold">{userToDelete.email}</span>
+                            </p>
+                            <p className="text-sm text-gray-700">
+                                Role: <span className={`px-2 py-1 text-xs font-semibold rounded-full ${userToDelete.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    {userToDelete.role}
+                                </span>
+                            </p>
+                            <p className="text-xs text-red-600 mt-2">
+                                ⚠️ This action cannot be undone. All user data and associated orders will be permanently removed.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={closeDeleteModal}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteUser}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-red-100 transition-all duration-300 font-semibold flex items-center"
+                            >
+                                <svg className="w-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useCategoryContext } from '@/context/CategoryContext';
-import { useCategories, useCountFilteredCategories } from '@/hooks/categories';
+import { useCategories, useCountFilteredCategories, useDeleteCategory } from '@/hooks/categories';
+import { toast } from 'react-hot-toast';
 export default function CategoriesTable({ initialCategories, initialCategoriesCount }) {
 
     const formatDate = (dateString) => {
@@ -19,6 +20,39 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
     const { filters } = useCategoryContext();
     const { data: categories } = useCategories(filters, initialCategories);
     const { data: totalCategories } = useCountFilteredCategories(filters, initialCategoriesCount);
+    const { mutateAsync: deleteCategoryAsync, isPending: isDeleting } = useDeleteCategory();
+
+    // Delete confirmation state
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [categoryToDelete, setCategoryToDelete] = useState(null);
+
+    const openDeleteModal = (category) => {
+        setCategoryToDelete(category);
+        setDeleteModalOpen(true);
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteModalOpen(false);
+        setCategoryToDelete(null);
+    };
+
+    const handleDelete = async () => {
+        if (!categoryToDelete) return;
+
+        try {
+            await deleteCategoryAsync(categoryToDelete.id, {
+                onSuccess: () => {
+                    toast.success("Category deleted successfully!");
+                    closeDeleteModal();
+                },
+                onError: (error) => {
+                    toast.error(error?.message || 'Failed to delete category');
+                }
+            });
+        } catch (error) {
+            toast.error('An unexpected error occurred');
+        }
+    };
     const totalPages = useMemo(() =>
         totalCategories && totalCategories > 0 ? Math.ceil(totalCategories / filters.limit) : 1,
         [totalCategories, filters.limit]
@@ -121,6 +155,24 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex space-x-2">
                                         <Link
+                                            href={`/control-panel/categories/${category.id}/edit`}
+                                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                                        >
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Edit
+                                        </Link>
+                                        <button
+                                            onClick={() => openDeleteModal(category)}
+                                            className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                                        >
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            Delete
+                                        </button>
+                                        <Link
                                             href={`/control-panel/products?categoryId=${category.id}`}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                         >
@@ -189,6 +241,61 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                     </button>
                 </div>
             </section>
+
+            {/* Delete Confirmation Modal */}
+            {deleteModalOpen && categoryToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-lg font-medium text-gray-900">Delete Category</h3>
+                                <p className="text-sm text-gray-500">Are you sure you want to delete this category?</p>
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-700">
+                                Category: <span className="font-semibold">{categoryToDelete.name}</span>
+                            </p>
+                            <p className="text-xs text-red-600 mt-2">
+                                ⚠️ This action cannot be undone. All products in this category will become uncategorized.
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={closeDeleteModal}
+                                disabled={isDeleting}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={isDeleting}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-red-100 transition-all duration-300 font-semibold disabled:opacity-60 cursor-not-allowed flex items-center"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    'Delete Category'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

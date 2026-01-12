@@ -109,6 +109,11 @@ type Mutation {
     updateOrder(id: String!, status: OrderStatus!): Order!
     deleteOrder(id: String!): Order!
     cancelOrder(id: String!): Order!
+
+    # Category Management (Admin) ############
+    createCategory(name: String!): Category!
+    updateCategory(id: String!, name: String!): Category!
+    deleteCategory(id: String!): Category!
     }
 
 #################################################
@@ -192,6 +197,7 @@ type Query {
     filteredProductsCount(searchQuery: String, stock: String, startDate: DateTime, endDate: DateTime, categoryId: String): Int!
     
     categories: [Category!]!
+    category(id: String!): Category!
     featuredCategories(head: Int!): [Category!]!
     featuredProducts(head: Int!): [Product!]!
     countFilteredCategories(searchQuery: String!): Int!

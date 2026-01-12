@@ -33,6 +33,7 @@ export default function UpdateProductForm({ productId, initialCategories }) {
     const [existingImagesToKeep, setExistingImagesToKeep] = useState(product?.images || []);
     const [newImagesToUpload, setNewImagesToUpload] = useState([]);
     const [newImagePreviews, setNewImagePreviews] = useState([]);
+    const [imageValidationErrors, setImageValidationErrors] = useState([]);
 
 
     useEffect(() => {
@@ -52,30 +53,45 @@ export default function UpdateProductForm({ productId, initialCategories }) {
     const handleImageSelect = (event) => {
         const files = Array.from(event.target.files);
         if (files.length > 0) {
+            // Clear previous validation errors
+            setImageValidationErrors([]);
+
             // Check total images limit (existing + new)
             if (existingImagesToKeep.length + files.length > 10) {
-                toast.error('Maximum 10 images allowed');
+                setImageValidationErrors(['Maximum 10 images allowed total']);
                 return;
             }
 
             // Validate each file
             const validFiles = [];
             const validPreviews = [];
+            const validationErrors = [];
 
             for (const file of files) {
-                // Basic validation - you can add more validation here
-                validateImage(file);
+                try {
+                    // Validate file (throws error if invalid)
+                    validateImage(file);
 
-                validFiles.push(file);
+                    validFiles.push(file);
 
-                // Create preview
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    setNewImagePreviews(prev => [...prev, e.target.result]);
-                };
-                reader.readAsDataURL(file);
+                    // Create preview
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        setNewImagePreviews(prev => [...prev, e.target.result]);
+                    };
+                    reader.readAsDataURL(file);
+                } catch (validationError) {
+                    // Collect validation errors for display
+                    validationErrors.push(`${file.name}: ${validationError.message}`);
+                }
             }
 
+            // Set validation errors if any occurred
+            if (validationErrors.length > 0) {
+                setImageValidationErrors(validationErrors);
+            }
+
+            // Add valid files to state
             if (validFiles.length > 0) {
                 setNewImagesToUpload(prev => [...prev, ...validFiles]);
             }
@@ -486,6 +502,28 @@ export default function UpdateProductForm({ productId, initialCategories }) {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Image Validation Errors */}
+                                    {imageValidationErrors.length > 0 && (
+                                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                            <div className="flex items-start">
+                                                <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <div className="flex-1">
+                                                    <h4 className="text-sm font-medium text-red-800 mb-2">Upload Errors:</h4>
+                                                    <ul className="text-sm text-red-700 space-y-1">
+                                                        {imageValidationErrors.map((error, index) => (
+                                                            <li key={index} className="flex items-start">
+                                                                <span className="text-red-500 mr-2">•</span>
+                                                                {error}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

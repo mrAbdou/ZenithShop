@@ -6,6 +6,7 @@ import categoriesQueries from '@/app/graphql/queries/categories';
 import usersMutations from '@/app/graphql/mutations/users';
 import ordersMutations from '@/app/graphql/mutations/orders';
 import productsMutations from '@/app/graphql/mutations/products';
+import categoriesMutations from '@/app/graphql/mutations/categories';
 const resolvers = {
     Query: {
         ...userQueries,
@@ -19,6 +20,7 @@ const resolvers = {
         ...ordersMutations,
         ...productsMutations,
         ...usersMutations,
+        ...categoriesMutations,
     },
 }
 

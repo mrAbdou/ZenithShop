@@ -29,6 +29,17 @@ export const COUNT_FILTERED_CATEGORIES = `
       countFilteredCategories(searchQuery: $searchQuery)
     }
   `;
+
+export const CATEGORY_QUERY = `
+    query Category($id: String!) {
+      category(id: $id) {
+        id
+        name
+        createdAt
+        updatedAt
+      }
+    }
+  `;
 export async function fetchFeaturedCategories(variables, cookieHeader) {
   try {
     const response = await graphqlServerRequest(FEATURED_CATEGORIES_QUERY, variables, cookieHeader);
@@ -50,6 +61,15 @@ export async function countFilteredCategories(variables, cookieHeader) {
   try {
     const response = await graphqlServerRequest(COUNT_FILTERED_CATEGORIES, variables, cookieHeader);
     return response.countFilteredCategories ?? 0;
+  } catch (gqlError) {
+    throw gqlError;
+  }
+}
+
+export async function fetchCategory(variables, cookieHeader) {
+  try {
+    const response = await graphqlServerRequest(CATEGORY_QUERY, variables, cookieHeader);
+    return response.category;
   } catch (gqlError) {
     throw gqlError;
   }

@@ -58,7 +58,30 @@ export default {
             }
         }
     },
-
+    category: async (parent, args, context) => {
+        if (context.session?.user?.role !== Role.ADMIN) {
+            throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });
+        }
+        const { id } = args;
+        if (!id || typeof id !== 'string') {
+            throw new GraphQLError('Invalid category id', { extensions: { code: 'BAD_REQUEST' } });
+        }
+        try {
+            const category = await context.prisma.category.findUnique({
+                where: { id }
+            });
+            return category;
+        } catch (prismaError) {
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
+    },
     countFilteredCategories: async (parent, args, context) => {
         if (context.session?.user?.role !== Role.ADMIN) {
             throw new GraphQLError("Unauthorized", { extensions: { code: 'UNAUTHORIZED' } });

@@ -1,8 +1,21 @@
 'use client';
 import Link from "next/link";
 import AddToCartButton from "./customer/AddToCartButton";
+import { useState } from "react";
 
 export default function Product({ product }) {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const images = product.images || [];
+    const hasImages = images.length > 0;
+
+    const nextImage = () => {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const prevImage = () => {
+        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
+
     return (
         <div
             key={product.id}
@@ -11,13 +24,57 @@ export default function Product({ product }) {
             {/* Gradient overlay decorativo */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-bl-full -z-10"></div>
 
-            {/* Product Image Placeholder */}
+            {/* Product Image Carousel */}
             <div className="relative w-full h-48 mb-4 rounded-xl overflow-hidden bg-gray-100">
-                <img
-                    src={`https://placehold.co/600x400/e2e8f0/475569?text=${encodeURIComponent(product.name)}`}
-                    alt={product.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                />
+                {hasImages ? (
+                    <>
+                        <img
+                            src={images[currentImageIndex]}
+                            alt={`${product.name} - Image ${currentImageIndex + 1}`}
+                            className="w-full h-full object-cover transform scale-95 group-hover:scale-110 transition-transform duration-500"
+                        />
+                        {images.length > 1 && (
+                            <>
+                                {/* Navigation Arrows */}
+                                <button
+                                    onClick={(e) => { e.preventDefault(); prevImage(); }}
+                                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-all duration-200"
+                                    aria-label="Previous image"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={(e) => { e.preventDefault(); nextImage(); }}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-all duration-200"
+                                    aria-label="Next image"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                                {/* Dots Indicator */}
+                                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                                    {images.map((_, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={(e) => { e.preventDefault(); setCurrentImageIndex(index); }}
+                                            className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                                            aria-label={`Go to image ${index + 1}`}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </>
+                ) : (
+                    <img
+                        src={`https://placehold.co/600x400/e2e8f0/475569?text=${encodeURIComponent(product.name)}`}
+                        alt={product.name}
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    />
+                )}
             </div>
 
             {/* Badge de precio destacado */}

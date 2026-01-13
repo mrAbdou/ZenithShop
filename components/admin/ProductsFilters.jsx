@@ -7,7 +7,7 @@ import { useProductContext } from "@/context/ProductContext";
 import { useEffect } from "react";
 import { useCategories } from "@/hooks/categories";
 
-export default function ProductsFilters({ initialCategories }) {
+export default function ProductsFilters({ initialCategories, initialCategoryId }) {
     const { filters, setFilteringProps, setPaginationCurrentPage } = useProductContext();
     const { data: categories } = useCategories({}, initialCategories);
     const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -21,6 +21,12 @@ export default function ProductsFilters({ initialCategories }) {
         resolver: zodResolver(FilteringProductPaginationSchema),
         mode: 'onChange',
     });
+
+    useEffect(() => {
+        if (initialCategoryId && initialCategoryId !== filters.categoryId) {
+            setFilteringProps({ categoryId: initialCategoryId });
+        }
+    }, [initialCategoryId, filters.categoryId, setFilteringProps]);
 
     useEffect(() => {
         reset({

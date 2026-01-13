@@ -3,7 +3,7 @@ import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { fetchPaginatedProducts, fetchProductsCount } from "@/services/products.server";
+import { fetchPaginatedProducts, filteredProductsCount } from "@/services/products.server";
 import ProductsManagement from "@/components/admin/ProductsManagement";
 import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
 import { fetchCategories } from "@/services/categories.server";
@@ -11,7 +11,7 @@ export const metadata = {
     title: "Products Management | ZenithShop Admin",
     description: "Admin interface for managing ZenithShop product catalog. Add, edit, delete, and organize products efficiently with real-time updates and analytics.",
 }
-export default async function ProductsManagementPage() {
+export default async function ProductsManagementPage({ searchParams }) {
     const h = await headers();
     const cookieHeader = h.get("cookie");
     const session = await auth.api.getSession({
@@ -19,9 +19,10 @@ export default async function ProductsManagementPage() {
     });
 
     if (!session || !(session?.user?.role === Role.ADMIN)) return redirect("/");
+    const categoryId = (await searchParams)?.categoryId;
     const categories = await fetchCategories({}, cookieHeader);
-    const products = await fetchPaginatedProducts({ limit: PAGINATION_MIN_LIMIT, currentPage: 1 }, cookieHeader);
-    const totalProducts = await fetchProductsCount({ limit: PAGINATION_MIN_LIMIT, currentPage: 1 }, cookieHeader); // needs to count the filtered data not the full products available !!
+    const products = await fetchPaginatedProducts({ limit: PAGINATION_MIN_LIMIT, currentPage: 1, categoryId }, cookieHeader);
+    const totalProducts = await filteredProductsCount({ limit: PAGINATION_MIN_LIMIT, currentPage: 1, categoryId }, cookieHeader); // needs to count the filtered data not the full products available !!
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}
@@ -50,7 +51,7 @@ export default async function ProductsManagementPage() {
                     </div>
                 </div>
             </div>
-            <ProductsManagement products={products} categories={categories} />
+            <ProductsManagement products={products} categories={categories} initialCategoryId={categoryId} />
 
             {/* Floating Action Button */}
             <Link

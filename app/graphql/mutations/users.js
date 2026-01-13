@@ -11,7 +11,7 @@ export default {
             throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
         }
 
-        const { imageUrl } = args;
+        const { imageUrl, userId } = args;
         if (!imageUrl || typeof imageUrl !== 'string') {
             throw new GraphQLError('Invalid image URL', { extensions: { code: 'BAD_REQUEST' } });
         }

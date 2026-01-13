@@ -16,6 +16,7 @@ type User {
     # password removed for security reasons
     address: String!
     phoneNumber: String!
+    image: String
     role: Role!
     orders: [Order!]!
     createdAt: DateTime!

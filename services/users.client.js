@@ -44,6 +44,7 @@ query GetUser($id: String!) {
         id
         name
         email
+        image
         phoneNumber
         address
         role
@@ -98,6 +99,14 @@ mutation DeleteCustomerProfile($userId: String!) {
         name
         email
         role
+    }
+}`;
+
+export const UPDATE_USER_IMAGE = gql`
+mutation UpdateUserImage($imageUrl: String!) {
+    updateUserImage(imageUrl: $imageUrl) {
+        id
+        image
     }
 }`;
 //TODO: i changed the signature of this function, instead of filters been passed 
@@ -165,6 +174,15 @@ export async function deleteUser(variables) {
     try {
         const data = await graphqlRequest(DELETE_CUSTOMER_PROFILE, variables);
         return data?.deleteCustomerProfile ?? null;
+    } catch (err) {
+        throw err;
+    }
+}
+
+export async function updateUserImage(variables) {
+    try {
+        const data = await graphqlRequest(UPDATE_USER_IMAGE, variables);
+        return data?.updateUserImage ?? null;
     } catch (err) {
         throw err;
     }

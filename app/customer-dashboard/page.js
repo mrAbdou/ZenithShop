@@ -56,6 +56,17 @@ export default async function CustomerDashboard() {
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Overview</h2>
                             <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                    <img
+                                        src={session?.user?.image || '/default-avatar.png'}
+                                        alt="Profile Picture"
+                                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                                    />
+                                    <div>
+                                        <p className="text-gray-600">Profile Picture</p>
+                                        <p className="text-sm text-gray-500">Update in profile section</p>
+                                    </div>
+                                </div>
                                 <div className="flex justify-between">
                                     <span className="text-gray-600">Registration Date</span>
                                     <span className="text-gray-900">{session?.user?.createdAt.toISOString().split('T').join(' ')}</span>

@@ -9,6 +9,7 @@ query GetInfiniteProducts($limit: Int!, $offset: Int!, $searchQuery: String, $st
         qteInStock
         price
         createdAt
+        images
         category {
             id
             name

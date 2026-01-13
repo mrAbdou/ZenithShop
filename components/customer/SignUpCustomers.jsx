@@ -7,8 +7,9 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import ZodValidationError from "@/lib/ZodValidationError";
-import { supabase } from "@/lib/supabase";
-import { graphqlRequest } from "@/lib/graphql-client";
+import { supabase, validateImage } from "@/lib/supabase";
+import { uploadProfileImageAction } from "@/app/actions/upload";
+import { updateUserImage } from "@/services/users.client";
 export default function SignUpCustomers({ redirectPath }) {
     const [errorMessages, setErrorMessages] = useState([]);
     const [avatarFile, setAvatarFile] = useState(null);
@@ -24,20 +25,8 @@ export default function SignUpCustomers({ redirectPath }) {
     const handleAvatarChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                toast.error('Please select a valid image file');
-                return;
-            }
-            // Validate file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-                toast.error('Image size must be less than 5MB');
-                return;
-            }
-
+            validateImage(file);
             setAvatarFile(file);
-
-            // Create preview URL
             const reader = new FileReader();
             reader.onload = (e) => setAvatarPreview(e.target.result);
             reader.readAsDataURL(file);
@@ -49,33 +38,6 @@ export default function SignUpCustomers({ redirectPath }) {
         setAvatarPreview(null);
     };
 
-    // Upload avatar to Supabase Storage
-    const uploadAvatar = async (userId) => {
-        if (!avatarFile) return null;
-
-        try {
-            const fileName = `avatar-${userId}-${Date.now()}.${avatarFile.name.split('.').pop()}`;
-
-            const { data, error } = await supabase.storage
-                .from('avatars')
-                .upload(fileName, avatarFile, {
-                    cacheControl: '3600',
-                    upsert: false
-                });
-
-            if (error) throw error;
-
-            // Get public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(fileName);
-
-            return publicUrl;
-        } catch (error) {
-            console.error('Avatar upload failed:', error);
-            throw new Error('Failed to upload avatar');
-        }
-    };
     //submit function :
     const onSubmit = async ({ name, email, password, phoneNumber, address }) => {
         setErrorMessages([]); // clear the error messages
@@ -102,19 +64,14 @@ export default function SignUpCustomers({ redirectPath }) {
             // If avatar was selected, upload it and update user profile
             if (avatarFile && data?.user?.id) {
                 try {
-                    const avatarUrl = await uploadAvatar(data.user.id);
-                    if (avatarUrl) {
-                        // Update user profile with avatar URL using GraphQL
-                        const UPDATE_USER_IMAGE = `
-                            mutation UpdateUserImage($imageUrl: String!) {
-                                updateUserImage(imageUrl: $imageUrl) {
-                                    id
-                                    image
-                                }
-                            }
-                        `;
+                    const formData = new FormData();
+                    formData.append('file', avatarFile);
+                    formData.append('userId', data.user.id);
 
-                        await graphqlRequest(UPDATE_USER_IMAGE, { imageUrl: avatarUrl });
+                    const avatarUrl = await uploadProfileImageAction(formData);
+
+                    if (avatarUrl) {
+                        await updateUserImage({ imageUrl: avatarUrl });
                     }
                 } catch (avatarError) {
                     // Avatar upload failed, but account was created successfully
@@ -310,34 +267,34 @@ export default function SignUpCustomers({ redirectPath }) {
                     </div>
                 )}
 
-                {/* Upload Area */}
-                <div className="relative">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        disabled={isSubmitting}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                        id="avatar-upload"
-                    />
-                    <label
-                        htmlFor="avatar-upload"
-                        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${avatarPreview
-                            ? 'border-green-300 bg-green-50 hover:bg-green-100'
-                            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                            } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
-                    >
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg className="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <p className="mb-2 text-sm text-gray-500">
-                                <span className="font-semibold">Click to upload</span> or drag and drop
-                            </p>
-                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
-                        </div>
-                    </label>
-                </div>
+                {/* Upload Area - Hidden when avatar is selected */}
+                {!avatarPreview && (
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple={false}
+                            onChange={handleAvatarChange}
+                            disabled={isSubmitting}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                            id="avatar-upload"
+                        />
+                        <label
+                            htmlFor="avatar-upload"
+                            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 border-gray-300 bg-gray-50 hover:bg-gray-100 ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
+                        >
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg className="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <p className="mb-2 text-sm text-gray-500">
+                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                </p>
+                                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                            </div>
+                        </label>
+                    </div>
+                )}
 
                 <div className="mt-2 text-xs text-gray-500">
                     Your profile picture will be visible to other users and helps personalize your account.

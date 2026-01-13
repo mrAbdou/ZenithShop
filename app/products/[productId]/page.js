@@ -5,10 +5,11 @@ import { notFound } from "next/navigation";
 
 //start components import -----------------------------------------
 import AddToCartButton from "@/components/customer/AddToCartButton";
+import ProductImageDisplay from "@/components/customer/ProductImageDisplay";
 //end components import -------------------------------------------
 
 //start services import -------------------------------------------
-import { fetchProduct } from "@/services/products.client";
+import { fetchProduct } from "@/services/products.server";
 //end services import ---------------------------------------------
 
 export async function generateMetadata({ params }) {
@@ -51,23 +52,7 @@ export default async function ProductDetailsPage({ params }) {
         <div className="grid md:grid-cols-2 gap-0">
           {/* Product Images */}
           <div className="relative p-8 bg-gradient-to-br from-gray-50 to-gray-100">
-            <div className="aspect-square bg-white rounded-2xl shadow-lg p-12 flex items-center justify-center">
-              <img
-                src={'./file.svg'}
-                alt={product?.name}
-                className="w-full h-full object-contain rounded-lg"
-              />
-            </div>
-            <div className="flex gap-3 mt-6 justify-center">
-              {product?.images?.map((image, index) => (
-                <div
-                  key={index}
-                  className="w-16 h-16 bg-white rounded-lg border-2 border-gray-200 cursor-pointer hover:border-blue-500 transition-colors p-2"
-                >
-                  <img src={'./file.svg'} alt={`View ${index + 1}`} className="w-full h-full object-contain" />
-                </div>
-              ))}
-            </div>
+            <ProductImageDisplay images={product?.images} productName={product?.name} />
           </div>
 
           {/* Product Info */}

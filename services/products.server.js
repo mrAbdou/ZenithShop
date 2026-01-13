@@ -64,8 +64,8 @@ query GetProductsInCart($cart: [ID!]!) {
     }
 }`;
 export const FILTERED_PRODUCTS_COUNT = gql`
-query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime) {
-    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate)
+query GetFilteredProductsCount($searchQuery: String, $stock: String, $startDate: DateTime, $endDate: DateTime, $categoryId: String) {
+    filteredProductsCount(searchQuery: $searchQuery, stock: $stock, startDate: $startDate, endDate: $endDate, categoryId: $categoryId)
 }`;
 
 export const GET_FEATURED_PRODUCTS = gql`

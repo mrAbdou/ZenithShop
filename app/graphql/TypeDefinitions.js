@@ -202,6 +202,7 @@ type Query {
     featuredCategories(head: Int!): [Category!]!
     featuredProducts(head: Int!): [Product!]!
     countFilteredCategories(searchQuery: String!): Int!
+    countCategories: Int!
     orderItems(orderId: String!): [OrderItem!]!
     orderItem(id: String!): OrderItem
 }

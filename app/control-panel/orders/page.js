@@ -20,9 +20,19 @@ import { headers } from "next/headers";
 import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
 // end next import -----------------------------------------------
 
-export const metadata = {
-    title: "Orders Management",
-    description: "Orders Management",
+// start i18n import ---------------------------------------------
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
+// end i18n import -----------------------------------------------
+
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+
+    return {
+        title: dictionary.admin.orders.pageTitle,
+        description: dictionary.admin.orders.pageDescription,
+    };
 }
 export default async function OrdersManagementPage() {
     const h = await headers();
@@ -30,6 +40,9 @@ export default async function OrdersManagementPage() {
     const session = await auth.api.getSession({
         headers: h
     });
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+
     let error = '';
     if (!session || session.user.role !== Role.ADMIN) {
         return redirect("/");
@@ -52,20 +65,20 @@ export default async function OrdersManagementPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Orders Management
+                                {dictionary.admin.orders.management}
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                Manage customer orders efficiently
+                                {dictionary.admin.orders.manageOrders}
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                View and manage all orders placed by customers. Track order status, customer details, and order history in real-time.
+                                {dictionary.admin.orders.trackOrders}
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-white mb-1">{ordersCount}</p>
-                                    <p className="text-blue-100 text-sm">Total Orders</p>
+                                    <p className="text-blue-100 text-sm">{dictionary.admin.orders.total || "Total Orders"}</p>
                                 </div>
                             </div>
                         </div>
@@ -74,7 +87,7 @@ export default async function OrdersManagementPage() {
             </div>
             {error && <p className="text-red-500">{error}</p>}
             {/* Search and Filter Partition */}
-            <OrdersManagement orders={orders} />
+            <OrdersManagement orders={orders} dictionary={dictionary} locale={locale} />
         </div>
     )
 }

@@ -40,6 +40,12 @@ export const CATEGORY_QUERY = `
       }
     }
   `;
+
+export const COUNT_CATEGORIES_QUERY = `
+    query CountCategories {
+      countCategories
+    }
+  `;
 export async function fetchFeaturedCategories(variables, cookieHeader) {
   try {
     const response = await graphqlServerRequest(FEATURED_CATEGORIES_QUERY, variables, cookieHeader);
@@ -70,6 +76,15 @@ export async function fetchCategory(variables, cookieHeader) {
   try {
     const response = await graphqlServerRequest(CATEGORY_QUERY, variables, cookieHeader);
     return response.category;
+  } catch (gqlError) {
+    throw gqlError;
+  }
+}
+
+export async function fetchCategoriesCount(cookieHeader) {
+  try {
+    const response = await graphqlServerRequest(COUNT_CATEGORIES_QUERY, {}, cookieHeader);
+    return response.countCategories ?? 0;
   } catch (gqlError) {
     throw gqlError;
   }

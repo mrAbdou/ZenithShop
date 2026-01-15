@@ -3,11 +3,14 @@ import Link from "next/link";
 import { useCartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-export default function CartProductsDisplay() {
+export default function CartProductsDisplay({ cartTranslations }) {
     const { getCart, addToCart, removeFromCart } = useCartContext();
     const cart = getCart();
     const { data: session } = authClient.useSession();
     const router = useRouter();
+
+    // Use the cart translations directly
+    const t = cartTranslations;
     const goToCheckoutPage = () => {
         if (!session) {
             const redirectTo = encodeURIComponent('/checkout/confirmation');
@@ -26,8 +29,8 @@ export default function CartProductsDisplay() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Cart is Empty</h2>
-                        <p className="text-gray-600 mb-8">Looks like you haven't added anything to your cart yet. Start shopping and fill it up!</p>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.emptyCart}</h2>
+                        <p className="text-gray-600 mb-8">{t.emptyCartMessage}</p>
                         <Link
                             href="/products"
                             className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
@@ -35,7 +38,7 @@ export default function CartProductsDisplay() {
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                             </svg>
-                            Start Shopping
+                            {t.startShopping}
                         </Link>
                     </div>
                 </div>
@@ -47,8 +50,8 @@ export default function CartProductsDisplay() {
         <div className="max-w-4xl mx-auto p-6">
             {/* Header */}
             <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Shopping Cart</h2>
-                <p className="text-gray-600">Review your items and proceed to checkout</p>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">{t.cartTitle}</h2>
+                <p className="text-gray-600">{t.cartSubtitle}</p>
             </div>
 
             {/* Cart Items */}
@@ -89,7 +92,7 @@ export default function CartProductsDisplay() {
                                         <button
                                             className="w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-l-xl transition-colors font-bold text-lg"
                                             onClick={() => removeFromCart(item)}
-                                            aria-label="Decrease quantity"
+                                            aria-label={t.decreaseQuantity}
                                         >
                                             −
                                         </button>
@@ -102,7 +105,7 @@ export default function CartProductsDisplay() {
                                                 : 'bg-green-500 hover:bg-green-600 text-white'
                                                 }`}
                                             onClick={() => addToCart(item)}
-                                            aria-label={item.qte >= item.qteInStock ? "Maximum quantity reached" : "Increase quantity"}
+                                            aria-label={item.qte >= item.qteInStock ? t.maxQuantityReached : t.increaseQuantity}
                                             disabled={item.qte >= item.qteInStock}
                                         >
                                             +
@@ -112,7 +115,7 @@ export default function CartProductsDisplay() {
                                     {/* Subtotal */}
                                     <div className="text-right min-w-[100px]">
                                         <p className="text-lg font-bold text-gray-800">${(item.price * item.qte).toFixed(2)}</p>
-                                        <p className="text-sm text-gray-500">@ ${item.price} each</p>
+                                        <p className="text-sm text-gray-500">{t.each.replace('{price}', item.price)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -127,19 +130,19 @@ export default function CartProductsDisplay() {
                     {/* Summary Details */}
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Total Items:</span>
+                            <span className="text-gray-600">{t.totalItems}</span>
                             <span className="font-semibold text-gray-800">{cart.reduce((sum, item) => sum + item.qte, 0)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Subtotal:</span>
+                            <span className="text-gray-600">{t.subtotal}</span>
                             <span className="font-semibold text-gray-800">${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600">Shipping:</span>
-                            <span className="font-semibold text-green-600">Free</span>
+                            <span className="text-gray-600">{t.shipping}</span>
+                            <span className="font-semibold text-green-600">{t.free}</span>
                         </div>
                         <div className="flex justify-between items-center border-t border-gray-300 pt-4">
-                            <span className="text-lg font-semibold text-gray-800">Total:</span>
+                            <span className="text-lg font-semibold text-gray-800">{t.total}</span>
                             <span className="text-2xl font-bold text-blue-600">${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                         </div>
                     </div>
@@ -147,10 +150,10 @@ export default function CartProductsDisplay() {
                     {/* Checkout Button */}
                     <div className="flex flex-col justify-center space-y-4">
                         <button onClick={goToCheckoutPage} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg">
-                            Proceed to checkout
+                            {t.proceedToCheckout}
                         </button>
                         <button onClick={() => router.push('/products')} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold transition-all duration-200">
-                            Continue Shopping
+                            {t.continueShopping}
                         </button>
                     </div>
                 </div>

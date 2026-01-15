@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useProductContext } from "@/context/ProductContext";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/lib/i18n/context";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -18,6 +19,7 @@ const formatDate = (dateString) => {
 
 export default function ProductsTable({ initialData = [] }) {
     const router = useRouter();
+    const { t } = useTranslation();
 
     const { filters, setPaginationCurrentPage, setPaginationLimit, setSortingFilters } = useProductContext();
     const { data: products, error: productsError } = usePaginationProducts(filters, initialData);
@@ -44,12 +46,12 @@ export default function ProductsTable({ initialData = [] }) {
         try {
             await deleteProduct(productToDelete.id, {
                 onSuccess: () => {
-                    toast.success('Product has been deleted successfully');
+                    toast.success(t('admin.products.productDeleted'));
                     closeDeleteModal();
                 }
             });
         } catch (error) {
-            toast.error('Failed to delete product');
+            toast.error(t('admin.products.deleteFailed'));
         }
     };
     const totalPages = useMemo(() => filteredProductsCount && filteredProductsCount > 0 ? Math.ceil(filteredProductsCount / filters.limit) : 1, [filteredProductsCount, filters.limit]);
@@ -126,7 +128,7 @@ export default function ProductsTable({ initialData = [] }) {
     }
     return (
         <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Products Management</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('admin.products.management')}</h2>
             {productsError && <div className='w-full bg-red-300 text-red-700 p-2'>
                 <h1>{`product: ${productsError?.message}`}</h1>
                 <ul>
@@ -148,25 +150,25 @@ export default function ProductsTable({ initialData = [] }) {
                     <thead className="bg-gray-50">
                         <tr>
                             <th onClick={() => onHeaderClick('id')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {getHeaderText('Product ID', 'id')}
+                                {getHeaderText(t('admin.products.productId'), 'id')}
                             </th>
                             <th onClick={() => onHeaderClick('name')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {getHeaderText('Name', 'name')}
+                                {getHeaderText(t('admin.products.name'), 'name')}
                             </th>
                             <th onClick={() => onHeaderClick('price')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {getHeaderText('Price', 'price')}
+                                {getHeaderText(t('admin.products.price'), 'price')}
                             </th>
                             <th onClick={() => onHeaderClick('qteInStock')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {getHeaderText('Stock', 'qteInStock')}
+                                {getHeaderText(t('admin.products.stock'), 'qteInStock')}
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Category
+                                {t('admin.products.category')}
                             </th>
                             <th onClick={() => onHeaderClick('createdAt')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                {getHeaderText('Created', 'createdAt')}
+                                {getHeaderText(t('admin.products.created'), 'createdAt')}
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
+                                {t('admin.products.actions')}
                             </th>
                         </tr>
                     </thead>
@@ -187,8 +189,8 @@ export default function ProductsTable({ initialData = [] }) {
                                         product.qteInStock > 0 ? 'bg-yellow-100 text-yellow-800' :
                                             'bg-red-100 text-red-800'
                                         }`}>
-                                        {product.qteInStock > 10 ? `In Stock (${product.qteInStock})` :
-                                            product.qteInStock > 0 ? `Low Stock (${product.qteInStock})` : `Out of Stock (${product.qteInStock})`}
+                                        {product.qteInStock > 10 ? `${t('admin.products.inStock')} (${product.qteInStock})` :
+                                            product.qteInStock > 0 ? `${t('admin.products.lowStock')} (${product.qteInStock})` : `${t('admin.products.outOfStock')} (${product.qteInStock})`}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -203,19 +205,29 @@ export default function ProductsTable({ initialData = [] }) {
                                             onClick={() => onViewProduct(product.id)}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                         >
-                                            View
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            {t('common.view')}
                                         </button>
                                         <button
                                             onClick={() => onEditProduct(product.id)}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
                                         >
-                                            Edit
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            {t('common.edit')}
                                         </button>
                                         <button
                                             onClick={() => openDeleteModal(product)}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                                         >
-                                            Delete
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            {t('common.delete')}
                                         </button>
                                     </div>
                                 </td>
@@ -224,7 +236,7 @@ export default function ProductsTable({ initialData = [] }) {
                         {(!products || products.length === 0) && (
                             <tr>
                                 <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                                    No products found
+                                    {t('admin.products.noProductsFound')}
                                 </td>
                             </tr>
                         )}
@@ -234,7 +246,7 @@ export default function ProductsTable({ initialData = [] }) {
             {/* Pagination Controls */}
             <section className="mt-6 flex justify-between items-center">
                 <div className="text-sm text-gray-700">
-                    Showing {((filters.currentPage - 1) * filters.limit) + 1} to {Math.min(filters.currentPage * filters.limit, filteredProductsCount || 0)} of {filteredProductsCount || 0} products
+                    {t('admin.products.showingProducts').replace('{from}', ((filters.currentPage - 1) * filters.limit) + 1).replace('{to}', Math.min(filters.currentPage * filters.limit, filteredProductsCount || 0)).replace('{total}', filteredProductsCount || 0)} {t('admin.products.showingProducts')}
                 </div>
                 <div className="flex items-center gap-2">
                     <select onChange={onChangeLimit} className="block w-auto px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -248,7 +260,7 @@ export default function ProductsTable({ initialData = [] }) {
                         disabled={filters.currentPage === 1}
                         onClick={() => setPaginationCurrentPage(filters.currentPage - 1)}
                     >
-                        Previous
+                        {t('common.previous')}
                     </button>
                     {getVisiblePages(filters.currentPage, totalPages, 7).map((page, index) => (
                         page === '...' ? (
@@ -271,7 +283,7 @@ export default function ProductsTable({ initialData = [] }) {
                         disabled={filters.currentPage === totalPages}
                         onClick={() => setPaginationCurrentPage(filters.currentPage + 1)}
                     >
-                        Next
+                        {t('common.next')}
                     </button>
                 </div>
             </section>
@@ -287,20 +299,20 @@ export default function ProductsTable({ initialData = [] }) {
                                 </svg>
                             </div>
                             <div className="ml-3">
-                                <h3 className="text-lg font-medium text-gray-900">Delete Product</h3>
-                                <p className="text-sm text-gray-500">Are you sure you want to delete this product?</p>
+                                <h3 className="text-lg font-medium text-gray-900">{t('admin.products.deleteProduct')}</h3>
+                                <p className="text-sm text-gray-500">{t('admin.products.deleteConfirm')}</p>
                             </div>
                         </div>
 
                         <div className="mb-4">
                             <p className="text-sm text-gray-700">
-                                Product: <span className="font-semibold">{productToDelete.name}</span>
+                                {t('admin.products.name')}: <span className="font-semibold">{productToDelete.name}</span>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Price: <span className="font-semibold">${productToDelete.price}</span>
+                                {t('admin.products.price')}: <span className="font-semibold">${productToDelete.price}</span>
                             </p>
                             <p className="text-xs text-red-600 mt-2">
-                                ⚠️ This action cannot be undone. The product will be permanently removed from your catalog.
+                                {t('admin.products.productWillBeRemoved')}
                             </p>
                         </div>
 
@@ -309,7 +321,7 @@ export default function ProductsTable({ initialData = [] }) {
                                 onClick={closeDeleteModal}
                                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                             <button
                                 onClick={handleDeleteProduct}
@@ -318,7 +330,7 @@ export default function ProductsTable({ initialData = [] }) {
                                 <svg className="w-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
-                                Delete Product
+                                {t('admin.products.deleteProduct')}
                             </button>
                         </div>
                     </div>

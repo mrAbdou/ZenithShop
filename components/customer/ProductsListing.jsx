@@ -5,7 +5,7 @@ import { useInfiniteProducts } from "@/hooks/products";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 import { useProductContext } from "@/context/ProductContext";
-export default function ProductsListing({ initialData }) {
+export default function ProductsListing({ initialData, translations, commonTranslations }) {
     const { filters, setPaginationLimit } = useProductContext();
 
     useEffect(() => {
@@ -45,7 +45,7 @@ export default function ProductsListing({ initialData }) {
         return (
             <div className="flex justify-center items-center py-12">
                 <div className="flex items-center gap-3">
-                    <span className="text-gray-600 font-medium">Something went wrong</span>
+                    <span className="text-gray-600 font-medium">{translations.somethingWentWrong}</span>
                     {error.message}
                 </div>
             </div>
@@ -58,7 +58,7 @@ export default function ProductsListing({ initialData }) {
                 <div className="flex justify-center items-center py-12">
                     <div className="flex items-center gap-3">
                         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-gray-600 font-medium">Loading products...</span>
+                        <span className="text-gray-600 font-medium">{commonTranslations.loading}</span>
                     </div>
                 </div>
             )}
@@ -81,12 +81,12 @@ export default function ProductsListing({ initialData }) {
                         {isFetchingNextPage && (
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-gray-600 font-medium">Loading more products...</span>
+                                <span className="text-gray-600 font-medium">{translations.loadingMoreProducts}</span>
                             </div>
                         )}
                         {!hasNextPage && !isFetchingNextPage && (
                             <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                                <p className="text-gray-600 font-medium">All products have been loaded</p>
+                                <p className="text-gray-600 font-medium">{translations.allProductsLoaded}</p>
                             </div>
                         )}
                     </div>
@@ -98,8 +98,8 @@ export default function ProductsListing({ initialData }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                             </div>
-                            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Products Available</h3>
-                            <p className="text-gray-500">Check back soon for new arrivals!</p>
+                            <h3 className="text-xl font-semibold text-gray-600 mb-2">{translations.noProductsAvailable}</h3>
+                            <p className="text-gray-500">{translations.checkBackSoon}</p>
                         </div>
                     )}
                 </>

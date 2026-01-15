@@ -5,8 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CategoryCreateSchema } from "@/lib/schemas/category.schema";
 import { useCreateCategory } from "@/hooks/categories";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function AddCategoryForm() {
+    const { t } = useTranslation();
     const { mutateAsync: createCategoryAsync, isPending } = useCreateCategory();
     const { handleSubmit, register, reset, formState: { isSubmitting, isValid, errors, isDirty } } = useForm({
         defaultValues: {
@@ -21,18 +23,18 @@ export default function AddCategoryForm() {
             await createCategoryAsync(data, {
                 onSuccess: (responseData) => {
                     if (responseData?.id) {
-                        toast.success("Category created successfully!");
+                        toast.success(t('admin.categories.categoryCreated'));
                         reset();
                     } else {
-                        toast.error("Category created but response invalid");
+                        toast.error(t('admin.categories.categoryCreatedInvalid'));
                     }
                 },
                 onError: (error) => {
-                    toast.error(error?.message || 'Failed to create category');
+                    toast.error(error?.message || t('admin.categories.createFailed'));
                 }
             });
         } catch (error) {
-            toast.error('An unexpected error occurred');
+            toast.error(t('admin.categories.unexpectedError'));
         }
     };
 
@@ -43,14 +45,14 @@ export default function AddCategoryForm() {
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Category Name
+                        {t('admin.categories.categoryName')}
                         <span className="text-red-500 ml-1">*</span>
                     </label>
                     <input
                         {...register("name")}
                         disabled={isLoading}
                         type="text"
-                        placeholder="Enter category name..."
+                        placeholder={t('admin.categories.enterCategoryName')}
                         className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-4 transition-all duration-300 outline-none ${errors.name
                             ? 'border-red-500 focus:border-red-500 focus:ring-red-100 bg-red-50 text-red-700'
                             : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100 bg-white'
@@ -78,10 +80,10 @@ export default function AddCategoryForm() {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Creating...
+                                {t('admin.categories.creating')}
                             </>
                         ) : (
-                            'Create Category'
+                            t('admin.categories.createCategory')
                         )}
                     </button>
                 </div>

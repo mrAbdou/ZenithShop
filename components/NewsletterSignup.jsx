@@ -1,7 +1,9 @@
 'use client';
 import { useState } from 'react';
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function NewsletterSignup() {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
@@ -16,7 +18,7 @@ export default function NewsletterSignup() {
         // Validate email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            setErrorMessage('Please enter a valid email address.');
+            setErrorMessage(t('home.invalidEmail'));
             setIsLoading(false);
             return;
         }
@@ -25,10 +27,10 @@ export default function NewsletterSignup() {
             // TODO: Implement email sending logic here
             // For now, simulate a successful submission
             await new Promise(resolve => setTimeout(resolve, 1000));
-            setSuccessMessage('Thank you for subscribing to our newsletter!');
+            setSuccessMessage(t('home.newsletterSuccess'));
             setEmail('');
         } catch (error) {
-            setErrorMessage('An error occurred while subscribing. Please try again later.');
+            setErrorMessage(t('home.newsletterError'));
         } finally {
             setIsLoading(false);
         }
@@ -36,12 +38,12 @@ export default function NewsletterSignup() {
 
     return (
         <div className="py-12">
-            <h2 className="text-3xl font-bold text-center mb-8">Newsletter Signup</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">{t('home.newsletterSignup')}</h2>
             <div className="max-w-lg mx-auto bg-white border border-gray-200 rounded-2xl p-6 shadow-md">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                            Email Address
+                            {t('home.emailAddress')}
                         </label>
                         <input
                             type="email"
@@ -50,7 +52,7 @@ export default function NewsletterSignup() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter your email address"
+                            placeholder={t('home.enterEmailPlaceholder')}
                             required
                         />
                     </div>
@@ -63,10 +65,10 @@ export default function NewsletterSignup() {
                             {isLoading ? (
                                 <div className="flex items-center">
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                                    Subscribing...
+                                    {t('home.subscribing')}
                                 </div>
                             ) : (
-                                'Subscribe'
+                                t('home.subscribe')
                             )}
                         </button>
                     </div>

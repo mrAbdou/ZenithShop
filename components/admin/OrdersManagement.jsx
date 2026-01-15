@@ -2,11 +2,17 @@
 import OrdersFilters from "@/components/admin/OrdersFilters";
 import OrdersTable from "@/components/admin/OrdersTable";
 import OrderFiltersProvider from "@/context/OrdersFiltersContext";
-export default function OrdersManagement({ orders }) {
+import { I18nProvider } from "@/lib/i18n/context";
+
+export default function OrdersManagement({ orders, dictionary, locale }) {
+    console.log('OrdersManagement dictionary:', dictionary);
+    console.log('OrdersManagement locale:', locale);
     return (
-        <OrderFiltersProvider>
-            <OrdersFilters />
-            <OrdersTable initialData={orders} />
-        </OrderFiltersProvider>
+        <I18nProvider dictionary={dictionary} locale={locale}>
+            <OrderFiltersProvider>
+                <OrdersFilters />
+                <OrdersTable initialData={orders} />
+            </OrderFiltersProvider>
+        </I18nProvider>
     );
 }

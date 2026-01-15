@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function ProductImageCarousel({ images, productName }) {
+    const { t } = useTranslation();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const navigateImage = (direction) => {
@@ -27,9 +29,9 @@ export default function ProductImageCarousel({ images, productName }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Product Images</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">{t('admin.products.productImage')}</h3>
                         <span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                            {images.length} image{images.length > 1 ? 's' : ''}
+                            {images.length} {images.length > 1 ? t('admin.products.images') : t('admin.products.image')}
                         </span>
                     </div>
                 </div>

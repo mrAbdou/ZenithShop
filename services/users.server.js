@@ -40,6 +40,7 @@ query GetUser($id: String!) {
         id
         name
         email
+        image
         phoneNumber
         address
         role

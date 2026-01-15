@@ -59,19 +59,51 @@ describe('Product Queries', () => {
                             description: 'Description 1',
                             price: 100,
                             qteInStock: 10,
+                            category: {
+                                id: 'cat1',
+                                name: 'Category 1'
+                            },
+                            orderItems: [
+                                {
+                                    id: 'orderItem1',
+                                    order: {
+                                        id: 'order1',
+                                        user: {
+                                            id: 'user1',
+                                            name: 'User 1'
+                                        }
+                                    }
+                                }
+                            ]
                         })
                     }
                 }
             });
             const args = { id: 'clp1234567890abcdefghij' }
             const result = await productQueries.product(null, args, context);
-            expect(context.prisma.product.findUnique).toHaveBeenCalledWith({ where: { id: 'clp1234567890abcdefghij' }, include: { orderItems: { include: { order: { include: { user: true } } } } } });
+            expect(context.prisma.product.findUnique).toHaveBeenCalledWith({ where: { id: 'clp1234567890abcdefghij' }, include: { orderItems: { include: { order: { include: { user: true } } } }, category: true } });
             expect(result).toMatchObject({
                 id: 'clp1234567890abcdefghij',
                 name: 'Product 1',
                 description: 'Description 1',
                 price: 100,
                 qteInStock: 10,
+                category: {
+                    id: 'cat1',
+                    name: 'Category 1'
+                },
+                orderItems: [
+                    {
+                        id: 'orderItem1',
+                        order: {
+                            id: 'order1',
+                            user: {
+                                id: 'user1',
+                                name: 'User 1'
+                            }
+                        }
+                    }
+                ]
             });
         });
         it('should throw an error when id is integer', async () => {
@@ -158,6 +190,9 @@ describe('Product Queries', () => {
             expect(context.prisma.product.findMany).toHaveBeenCalledWith({
                 where: {},
                 orderBy: {},
+                include: {
+                    category: true,
+                },
                 take: 5,
                 skip: 0,
             })
@@ -196,6 +231,9 @@ describe('Product Queries', () => {
             expect(context.prisma.product.findMany).toHaveBeenCalledWith({
                 where: {},
                 orderBy: {},
+                include: {
+                    category: true,
+                },
                 take: 5,
                 skip: 0
             });
@@ -223,7 +261,10 @@ describe('Product Queries', () => {
                                 price: 10,
                                 description: 'Description 1',
                                 image: 'image1.jpg',
-                                category: 'Category 1',
+                                category: {
+                                    id: 'cat1',
+                                    name: 'Category 1'
+                                },
                             }
                         ])
                     }
@@ -244,7 +285,10 @@ describe('Product Queries', () => {
                 where: {},
                 orderBy: {},
                 take: 5,
-                skip: 0
+                skip: 0,
+                include: {
+                    category: true
+                }
             });
             expect(result).toBeInstanceOf(Array);
             expect(result).toHaveLength(1);
@@ -255,7 +299,10 @@ describe('Product Queries', () => {
                     price: 10,
                     description: 'Description 1',
                     image: 'image1.jpg',
-                    category: 'Category 1',
+                    category: {
+                        id: 'cat1',
+                        name: 'Category 1'
+                    },
                 }
             ])
         });
@@ -270,6 +317,10 @@ describe('Product Queries', () => {
                                 description: 'Description 1',
                                 price: 10,
                                 qteInStock: 10,
+                                category: {
+                                    id: 'cat1',
+                                    name: 'Category 1'
+                                },
                             }
                         ])
                     }
@@ -318,7 +369,10 @@ describe('Product Queries', () => {
                 },
                 orderBy: {},
                 take: 5,
-                skip: 0
+                skip: 0,
+                include: {
+                    category: true
+                }
             });
             expect(result).toBeInstanceOf(Array);
             expect(result).toHaveLength(1);
@@ -329,6 +383,10 @@ describe('Product Queries', () => {
                     description: 'Description 1',
                     price: 10,
                     qteInStock: 10,
+                    category: {
+                        id: 'cat1',
+                        name: 'Category 1'
+                    },
                 }
             ])
         });
@@ -343,6 +401,10 @@ describe('Product Queries', () => {
                                 description: 'Description 1',
                                 price: 10,
                                 qteInStock: 10,
+                                category: {
+                                    id: 'cat1',
+                                    name: 'Category 1'
+                                },
                             }
                         ])
                     }
@@ -398,6 +460,9 @@ describe('Product Queries', () => {
                 orderBy: {
                     name: 'asc'
                 },
+                include: {
+                    category: true
+                },
                 take: 5,
                 skip: 0,
             });
@@ -410,6 +475,10 @@ describe('Product Queries', () => {
                     description: 'Description 1',
                     price: 10,
                     qteInStock: 10,
+                    category: {
+                        id: 'cat1',
+                        name: 'Category 1'
+                    },
                 }
             ])
         });
@@ -594,6 +663,9 @@ describe('Product Queries', () => {
                         }
                     ]
                 },
+                include: {
+                    category: true,
+                },
                 orderBy: {},
                 take: 5,
                 skip: 0
@@ -689,6 +761,9 @@ describe('Product Queries', () => {
                             }
                         }
                     ]
+                },
+                include: {
+                    category: true
                 },
                 orderBy: {},
                 take: 5,

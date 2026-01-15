@@ -1,8 +1,9 @@
 'use client';
 import { useCartContext } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/i18n/context';
 
-export default function CartFloatingButton() {
+export default function CartFloatingButton({ translations }) {
     const { getCart } = useCartContext();
     const cart = getCart();
     const router = useRouter();
@@ -16,7 +17,7 @@ export default function CartFloatingButton() {
         <button
             onClick={() => router.push('/cart')}
             className="fixed bottom-6 right-6 z-50 group"
-            aria-label={`Go to cart with ${totalItems} items`}
+            aria-label={translations.goToCart.replace('{count}', totalItems)}
         >
             {/* Main Button */}
             <div className="relative bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 ease-out">
@@ -55,7 +56,7 @@ export default function CartFloatingButton() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span>Checkout • ${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
+                    <span>{translations.checkout} • ${cart.reduce((sum, item) => sum + (item.price * item.qte), 0).toFixed(2)}</span>
                 </div>
             </div>
 

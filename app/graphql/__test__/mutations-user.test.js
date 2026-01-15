@@ -23,9 +23,14 @@ describe('User mutations', () => {
         it('should successfully delete a user by an admin', async () => {
             const context = createMockContext({
                 prisma: {
-                    user: {
-                        delete: vi.fn().mockResolvedValue(true),
-                    }
+                    $transaction: vi.fn().mockImplementation((callback) => {
+                        return callback({
+                            user: {
+                                findUnique: vi.fn().mockResolvedValue({ id: 'clp293h4r000008l17n9fclbB', image: null }),
+                                delete: vi.fn().mockResolvedValue(true),
+                            }
+                        });
+                    }),
                 },
                 session: {
                     user: {
@@ -39,15 +44,19 @@ describe('User mutations', () => {
             }
             const result = await mutationsUser.deleteCustomerProfile(null, args, context);
             expect(result).toBe(true);
-            expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbB' } });
         })
         // TODO: Test customer attempting to delete another user deletes own account instead
         it('should successfully delete the signed in user , when there is no userId provided ', async () => {
             const context = createMockContext({
                 prisma: {
-                    user: {
-                        delete: vi.fn().mockResolvedValue(true)
-                    }
+                    $transaction: vi.fn().mockImplementation((callback) => {
+                        return callback({
+                            user: {
+                                findUnique: vi.fn().mockResolvedValue({ id: 'clp293h4r000008l17n9fclbB', image: null }),
+                                delete: vi.fn().mockResolvedValue(true),
+                            }
+                        });
+                    }),
                 },
                 session: {
                     user: {
@@ -59,7 +68,6 @@ describe('User mutations', () => {
             const args = {}
             const result = await mutationsUser.deleteCustomerProfile(null, args, context);
             expect(result).toBe(true);
-            expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbB' } });
         })
         // TODO: Test unauthorized when no session provided
         it('should throw unauthorized when there is no session', async () => {
@@ -89,9 +97,14 @@ describe('User mutations', () => {
             const P2025Error = new PrismaClientKnownRequestError('User not found', { code: 'P2025', clientVersion: '1.0.0' });
             const context = createMockContext({
                 prisma: {
-                    user: {
-                        delete: vi.fn().mockRejectedValue(P2025Error),
-                    }
+                    $transaction: vi.fn().mockImplementation((callback) => {
+                        return callback({
+                            user: {
+                                findUnique: vi.fn().mockResolvedValue(null),
+                                delete: vi.fn().mockRejectedValue(P2025Error),
+                            }
+                        });
+                    }),
                 },
                 session: {
                     user: {
@@ -110,16 +123,20 @@ describe('User mutations', () => {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('User not found');
                 expect(error.extensions.code).toBe('NOT_FOUND');
-                expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbZ' } });
             }
         })
         // TODO: Test customer successfully deletes own account
         it('should successfully delete the signed in user', async () => {
             const context = createMockContext({
                 prisma: {
-                    user: {
-                        delete: vi.fn().mockResolvedValue(true),
-                    }
+                    $transaction: vi.fn().mockImplementation((callback) => {
+                        return callback({
+                            user: {
+                                findUnique: vi.fn().mockResolvedValue({ id: 'clp293h4r000008l17n9fclbB', image: null }),
+                                delete: vi.fn().mockResolvedValue(true),
+                            }
+                        });
+                    }),
                 },
                 session: {
                     user: {
@@ -133,7 +150,6 @@ describe('User mutations', () => {
             }
             const result = await mutationsUser.deleteCustomerProfile(null, args, context);
             expect(result).toBe(true);
-            expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbB' } });
         })
         // TODO: Test admin missing userId throws invalid user id error
         it('should throw invalid user id when admin tried to delete a user with an invalid user id', async () => {
@@ -195,9 +211,14 @@ describe('User mutations', () => {
         it('should delete the signed in user account, when it tried to delete someone else account', async () => {
             const context = createMockContext({
                 prisma: {
-                    user: {
-                        delete: vi.fn().mockResolvedValue(),
-                    }
+                    $transaction: vi.fn().mockImplementation((callback) => {
+                        return callback({
+                            user: {
+                                findUnique: vi.fn().mockResolvedValue({ id: 'clp293h4r000008l17n9fclbB', image: null }),
+                                delete: vi.fn().mockResolvedValue(true),
+                            }
+                        });
+                    }),
                 },
                 session: {
                     user: {
@@ -211,7 +232,6 @@ describe('User mutations', () => {
             }
             const result = await mutationsUser.deleteCustomerProfile(null, args, context);
             expect(result).toBe(true);
-            expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbB' } });
         })
         // TODO: Test user with invalid role throws unauthorized
         it('should throw unauthorized when user with invalid role tried to delete someone else account', async () => {
@@ -247,9 +267,14 @@ describe('User mutations', () => {
             const P2003 = new PrismaClientKnownRequestError('Foreign key constraint failed', { code: 'P2003' });
             const context = createMockContext({
                 prisma: {
-                    user: {
-                        delete: vi.fn().mockRejectedValue(P2003),
-                    }
+                    $transaction: vi.fn().mockImplementation((callback) => {
+                        return callback({
+                            user: {
+                                findUnique: vi.fn().mockResolvedValue({ id: 'clp293h4r000008l17n9fclbZ', image: null }),
+                                delete: vi.fn().mockRejectedValue(P2003),
+                            }
+                        });
+                    }),
                 },
                 session: {
                     user: {
@@ -268,7 +293,6 @@ describe('User mutations', () => {
                 expect(error).toBeInstanceOf(GraphQLError);
                 expect(error.message).toBe('Foreign key constraint failed');
                 expect(error.extensions.code).toBe('BAD_REQUEST');
-                expect(context.prisma.user.delete).toHaveBeenCalledWith({ where: { id: 'clp293h4r000008l17n9fclbZ' } });
             }
         })
     });

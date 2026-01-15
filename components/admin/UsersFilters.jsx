@@ -4,8 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FilteringUserPaginationSchema } from "@/lib/schemas/user.schema";
 import { useUserContext } from "@/context/usersContext";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function UsersFilters() {
+    const { t } = useTranslation();
     const { filters, setFilteringProps } = useUserContext();
 
     const { register, handleSubmit, formState: { errors, isValid }, reset } = useForm({
@@ -35,8 +37,8 @@ export default function UsersFilters() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-200/80 pb-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Filter Users</h2>
-                        <p className="text-sm text-gray-500 mt-1">Search and filter your user accounts</p>
+                        <h2 className="text-2xl font-bold text-gray-900">{t('admin.users.filterUsers')}</h2>
+                        <p className="text-sm text-gray-500 mt-1">{t('admin.users.searchFilterAccounts')}</p>
                     </div>
                 </div>
 
@@ -44,7 +46,7 @@ export default function UsersFilters() {
                     {/* Search Input */}
                     <div className="space-y-2">
                         <label htmlFor="searchQuery" className="block text-sm font-semibold text-gray-700">
-                            Search Users
+                            {t('admin.users.searchUsers')}
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -56,7 +58,7 @@ export default function UsersFilters() {
                                 id="searchQuery"
                                 type="text"
                                 {...register("searchQuery")}
-                                placeholder="Search by name, email or ID..."
+                                placeholder={t('admin.users.searchPlaceholder')}
                                 className="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder:text-gray-400"
                             />
                         </div>
@@ -71,7 +73,7 @@ export default function UsersFilters() {
                     {/* Role Filter */}
                     <div className="space-y-2">
                         <label htmlFor="role" className="block text-sm font-semibold text-gray-700">
-                            User Role
+                            {t('admin.users.userRole')}
                         </label>
                         <div className="relative">
                             <select
@@ -79,9 +81,9 @@ export default function UsersFilters() {
                                 {...register("role")}
                                 className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none bg-white cursor-pointer"
                             >
-                                <option value="">All Roles</option>
-                                <option value="ADMIN">👑 Admin</option>
-                                <option value="CUSTOMER">👤 Customer</option>
+                                <option value="">{t('admin.users.allRoles')}</option>
+                                <option value="ADMIN">👑 {t('admin.users.admin')}</option>
+                                <option value="CUSTOMER">👤 {t('admin.users.customer')}</option>
                             </select>
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,7 +102,7 @@ export default function UsersFilters() {
                     {/* Start Date */}
                     <div className="space-y-2">
                         <label htmlFor="startDate" className="block text-sm font-semibold text-gray-700">
-                            From Date
+                            {t('admin.common.fromDate')}
                         </label>
                         <div className="relative">
                             <input
@@ -121,7 +123,7 @@ export default function UsersFilters() {
                     {/* End Date */}
                     <div className="space-y-2">
                         <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700">
-                            To Date
+                            {t('admin.common.toDate')}
                         </label>
                         <div className="relative">
                             <input
@@ -143,7 +145,7 @@ export default function UsersFilters() {
                 {/* Action Button */}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-200/80">
                     <p className="text-sm text-gray-500">
-                        Apply filters to refine your user search
+                        {t('admin.users.applyFiltersDesc')}
                     </p>
                     <button
                         type="submit"
@@ -153,7 +155,7 @@ export default function UsersFilters() {
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
-                        Apply Filters
+                        {t('admin.common.applyFilters')}
                     </button>
                 </div>
             </form>

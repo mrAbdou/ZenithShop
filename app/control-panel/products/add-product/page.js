@@ -4,11 +4,18 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import AddProductForm from "@/components/admin/AddProductForm";
 import { fetchCategories } from "@/services/categories.server";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
-export const metadata = {
-    title: "Add Product | ZenithShop Admin",
-    description: "Create and add new products to your ZenithShop catalog. Fill in product details, pricing, and inventory information through this admin interface.",
-};
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
+    return {
+        title: dictionary.admin.products.pageTitle,
+        description: dictionary.admin.products.pageDescription,
+    };
+}
 
 export default async function AddProduct() {
     const h = await headers();
@@ -23,6 +30,10 @@ export default async function AddProduct() {
         redirect("/");
         return;
     }
+    
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Header Section */}
@@ -31,20 +42,20 @@ export default async function AddProduct() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Add New Product
+                                {dictionary.admin.products.addProduct}
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                Expand your product catalog
+                                {dictionary.admin.products.manageEfficiently}
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Create a new product for your store. Fill in the details below to add it to your catalog.
+                                {dictionary.admin.products.viewAddUpdate}
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-white mb-1">+1</p>
-                                    <p className="text-blue-100 text-sm">New Product</p>
+                                    <p className="text-blue-100 text-sm">{dictionary.admin.products.addProduct}</p>
                                 </div>
                             </div>
                         </div>

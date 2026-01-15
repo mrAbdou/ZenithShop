@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { useCategoryContext } from '@/context/CategoryContext';
 import { useCategories, useCountFilteredCategories, useDeleteCategory } from '@/hooks/categories';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from '@/lib/i18n/context';
+
 export default function CategoriesTable({ initialCategories, initialCategoriesCount }) {
+    const { t } = useTranslation();
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -17,7 +20,7 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
         const second = date.getSeconds().toString().padStart(2, '0');
         return `${day}-${month}-${year} ${hour}:${minute}:${second}`;
     };
-    const { filters } = useCategoryContext();
+    const { filters, setSortingFilters, setPaginationLimit, setPaginationCurrentPage } = useCategoryContext();
     const { data: categories } = useCategories(filters, initialCategories);
     const { data: totalCategories } = useCountFilteredCategories(filters, initialCategoriesCount);
     const { mutateAsync: deleteCategoryAsync, isPending: isDeleting } = useDeleteCategory();
@@ -42,15 +45,15 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
         try {
             await deleteCategoryAsync(categoryToDelete.id, {
                 onSuccess: () => {
-                    toast.success("Category deleted successfully!");
+                    toast.success(t('admin.categories.categoryDeleted'));
                     closeDeleteModal();
                 },
                 onError: (error) => {
-                    toast.error(error?.message || 'Failed to delete category');
+                    toast.error(error?.message || t('admin.categories.deleteFailed'));
                 }
             });
         } catch (error) {
-            toast.error('An unexpected error occurred');
+            toast.error(t('admin.categories.deleteFailed'));
         }
     };
     const totalPages = useMemo(() =>
@@ -121,22 +124,22 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
 
     return (
         <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories Management</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('admin.categories.management')}</h2>
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
                             <th onClick={() => onHeaderClick('id')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Category ID', 'id')}
+                                {getHeaderText(t('admin.categories.categoryId'), 'id')}
                             </th>
                             <th onClick={() => onHeaderClick('name')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Name', 'name')}
+                                {getHeaderText(t('admin.categories.name'), 'name')}
                             </th>
                             <th onClick={() => onHeaderClick('createdAt')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Created', 'createdAt')}
+                                {getHeaderText(t('admin.categories.created'), 'createdAt')}
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
+                                {t('admin.categories.actions')}
                             </th>
                         </tr>
                     </thead>
@@ -158,25 +161,29 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                                             href={`/control-panel/categories/${category.id}/edit`}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-100 border border-green-300 rounded-full hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
                                         >
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
-                                            Edit
+                                            {t('common.edit')}
                                         </Link>
                                         <button
                                             onClick={() => openDeleteModal(category)}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                                         >
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
-                                            Delete
+                                            {t('admin.categories.deleteCategoryBtn')}
                                         </button>
                                         <Link
                                             href={`/control-panel/products?categoryId=${category.id}`}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                         >
-                                            View Products
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            {t('admin.categories.viewProducts')}
                                         </Link>
                                     </div>
                                 </td>
@@ -185,7 +192,7 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                         {(!categories || categories.length === 0) && (
                             <tr>
                                 <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                                    No categories found
+                                    {t('admin.categories.noCategoriesFound')}
                                 </td>
                             </tr>
                         )}
@@ -196,7 +203,7 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
             {/* Pagination Controls */}
             <section className="mt-6 flex justify-between items-center">
                 <div className="text-sm text-gray-700">
-                    Showing {((filters.currentPage - 1) * filters.limit) + 1} to {Math.min(filters.currentPage * filters.limit, totalCategories || 0)} of {totalCategories || 0} categories
+                    {t('common.showing')} {((filters.currentPage - 1) * filters.limit) + 1} {t('common.to')} {Math.min(filters.currentPage * filters.limit, totalCategories || 0)} {t('common.of')} {totalCategories || 0} {t('admin.categories.showingCategories')}
                 </div>
                 <div className="flex items-center gap-2">
                     <select
@@ -214,7 +221,7 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                         disabled={filters.currentPage === 1}
                         onClick={() => setPaginationCurrentPage(filters.currentPage - 1)}
                     >
-                        Previous
+                        {t('common.previous')}
                     </button>
                     {getVisiblePages(filters.currentPage, totalPages, 7).map((page, index) => (
                         page === '...' ? (
@@ -237,7 +244,7 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                         disabled={filters.currentPage === totalPages}
                         onClick={() => setPaginationCurrentPage(filters.currentPage + 1)}
                     >
-                        Next
+                        {t('common.next')}
                     </button>
                 </div>
             </section>
@@ -253,17 +260,17 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                                 </svg>
                             </div>
                             <div className="ml-3">
-                                <h3 className="text-lg font-medium text-gray-900">Delete Category</h3>
-                                <p className="text-sm text-gray-500">Are you sure you want to delete this category?</p>
+                                <h3 className="text-lg font-medium text-gray-900">{t('admin.categories.deleteCategoryModalTitle')}</h3>
+                                <p className="text-sm text-gray-500">{t('admin.categories.deleteCategoryConfirm')}</p>
                             </div>
                         </div>
 
                         <div className="mb-4">
                             <p className="text-sm text-gray-700">
-                                Category: <span className="font-semibold">{categoryToDelete.name}</span>
+                                {t('admin.categories.categoryName')}: <span className="font-semibold">{categoryToDelete.name}</span>
                             </p>
                             <p className="text-xs text-red-600 mt-2">
-                                ⚠️ This action cannot be undone. All products in this category will become uncategorized.
+                                {t('admin.categories.productsWillBeUncategorized')}
                             </p>
                         </div>
 
@@ -273,7 +280,7 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                                 disabled={isDeleting}
                                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                             <button
                                 onClick={handleDelete}
@@ -286,10 +293,10 @@ export default function CategoriesTable({ initialCategories, initialCategoriesCo
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Deleting...
+                                        {t('admin.categories.deleting')}
                                     </>
                                 ) : (
-                                    'Delete Category'
+                                    t('admin.categories.deleteCategory')
                                 )}
                             </button>
                         </div>

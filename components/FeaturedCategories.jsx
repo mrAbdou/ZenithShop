@@ -1,15 +1,17 @@
 'use client';
 import { useFeaturedCategories } from '@/hooks/categories';
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function FeaturedCategories({ initialData }) {
     const { data: categories, isLoading, error } = useFeaturedCategories({ head: 4 }, initialData);
+    const { t } = useTranslation();
 
     if (isLoading) {
         return (
             <div className="flex justify-center items-center py-12">
                 <div className="flex items-center gap-3">
                     <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-600 font-medium">Loading categories...</span>
+                    <span className="text-gray-600 font-medium">{t('common.loading')}</span>
                 </div>
             </div>
         );
@@ -19,7 +21,7 @@ export default function FeaturedCategories({ initialData }) {
         return (
             <div className="flex justify-center items-center py-12">
                 <div className="flex items-center gap-3">
-                    <span className="text-gray-600 font-medium">Something went wrong</span>
+                    <span className="text-gray-600 font-medium">{t('common.error')}</span>
                     {error.message}
                 </div>
             </div>
@@ -28,7 +30,7 @@ export default function FeaturedCategories({ initialData }) {
 
     return (
         <div className="py-12">
-            <h2 className="text-3xl font-bold text-center mb-8">Featured Categories</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">{t('home.featuredCategories')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {categories?.map((category) => (
                     <div
@@ -48,7 +50,7 @@ export default function FeaturedCategories({ initialData }) {
                         </h3>
 
                         <div className="mt-4 text-center text-sm text-gray-600">
-                            {category.products.length} products
+                            {category.products.length} {t('home.products')}
                         </div>
 
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>

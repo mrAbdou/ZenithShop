@@ -5,13 +5,23 @@ import { headers } from "next/headers";
 import { fetchUsers, fetchUsersCount } from "@/services/users.server";
 import { minLimit } from "@/lib/constants";
 import UsersManagement from "@/components/admin/UsersManagement";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
-export const metadata = {
-    title: "Users Management | ZenithShop Admin",
-    description: "Admin interface for managing ZenithShop users. View, manage, and organize user accounts efficiently with real-time updates and analytics.",
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dict = await getDictionary(locale);
+
+    return {
+        title: dict.admin.users.pageTitle,
+        description: dict.admin.users.pageDescription,
+    };
 }
 
 export default async function UsersManagementPage() {
+    const locale = await getLocale();
+    const dict = await getDictionary(locale);
+
     const h = await headers();
     const cookieHeader = h.get("cookie");
     const session = await auth.api.getSession({
@@ -40,20 +50,20 @@ export default async function UsersManagementPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Users Management
+                                {dict.admin.users.management}
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                Manage user accounts efficiently
+                                {dict.admin.users.manageAccounts}
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Here you can view, manage, and organize user accounts in your system. Track user roles, permissions, and activity.
+                                {dict.admin.users.viewManageAccounts}
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-white mb-1">{usersCount}</p>
-                                    <p className="text-blue-100 text-sm">Total Users</p>
+                                    <p className="text-blue-100 text-sm">{dict.admin.users.totalUsers}</p>
                                 </div>
                             </div>
                         </div>
@@ -64,7 +74,7 @@ export default async function UsersManagementPage() {
             {error && <p className="text-red-500">{error}</p>}
 
             {/* Users Management Component */}
-            <UsersManagement users={users} />
+            <UsersManagement users={users} dictionary={dict} locale={locale} />
         </div>
     )
 }

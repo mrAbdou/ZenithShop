@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useCartContext } from "@/context/CartContext";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function AddToCartButton({ product }) {
   const { getCart, addToCart, removeFromCart } = useCartContext();
+  const { t } = useTranslation();
   const cart = getCart();
   const [isInCart, setIsInCart] = useState(false);
   const [productQte, setProductQte] = useState(0);
@@ -38,7 +40,7 @@ export default function AddToCartButton({ product }) {
   if (isOutOfStock) {
     return (
       <div className="w-full px-4 py-2.5 rounded-lg bg-gray-100 text-gray-400 font-semibold text-sm text-center cursor-not-allowed border border-gray-200">
-        Out of Stock
+        {t('home.outOfStock')}
       </div>
     );
   }
@@ -82,7 +84,7 @@ export default function AddToCartButton({ product }) {
               />
             </svg>
             <span className="font-bold text-emerald-700 text-lg">{productQte}</span>
-            <span className="text-emerald-600 text-sm">In Cart</span>
+            <span className="text-emerald-600 text-sm">{t('home.inCart')}</span>
           </div>
         </div>
 
@@ -140,7 +142,7 @@ export default function AddToCartButton({ product }) {
         </svg>
 
         {/* Button Text */}
-        <span>Add to Cart</span>
+        <span>{t('home.addToCart')}</span>
 
         {/* Stock Indicator */}
         {product.qteInStock <= 5 && (

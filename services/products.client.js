@@ -92,6 +92,8 @@ query GetFeaturedProducts($head: Int!) {
         name
         price
         qteInStock
+        images
+        categoryId
     }
 }`;
 export const UPDATE_PRODUCT = gql`

@@ -1,11 +1,14 @@
 'use client';
+import Image from 'next/image';
 import { useCartContext } from '@/context/CartContext';
 import { useFeaturedProducts } from '@/hooks/products';
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function FeaturedProducts({ initialData }) {
     const { data: products, isLoading, error } = useFeaturedProducts({ head: 4 }, initialData);
     const { getCart, addToCart, removeFromCart } = useCartContext();
     const cart = getCart();
+    const { t } = useTranslation();
 
     const getProductCartElement = (product) => {
         const productInCart = cart.find(item => item.id === product.id);
@@ -17,7 +20,7 @@ export default function FeaturedProducts({ initialData }) {
         if (isOutOfStock) {
             return (
                 <div className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-400 font-semibold text-sm text-center cursor-not-allowed">
-                    Out of Stock
+                    {t('home.outOfStock')}
                 </div>
             );
         }
@@ -58,7 +61,7 @@ export default function FeaturedProducts({ initialData }) {
                     onClick={() => addToCart(product)}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                    Add to Cart
+                    {t('home.addToCart')}
                 </button>
             );
         }
@@ -69,7 +72,7 @@ export default function FeaturedProducts({ initialData }) {
             <div className="flex justify-center items-center py-12">
                 <div className="flex items-center gap-3">
                     <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span className="text-gray-600 font-medium">Loading products...</span>
+                    <span className="text-gray-600 font-medium">{t('common.loading')}</span>
                 </div>
             </div>
         );
@@ -79,7 +82,7 @@ export default function FeaturedProducts({ initialData }) {
         return (
             <div className="flex justify-center items-center py-12">
                 <div className="flex items-center gap-3">
-                    <span className="text-gray-600 font-medium">Something went wrong</span>
+                    <span className="text-gray-600 font-medium">{t('common.error')}</span>
                     {error.message}
                 </div>
             </div>
@@ -88,7 +91,7 @@ export default function FeaturedProducts({ initialData }) {
 
     return (
         <div className="py-12">
-            <h2 className="text-3xl font-bold text-center mb-8">Featured Products</h2>
+            <h2 className="text-3xl font-bold text-center mb-8">{t('home.featuredProducts')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products?.map((product) => (
                     <div
@@ -96,11 +99,21 @@ export default function FeaturedProducts({ initialData }) {
                         className="group relative bg-white border border-gray-200 rounded-2xl p-6 shadow-md hover:shadow-2xl hover:shadow-blue-200/50 transition-all duration-300 hover:-translate-y-2 overflow-hidden"
                     >
                         <div className="relative w-full h-32 mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-indigo-100">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-4xl font-bold text-gray-600">
-                                    {product.name.charAt(0)}
-                                </span>
-                            </div>
+                            {product.images && product.images.length > 0 ? (
+                                <Image
+                                    src={product.images[0]}
+                                    alt={product.name}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                                />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-4xl font-bold text-gray-600">
+                                        {product.name.charAt(0)}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         <h3 className="font-bold text-lg text-gray-800 text-center group-hover:text-blue-600 transition-colors">

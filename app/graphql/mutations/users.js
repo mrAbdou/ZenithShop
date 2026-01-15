@@ -1,5 +1,6 @@
 // PRODUCTION-READY: This file has been thoroughly tested and is ready for production use. 😎
 
+import { deleteAvatarAction } from "@/app/actions/upload";
 import { UpdateCustomerSchema } from "@/lib/schemas/user.schema";
 import { Role } from "@prisma/client";
 import { GraphQLError } from "graphql";
@@ -79,27 +80,15 @@ export default {
             throw new GraphQLError('Unauthorized', { extensions: { code: 'UNAUTHORIZED' } });
         }
         try {
-            // First, find the user to return for cache management
-            const userToDelete = await context.prisma.user.findUnique({
-                where: { id: targetUserId },
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true
+            return await context.prisma.$transaction(async (tx) => {
+                const userToDelete = await tx.user.findUnique({ where: { id: targetUserId } });
+                if(!userToDelete) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+                if(userToDelete.image) {
+                    deleteAvatarAction(userToDelete.image);
                 }
+                return await tx.user.delete({ where: { id: targetUserId } });
             });
 
-            if (!userToDelete) {
-                throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-            }
-
-            // Delete the user with cascade to remove associated orders and order items
-            await context.prisma.user.delete({
-                where: { id: targetUserId }
-            });
-
-            return userToDelete;
         } catch (prismaError) {
             if (prismaError instanceof GraphQLError) throw prismaError;
             switch (prismaError.code) {

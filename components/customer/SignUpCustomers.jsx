@@ -10,7 +10,10 @@ import ZodValidationError from "@/lib/ZodValidationError";
 import { supabase, validateImage } from "@/lib/supabase";
 import { uploadProfileImageAction } from "@/app/actions/upload";
 import { updateUserImage } from "@/services/users.client";
+import { useTranslation } from "@/lib/i18n/context";
+
 export default function SignUpCustomers({ redirectPath }) {
+    const { t } = useTranslation();
     const [errorMessages, setErrorMessages] = useState([]);
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
@@ -76,11 +79,11 @@ export default function SignUpCustomers({ redirectPath }) {
                 } catch (avatarError) {
                     // Avatar upload failed, but account was created successfully
                     console.error('Avatar upload failed:', avatarError);
-                    toast.error('Account created but profile picture upload failed. You can update it later.');
+                    toast.error(t('auth.avatarUploadFailed'));
                 }
             }
 
-            toast.success('Account created successfully!');
+            toast.success(t('auth.accountCreated'));
             router.push(redirectPath);
 
         } catch (error) {
@@ -88,7 +91,7 @@ export default function SignUpCustomers({ redirectPath }) {
                 setErrorMessages(error.issues);
                 return;
             }
-            toast.error('Unexpected error occurred. Please try again.');
+            toast.error(t('auth.unexpectedError'));
         }
     }
 
@@ -97,7 +100,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Error Messages Display */}
             {errorMessages.length > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-                    <h3 className="text-lg font-semibold text-red-800 mb-2">Errors</h3>
+                    <h3 className="text-lg font-semibold text-red-800 mb-2">{t('auth.errors')}</h3>
                     <div className="space-y-1">
                         {errorMessages.map((error, index) => (
                             <p key={index} className="text-sm text-red-700 font-medium">
@@ -111,7 +114,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Name Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Full Name
+                    {t('auth.fullName')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -125,7 +128,7 @@ export default function SignUpCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
-                        placeholder="Enter your full name"
+                        placeholder={t('auth.enterYourFullName')}
                     />
                 </div>
                 {errors.name && (
@@ -136,7 +139,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Email Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email Address
+                    {t('auth.emailAddress')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -150,7 +153,7 @@ export default function SignUpCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             } ${(isSubmitting) ? 'cursor-not-allowed opacity-50' : ''}`}
-                        placeholder="your@email.com"
+                        placeholder={t('auth.enterYourEmail')}
                     />
                 </div>
                 {errors.email && (
@@ -161,7 +164,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Password Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Password
+                    {t('auth.password')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -175,7 +178,7 @@ export default function SignUpCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
-                        placeholder="Create a strong password"
+                        placeholder={t('auth.createStrongPassword')}
                     />
                 </div>
                 {errors.password && (
@@ -186,7 +189,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Phone Number Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Phone Number
+                    {t('auth.phoneNumber')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -200,7 +203,7 @@ export default function SignUpCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.phoneNumber ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
-                        placeholder="+1 (555) 123-4567"
+                        placeholder={t('auth.enterYourPhone')}
                     />
                 </div>
                 {errors.phoneNumber && (
@@ -211,7 +214,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Address Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Shipping Address
+                    {t('auth.shippingAddress')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -226,7 +229,7 @@ export default function SignUpCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
-                        placeholder="123 Main St, City, State"
+                        placeholder={t('auth.enterYourAddress')}
                     />
                 </div>
                 {errors.address && (
@@ -237,7 +240,7 @@ export default function SignUpCustomers({ redirectPath }) {
             {/* Avatar Upload Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Profile Picture <span className="text-gray-500 font-normal">(optional)</span>
+                    {t('auth.profilePicture')} <span className="text-gray-500 font-normal">{t('auth.optional')}</span>
                 </label>
 
                 {/* Avatar Preview */}
@@ -253,7 +256,7 @@ export default function SignUpCustomers({ redirectPath }) {
                                 type="button"
                                 onClick={removeAvatar}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
-                                title="Remove avatar"
+                                title={t('auth.removeAvatar')}
                             >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -261,8 +264,8 @@ export default function SignUpCustomers({ redirectPath }) {
                             </button>
                         </div>
                         <div className="text-sm text-gray-600">
-                            <p className="font-medium">Selected: {avatarFile?.name}</p>
-                            <p>Size: {(avatarFile?.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p className="font-medium">{t('auth.selected')} {avatarFile?.name}</p>
+                            <p>{t('auth.size')} {(avatarFile?.size / 1024 / 1024).toFixed(2)} MB</p>
                         </div>
                     </div>
                 )}
@@ -288,16 +291,16 @@ export default function SignUpCustomers({ redirectPath }) {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
                                 <p className="mb-2 text-sm text-gray-500">
-                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                    <span className="font-semibold">{t('auth.clickToUpload')}</span> {t('auth.dragAndDrop')}
                                 </p>
-                                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                <p className="text-xs text-gray-500">{t('auth.supportedFormats')}</p>
                             </div>
                         </label>
                     </div>
                 )}
 
                 <div className="mt-2 text-xs text-gray-500">
-                    Your profile picture will be visible to other users and helps personalize your account.
+                    {t('auth.profilePictureDesc')}
                 </div>
             </div>
 
@@ -310,7 +313,7 @@ export default function SignUpCustomers({ redirectPath }) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                Create Account
+                {t('auth.createAccount')}
             </button>
         </form>
     );

@@ -4,8 +4,10 @@ import { authClient } from "@/lib/auth-client";
 import SignInCustomers from "@/components/customer/SignInCustomers";
 import SignUpCustomers from "@/components/customer/SignUpCustomers";
 import { redirect } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function CheckoutAuth({ redirectTo }) {
+    const { t } = useTranslation();
     const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
     const [loading, setLoading] = useState(true);
     const redirectPath = redirectTo || '/customer-dashboard';
@@ -33,8 +35,8 @@ export default function CheckoutAuth({ redirectTo }) {
                         <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <div className="w-6 h-6 bg-green-400 rounded-full animate-pulse"></div>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">Checking Your Session</h3>
-                        <p className="text-sm text-gray-600">Please wait while we verify your account...</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{t('auth.checkingSession')}</h3>
+                        <p className="text-sm text-gray-600">{t('auth.verifyingAccount')}</p>
                     </div>
                     <div className="animate-pulse space-y-4">
                         <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
@@ -63,7 +65,7 @@ export default function CheckoutAuth({ redirectTo }) {
                         }`}
                     onClick={() => setAuthMode('signin')}
                 >
-                    Sign In
+                    {t('auth.signIn')}
                 </button>
 
                 {/* Create Account Toggle Button */}
@@ -74,7 +76,7 @@ export default function CheckoutAuth({ redirectTo }) {
                         }`}
                     onClick={() => setAuthMode('signup')}
                 >
-                    Create Account
+                    {t('auth.createAccount')}
                 </button>
             </div>
 
@@ -83,18 +85,18 @@ export default function CheckoutAuth({ redirectTo }) {
                 {/* Sign In Form */}
                 <div className={`transition-all duration-300 ${authMode === 'signin' ? 'block' : 'hidden'}`}>
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">Sign In to Your Account</h3>
-                        <p className="text-sm text-gray-600">Welcome back! Sign in to complete your order.</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{t('auth.signInTitle')}</h3>
+                        <p className="text-sm text-gray-600">{t('auth.signInSubtitle')}</p>
                     </div>
                     <SignInCustomers redirectPath={redirectPath} />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">
-                            New customer?{' '}
+                            {t('auth.newCustomer')}{' '}
                             <button
                                 className="text-green-600 font-semibold hover:underline transition-colors"
                                 onClick={() => setAuthMode('signup')}
                             >
-                                Create an account
+                                {t('auth.createAccount')}
                             </button>
                         </p>
                     </div>
@@ -103,18 +105,18 @@ export default function CheckoutAuth({ redirectTo }) {
                 {/* Sign Up Form */}
                 <div className={`transition-all duration-300 ${authMode === 'signup' ? 'block' : 'hidden'}`}>
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">Create Your Account</h3>
-                        <p className="text-sm text-gray-600">Join us! Create an account to complete your first order.</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{t('auth.signUpTitle')}</h3>
+                        <p className="text-sm text-gray-600">{t('auth.signUpSubtitle')}</p>
                     </div>
                     <SignUpCustomers redirectPath={redirectPath} />
                     <div className="mt-6 text-center">
                         <p className="text-sm text-gray-600">
-                            Already have an account?{' '}
+                            {t('auth.alreadyHaveAccount')}{' '}
                             <button
                                 className="text-green-600 font-semibold hover:underline transition-colors"
                                 onClick={() => setAuthMode('signin')}
                             >
-                                Sign in here
+                                {t('auth.signInHere')}
                             </button>
                         </p>
                     </div>
@@ -142,8 +144,8 @@ export default function CheckoutAuth({ redirectTo }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">You're Signed In!</h3>
-                        <p className="text-sm text-gray-600">Proceed to complete your order.</p>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{t('auth.signedIn')}</h3>
+                        <p className="text-sm text-gray-600">{t('auth.proceedToOrder')}</p>
                     </div>
                     {/* Placeholder for OrderCompletion component */}
                 </div>

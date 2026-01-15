@@ -119,5 +119,20 @@ export default {
                 extensions: { code: 'DATABASE_OPERATION_FAILED' }
             });
         }
+    },
+    countCategories: async (parent, args, context) => {
+        try {
+            const count = await context.prisma.category.count();
+            return count;
+        } catch (prismaError) {
+            switch (prismaError.code) {
+                case 'P1000':
+                case 'P1001':
+                    throw new GraphQLError("Database connection failed", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+                default:
+                    console.error("Database Error:", prismaError);
+                    throw new GraphQLError("Internal server error", { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+            }
+        }
     }
 };

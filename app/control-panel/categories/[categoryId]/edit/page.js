@@ -4,13 +4,22 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { fetchCategory } from "@/services/categories.server";
 import UpdateCategoryForm from "@/components/admin/UpdateCategoryForm";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
-export const metadata = {
-    title: "Edit Category | ZenithShop Admin",
-    description: "Edit category details in your ZenithShop catalog.",
-};
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
+    return {
+        title: dictionary.admin.categories.pageTitle,
+        description: dictionary.admin.categories.pageDescription,
+    };
+}
 
 export default async function EditCategoryPage({ params }) {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
     const h = await headers();
     const session = await auth.api.getSession({
         headers: h
@@ -50,13 +59,13 @@ export default async function EditCategoryPage({ params }) {
                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Edit Category
+                                {dictionary.admin.categories.editCategory}
                             </h1>
                             <p className="text-green-100 text-lg font-medium mb-4">
-                                Update category information
+                                {dictionary.admin.categories.organizeCatalog}
                             </p>
                             <p className="text-green-50 max-w-2xl">
-                                Modify the category name and details. Changes will be reflected across all associated products.
+                                {dictionary.admin.categories.viewFilterCategories}
                             </p>
                         </div>
 
@@ -70,7 +79,7 @@ export default async function EditCategoryPage({ params }) {
                                         </svg>
                                         <p className="text-2xl font-bold text-white">{category.name}</p>
                                     </div>
-                                    <p className="text-green-100 text-sm">Editing Category</p>
+                                    <p className="text-green-100 text-sm">{dictionary.admin.categories.editCategory}</p>
                                 </div>
                             </div>
                         </div>

@@ -7,8 +7,10 @@ import toast from "react-hot-toast";
 import { useContext } from "react";
 import { CartContext } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function SignInCustomers({ redirectPath }) {
+    const { t } = useTranslation();
     const { getCart } = useContext(CartContext);
     const cart = getCart();
     const router = useRouter();
@@ -30,7 +32,7 @@ export default function SignInCustomers({ redirectPath }) {
         }
 
         if (data) {
-            toast.success('Signed in successfully!');
+            toast.success(t('auth.signedInSuccessfully'));
             router.push(redirectPath);
         }
     }
@@ -39,7 +41,7 @@ export default function SignInCustomers({ redirectPath }) {
             {/* Email Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email Address
+                    {t('auth.emailAddress')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -53,7 +55,7 @@ export default function SignInCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             }`}
-                        placeholder="your@email.com"
+                        placeholder={t('auth.enterYourEmail')}
                     />
                 </div>
                 {errors.email && (
@@ -64,7 +66,7 @@ export default function SignInCustomers({ redirectPath }) {
             {/* Password Field */}
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Password
+                    {t('auth.password')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -78,7 +80,7 @@ export default function SignInCustomers({ redirectPath }) {
                         disabled={isSubmitting}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 ${errors.password ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-50'
                             }`}
-                        placeholder="Enter your password"
+                        placeholder={t('auth.enterYourPassword')}
                     />
                 </div>
                 {errors.password && (
@@ -98,7 +100,7 @@ export default function SignInCustomers({ redirectPath }) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                Sign In
+                {t('auth.signIn')}
             </button>
         </form>
     )

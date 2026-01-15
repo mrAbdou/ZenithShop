@@ -2,8 +2,10 @@
 import Link from "next/link";
 import AddToCartButton from "./customer/AddToCartButton";
 import { useState } from "react";
+import { useTranslation } from '@/lib/i18n/context';
 
 export default function Product({ product }) {
+    const { t } = useTranslation();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const images = product.images || [];
     const hasImages = images.length > 0;
@@ -39,7 +41,7 @@ export default function Product({ product }) {
                                 <button
                                     onClick={(e) => { e.preventDefault(); prevImage(); }}
                                     className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-all duration-200"
-                                    aria-label="Previous image"
+                                    aria-label={t("products.previousImage")}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -48,7 +50,7 @@ export default function Product({ product }) {
                                 <button
                                     onClick={(e) => { e.preventDefault(); nextImage(); }}
                                     className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-all duration-200"
-                                    aria-label="Next image"
+                                    aria-label={t("products.nextImage")}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -61,7 +63,7 @@ export default function Product({ product }) {
                                             key={index}
                                             onClick={(e) => { e.preventDefault(); setCurrentImageIndex(index); }}
                                             className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
-                                            aria-label={`Go to image ${index + 1}`}
+                                            aria-label={t("products.goToImage").replace("{index}", index + 1)}
                                         />
                                     ))}
                                 </div>
@@ -105,7 +107,7 @@ export default function Product({ product }) {
                     <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover/link:translate-x-[200%] transition-transform duration-700"></span>
 
                     <span className="relative flex items-center justify-center gap-2">
-                        View Details
+                        {t("products.viewDetails")}
                         <svg
                             className="w-4 h-4 group-hover/link:translate-x-1 transition-transform"
                             fill="none"

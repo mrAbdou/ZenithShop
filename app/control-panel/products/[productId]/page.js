@@ -5,6 +5,8 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import ProductImageCarousel from "@/components/admin/ProductImageCarousel";
 import ProductDeleteButton from "@/components/admin/ProductDeleteButton";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -34,6 +36,9 @@ export default async function ProductDetails({ params }) {
     if (!product) {
         return notFound();
     }
+    
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
 
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
@@ -56,17 +61,17 @@ export default async function ProductDetails({ params }) {
                                 <svg className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                Back to Products
+                                {dictionary.admin.common.backToList}
                             </Link>
 
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Product Details
+                                {dictionary.admin.products.productDetails}
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                View and manage product information
+                                {dictionary.admin.products.manageEfficiently}
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Here you can see detailed information about this product, including pricing, inventory status, and creation details.
+                                {dictionary.admin.products.viewAddUpdate}
                             </p>
                         </div>
 
@@ -80,7 +85,7 @@ export default async function ProductDetails({ params }) {
                                         </svg>
                                         <p className="text-3xl font-bold text-white">${product.price}</p>
                                     </div>
-                                    <p className="text-blue-100 text-sm">Product Price</p>
+                                    <p className="text-blue-100 text-sm">{dictionary.admin.products.price}</p>
                                 </div>
                             </div>
 
@@ -91,7 +96,7 @@ export default async function ProductDetails({ params }) {
                                         }`}></div>
                                     <div>
                                         <p className="text-white font-semibold">{product.qteInStock}</p>
-                                        <p className="text-blue-100 text-xs">In Stock</p>
+                                        <p className="text-blue-100 text-xs">{dictionary.admin.products.inStockLabel}</p>
                                     </div>
                                 </div>
                             </div>
@@ -116,13 +121,13 @@ export default async function ProductDetails({ params }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">Product Identity</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">{dictionary.admin.products.productIdentity}</h3>
                             </div>
                         </div>
                         <div className="p-6 space-y-6">
                             {/* Product ID */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Product ID</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">{dictionary.admin.products.productId}</label>
                                 <div className="flex items-center bg-gray-50 rounded-lg px-4 py-3">
                                     <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -133,24 +138,24 @@ export default async function ProductDetails({ params }) {
 
                             {/* Product Name */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Product Name</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">{dictionary.admin.products.productName}</label>
                                 <h2 className="text-2xl font-bold text-gray-900 leading-tight">{product.name}</h2>
                             </div>
 
                             {/* Category */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-2">Category</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-2">{dictionary.admin.products.category}</label>
                                 <div className="flex items-center bg-gray-50 rounded-lg px-4 py-3">
                                     <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
-                                    <span className="font-medium text-gray-900">{product.category?.name || 'No category assigned'}</span>
+                                    <span className="font-medium text-gray-900">{product.category?.name || dictionary.admin.products.noCategoryAssigned}</span>
                                 </div>
                             </div>
 
                             {/* Description */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-500 mb-3">Description</label>
+                                <label className="block text-sm font-medium text-gray-500 mb-3">{dictionary.admin.products.productDescription}</label>
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <p className="text-gray-700 leading-relaxed">
                                         {product.description || 'No description available for this product.'}
@@ -169,7 +174,7 @@ export default async function ProductDetails({ params }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">Pricing & Inventory</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">{dictionary.admin.products.pricingInventory}</h3>
                             </div>
                         </div>
                         <div className="p-6">
@@ -182,7 +187,7 @@ export default async function ProductDetails({ params }) {
                                         </svg>
                                     </div>
                                     <p className="text-3xl font-bold text-green-600 mb-1">${product.price}</p>
-                                    <p className="text-gray-500 text-sm">Current Price</p>
+                                    <p className="text-gray-500 text-sm">{dictionary.admin.products.price}</p>
                                 </div>
 
                                 {/* Stock Status */}
@@ -201,8 +206,8 @@ export default async function ProductDetails({ params }) {
                                         product.qteInStock > 0 ? 'bg-yellow-100 text-yellow-800' :
                                             'bg-red-100 text-red-800'
                                         }`}>
-                                        {product.qteInStock > 10 ? 'In Stock' :
-                                            product.qteInStock > 0 ? 'Low Stock' : 'Out of Stock'}
+                                        {product.qteInStock > 10 ? dictionary.admin.products.inStockLabel :
+                                            product.qteInStock > 0 ? dictionary.admin.products.lowStockLabel : dictionary.admin.products.outOfStockLabel}
                                     </span>
                                 </div>
                             </div>
@@ -221,7 +226,7 @@ export default async function ProductDetails({ params }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">Timeline</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">{dictionary.admin.products.created}</h3>
                             </div>
                         </div>
                         <div className="p-6 space-y-4">
@@ -232,7 +237,7 @@ export default async function ProductDetails({ params }) {
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Created</p>
+                                    <p className="text-sm font-medium text-gray-900">{dictionary.admin.products.created}</p>
                                     <p className="text-sm text-gray-500">{formatDate(product.createdAt)}</p>
                                 </div>
                             </div>
@@ -245,7 +250,7 @@ export default async function ProductDetails({ params }) {
                                         </svg>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-gray-900">Last Updated</p>
+                                        <p className="text-sm font-medium text-gray-900">{dictionary.admin.products.created}</p>
                                         <p className="text-sm text-gray-500">{formatDate(product.updatedAt)}</p>
                                     </div>
                                 </div>
@@ -263,7 +268,7 @@ export default async function ProductDetails({ params }) {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900">Actions</h3>
+                                <h3 className="text-lg font-semibold text-gray-900">{dictionary.admin.products.actions}</h3>
                             </div>
                         </div>
                         <div className="p-6 space-y-4">
@@ -274,7 +279,7 @@ export default async function ProductDetails({ params }) {
                                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                Edit Product
+                                {dictionary.admin.products.editProduct}
                             </Link>
 
                             <ProductDeleteButton productId={product.id} productName={product.name} />

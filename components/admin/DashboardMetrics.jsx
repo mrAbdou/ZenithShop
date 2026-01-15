@@ -2,19 +2,25 @@
 import { useActiveOrdersCount } from "@/hooks/orders";
 import { useAvailableProductsCount, useProductsCount } from "@/hooks/products";
 import { useUsersCount, useCustomersCount } from "@/hooks/users";
+import { useCategoriesCount } from "@/hooks/categories";
+import { useTranslation } from "@/lib/i18n/context";
+
 export default function DashboardMetrics({
     availableProductsCount,
     activeOrdersCount,
     productsCount,
     usersCount,
-    customersCount
+    customersCount,
+    categoriesCount
 }) {
+    const { t } = useTranslation();
 
     const { data: nbrAvailableProducts } = useAvailableProductsCount(availableProductsCount);
     const { data: nbrActiveOrders } = useActiveOrdersCount(activeOrdersCount);
     const { data: nbrProducts } = useProductsCount(productsCount);
     const { data: nbrUsers } = useUsersCount(usersCount);
     const { data: nbrCustomers } = useCustomersCount(customersCount);
+    const { data: nbrCategories } = useCategoriesCount(categoriesCount);
 
     return (
         <>
@@ -32,13 +38,13 @@ export default function DashboardMetrics({
                                 </svg>
                             </div>
                             <div className="text-right">
-                                <p className="text-gray-500 text-sm font-medium">Products</p>
+                                <p className="text-gray-500 text-sm font-medium">{t('admin.dashboard.products')}</p>
                             </div>
                         </div>
-                        <h3 className="text-gray-600 text-sm font-medium mb-2">Available in Stock</h3>
+                        <h3 className="text-gray-600 text-sm font-medium mb-2">{t('admin.dashboard.availableInStock')}</h3>
                         <p className="text-4xl md:text-5xl font-bold text-gray-900">{nbrAvailableProducts}</p>
                         <div className="mt-4 pt-4 border-t border-gray-100">
-                            <p className="text-xs text-gray-500">Items ready for sale</p>
+                            <p className="text-xs text-gray-500">{t('admin.dashboard.itemsReadyForSale')}</p>
                         </div>
                     </div>
                 </div>
@@ -53,13 +59,34 @@ export default function DashboardMetrics({
                                 </svg>
                             </div>
                             <div className="text-right">
-                                <p className="text-gray-500 text-sm font-medium">Customers</p>
+                                <p className="text-gray-500 text-sm font-medium">{t('admin.dashboard.customers')}</p>
                             </div>
                         </div>
-                        <h3 className="text-gray-600 text-sm font-medium mb-2">Registered Users</h3>
+                        <h3 className="text-gray-600 text-sm font-medium mb-2">{t('admin.dashboard.registeredUsers')}</h3>
                         <p className="text-4xl md:text-5xl font-bold text-gray-900">{nbrCustomers}</p>
                         <div className="mt-4 pt-4 border-t border-gray-100">
-                            <p className="text-xs text-gray-500">Active customer accounts</p>
+                            <p className="text-xs text-gray-500">{t('admin.dashboard.activeCustomerAccounts')}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Categories Card */}
+                <div className="group">
+                    <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-all duration-300 h-full border border-gray-100">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="bg-linear-to-br from-yellow-50 to-yellow-100 rounded-2xl p-4">
+                                <svg className="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                                </svg>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-gray-500 text-sm font-medium">{t('admin.dashboard.categories')}</p>
+                            </div>
+                        </div>
+                        <h3 className="text-gray-600 text-sm font-medium mb-2">{t('admin.dashboard.totalCategories')}</h3>
+                        <p className="text-4xl md:text-5xl font-bold text-gray-900">{nbrCategories}</p>
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-xs text-gray-500">{t('admin.dashboard.organizedCatalog')}</p>
                         </div>
                     </div>
                 </div>
@@ -74,13 +101,13 @@ export default function DashboardMetrics({
                                 </svg>
                             </div>
                             <div className="text-right">
-                                <p className="text-gray-500 text-sm font-medium">Orders</p>
+                                <p className="text-gray-500 text-sm font-medium">{t('admin.dashboard.orders')}</p>
                             </div>
                         </div>
-                        <h3 className="text-gray-600 text-sm font-medium mb-2">Active Orders</h3>
+                        <h3 className="text-gray-600 text-sm font-medium mb-2">{t('admin.dashboard.activeOrders')}</h3>
                         <p className="text-4xl md:text-5xl font-bold text-gray-900">{nbrActiveOrders}</p>
                         <div className="mt-4 pt-4 border-t border-gray-100">
-                            <p className="text-xs text-gray-500">Pending &amp; in transit</p>
+                            <p className="text-xs text-gray-500">{t('admin.dashboard.pendingAndInTransit')}</p>
                         </div>
                     </div>
                 </div>
@@ -95,13 +122,13 @@ export default function DashboardMetrics({
                                 </svg>
                             </div>
                             <div className="text-right">
-                                <p className="text-gray-500 text-sm font-medium">Analytics</p>
+                                <p className="text-gray-500 text-sm font-medium">{t('admin.dashboard.analytics')}</p>
                             </div>
                         </div>
-                        <h3 className="text-gray-600 text-sm font-medium mb-2">Store Performance</h3>
+                        <h3 className="text-gray-600 text-sm font-medium mb-2">{t('admin.dashboard.storePerformance')}</h3>
                         <p className="text-4xl md:text-5xl font-bold text-gray-900">—</p>
                         <div className="mt-4 pt-4 border-t border-gray-100">
-                            <p className="text-xs text-gray-500">Coming soon</p>
+                            <p className="text-xs text-gray-500">{t('admin.dashboard.comingSoon')}</p>
                         </div>
                     </div>
                 </div>
@@ -112,19 +139,19 @@ export default function DashboardMetrics({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div className="text-center">
                         <p className="text-3xl font-bold text-indigo-600 mb-2">{nbrProducts}</p>
-                        <p className="text-gray-600 text-sm">Total Products</p>
+                        <p className="text-gray-600 text-sm">{t('admin.dashboard.totalProducts')}</p>
                     </div>
                     <div className="text-center">
                         <p className="text-3xl font-bold text-green-600 mb-2">{nbrUsers}</p>
-                        <p className="text-gray-600 text-sm">Total Users</p>
+                        <p className="text-gray-600 text-sm">{t('admin.dashboard.totalUsers')}</p>
                     </div>
                     <div className="text-center">
                         <p className="text-3xl font-bold text-purple-600 mb-2">{nbrActiveOrders}</p>
-                        <p className="text-gray-600 text-sm">Active Orders</p>
+                        <p className="text-gray-600 text-sm">{t('admin.dashboard.activeOrders')}</p>
                     </div>
                     <div className="text-center">
                         <p className="text-3xl font-bold text-blue-600 mb-2">✓</p>
-                        <p className="text-gray-600 text-sm">System Online</p>
+                        <p className="text-gray-600 text-sm">{t('admin.dashboard.systemOnline')}</p>
                     </div>
                 </div>
             </div>

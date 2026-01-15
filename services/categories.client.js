@@ -72,6 +72,12 @@ export const CATEGORY_QUERY = `
     }
   `;
 
+export const COUNT_CATEGORIES_QUERY = `
+    query CountCategories {
+      countCategories
+    }
+  `;
+
 export async function fetchFeaturedCategories(variables) {
   try {
     const response = await graphqlRequest(FEATURED_CATEGORIES_QUERY, variables);
@@ -128,6 +134,15 @@ export async function deleteCategory(variables) {
   try {
     const response = await graphqlRequest(DELETE_CATEGORY_MUTATION, variables);
     return response.deleteCategory;
+  } catch (gqlError) {
+    throw gqlError;
+  }
+}
+
+export async function fetchCategoriesCount() {
+  try {
+    const response = await graphqlRequest(COUNT_CATEGORIES_QUERY, {});
+    return response.countCategories ?? 0;
   } catch (gqlError) {
     throw gqlError;
   }

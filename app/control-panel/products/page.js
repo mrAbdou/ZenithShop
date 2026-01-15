@@ -7,11 +7,21 @@ import { fetchPaginatedProducts, filteredProductsCount } from "@/services/produc
 import ProductsManagement from "@/components/admin/ProductsManagement";
 import { PAGINATION_MIN_LIMIT } from "@/lib/constants";
 import { fetchCategories } from "@/services/categories.server";
-export const metadata = {
-    title: "Products Management | ZenithShop Admin",
-    description: "Admin interface for managing ZenithShop product catalog. Add, edit, delete, and organize products efficiently with real-time updates and analytics.",
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
+
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+
+    return {
+        title: dictionary.admin.products.pageTitle,
+        description: dictionary.admin.products.pageDescription,
+    };
 }
 export default async function ProductsManagementPage({ searchParams }) {
+    const sp = await searchParams;
+
     const h = await headers();
     const cookieHeader = h.get("cookie");
     const session = await auth.api.getSession({
@@ -19,7 +29,11 @@ export default async function ProductsManagementPage({ searchParams }) {
     });
 
     if (!session || !(session?.user?.role === Role.ADMIN)) return redirect("/");
-    const categoryId = (await searchParams)?.categoryId;
+
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+
+    const categoryId = sp?.categoryId ?? '';
     const categories = await fetchCategories({}, cookieHeader);
     const products = await fetchPaginatedProducts({ limit: PAGINATION_MIN_LIMIT, currentPage: 1, categoryId }, cookieHeader);
     const totalProducts = await filteredProductsCount({ limit: PAGINATION_MIN_LIMIT, currentPage: 1, categoryId }, cookieHeader); // needs to count the filtered data not the full products available !!
@@ -31,20 +45,20 @@ export default async function ProductsManagementPage({ searchParams }) {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Products Management
+                                {dictionary.admin.products.management}
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                Manage your product catalog efficiently
+                                {dictionary.admin.products.manageEfficiently}
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Here you can view, add, update, and delete products in your store. Each change is tracked and synchronized across your e-commerce platform.
+                                {dictionary.admin.products.viewAddUpdate}
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-white mb-1">{totalProducts ?? 0}</p>
-                                    <p className="text-blue-100 text-sm">Total Products</p>
+                                    <p className="text-blue-100 text-sm">{dictionary.admin.products.totalProducts}</p>
                                 </div>
                             </div>
                         </div>
@@ -57,7 +71,7 @@ export default async function ProductsManagementPage({ searchParams }) {
             <Link
                 href="/control-panel/products/add-product"
                 className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 z-50 group"
-                title="Add New Product"
+                title={dictionary.admin.products.addProduct}
             >
                 <svg
                     className="w-6 h-6 group-hover:scale-110 transition-transform duration-200"

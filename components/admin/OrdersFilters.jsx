@@ -6,7 +6,12 @@ import { OrderStatus } from "@prisma/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FilteredOrdersCountSchema } from "@/lib/schemas/order.schema";
 import { useOrderFiltersContext } from "@/context/OrdersFiltersContext";
+import { useTranslation } from "@/lib/i18n/context";
+
 export default function OrdersFilters() {
+    const { t } = useTranslation();
+    console.log('Debug OrdersFilters: t allOptions:', t('admin.orders.allOptions'));
+    console.log('Debug OrdersFilters: t pendingLabel:', t('admin.orders.pendingLabel'));
     // i used RHF do define a form for filter values , this way i can validate the values using zod schema validation and returned in organized shape (object)
     //TODO: create a zod schema validation for filter values
     //TODO: include the created zod schema validation in useForm and set the mode to onChange
@@ -22,13 +27,13 @@ export default function OrdersFilters() {
     });
     // all available order status options with visual indicators
     const statusOptions = [
-        { value: '', label: "📋 All Options", color: "text-gray-700" },
-        { value: OrderStatus.PENDING, label: "⏳ Pending", color: "text-yellow-700" },
-        { value: OrderStatus.CONFIRMED, label: "✅ Confirmed", color: "text-blue-700" },
-        { value: OrderStatus.SHIPPED, label: "🚚 Shipped", color: "text-purple-700" },
-        { value: OrderStatus.DELIVERED, label: "📦 Delivered", color: "text-green-700" },
-        { value: OrderStatus.CANCELLED, label: "❌ Cancelled", color: "text-red-700" },
-        { value: OrderStatus.RETURNED, label: "↩️ Returned", color: "text-orange-700" },
+        { value: '', label: t('admin.orders.allOptions'), color: "text-gray-700" },
+        { value: OrderStatus.PENDING, label: t('admin.orders.pendingLabel'), color: "text-yellow-700" },
+        { value: OrderStatus.CONFIRMED, label: t('admin.orders.confirmedLabel'), color: "text-blue-700" },
+        { value: OrderStatus.SHIPPED, label: t('admin.orders.shippedLabel'), color: "text-purple-700" },
+        { value: OrderStatus.DELIVERED, label: t('admin.orders.deliveredLabel'), color: "text-green-700" },
+        { value: OrderStatus.CANCELLED, label: t('admin.orders.cancelledLabel'), color: "text-red-700" },
+        { value: OrderStatus.RETURNED, label: t('admin.orders.returnedLabel'), color: "text-orange-700" },
     ];
 
     // i get the function that it will set the filter values in the context
@@ -52,8 +57,8 @@ export default function OrdersFilters() {
     return (
         <section className="bg-white rounded-xl shadow-sm border border-gray-200/80 p-6 mb-6 transition-shadow hover:shadow-md">
             <div className="mb-5">
-                <h2 className="text-lg font-semibold text-gray-800 mb-1">Filter Orders</h2>
-                <p className="text-sm text-gray-500">Search and filter orders by status and date range</p>
+                <h2 className="text-lg font-semibold text-gray-800 mb-1">{t('admin.orders.filterOrders')}</h2>
+                <p className="text-sm text-gray-500">{t('admin.orders.searchAndFilterOrders')}</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -62,16 +67,16 @@ export default function OrdersFilters() {
                     <div className="flex flex-col">
                         <label
                             htmlFor="searchQuery"
-                            className="text-sm font-medium text-gray-700 mb-2"
+                            className="text-sm font-semibold text-gray-700 mb-2"
                         >
-                            Search
+                            {t('admin.orders.search')}
                         </label>
                         <input
                             id="searchQuery"
                             name="searchQuery"
                             {...register('searchQuery')}
                             type="text"
-                            placeholder="Order ID or customer name..."
+                            placeholder={t('admin.orders.searchPlaceholder')}
                             className={`w-full px-4 py-2.5 bg-white border rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed disabled:opacity-60 ${errors.searchQuery
                                 ? 'border-red-500 focus:ring-red-500 focus:border-transparent'
                                 : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
@@ -91,9 +96,9 @@ export default function OrdersFilters() {
                     <div className="flex flex-col">
                         <label
                             htmlFor="status"
-                            className="text-sm font-medium text-gray-700 mb-2"
+                            className="text-sm font-semibold text-gray-700 mb-2"
                         >
-                            Order Status
+                            {t('admin.orders.orderStatus')}
                         </label>
                         <select
                             id="status"
@@ -124,9 +129,9 @@ export default function OrdersFilters() {
                     <div className="flex flex-col">
                         <label
                             htmlFor="startDate"
-                            className="text-sm font-medium text-gray-700 mb-2"
+                            className="text-sm font-semibold text-gray-700 mb-2"
                         >
-                            Start Date
+                            {t('admin.common.fromDate')}
                         </label>
                         <input
                             id="startDate"
@@ -152,9 +157,9 @@ export default function OrdersFilters() {
                     <div className="flex flex-col">
                         <label
                             htmlFor="endDate"
-                            className="text-sm font-medium text-gray-700 mb-2"
+                            className="text-sm font-semibold text-gray-700 mb-2"
                         >
-                            End Date
+                            {t('admin.common.toDate')}
                         </label>
                         <input
                             id="endDate"
@@ -186,7 +191,7 @@ export default function OrdersFilters() {
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
-                        Apply Filters
+                        {t('admin.orders.applyFilters')}
                     </button>
 
                     {isDirty && (
@@ -198,7 +203,7 @@ export default function OrdersFilters() {
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                            Reset
+                            {t('admin.orders.reset')}
                         </button>
                     )}
                 </div>

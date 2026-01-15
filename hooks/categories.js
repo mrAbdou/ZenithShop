@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchFeaturedCategories, fetchCategories, countFilteredCategories, createCategory, updateCategory, fetchCategory, deleteCategory } from '@/services/categories.client';
+import { fetchFeaturedCategories, fetchCategories, countFilteredCategories, createCategory, updateCategory, fetchCategory, deleteCategory, fetchCategoriesCount } from '@/services/categories.client';
 import { CategoryFilterSchema, FeaturedCategoriesSchema, CategoryCreateSchema, CategoryUpdateSchema } from '@/lib/schemas/category.schema';
 import ZodValidationError from '@/lib/ZodValidationError';
 
@@ -140,4 +140,12 @@ export function useDeleteCategory() {
             }
         }
     })
+}
+
+export function useCategoriesCount(initialData) {
+    return useQuery({
+        queryKey: ['categoriesCount'],
+        queryFn: fetchCategoriesCount,
+        initialData: initialData ?? 0
+    });
 }

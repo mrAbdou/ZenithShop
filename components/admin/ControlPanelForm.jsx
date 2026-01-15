@@ -8,9 +8,11 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client"; // use client auth
 import { Role } from "@prisma/client";
 import { SignInAdminSchema } from "@/lib/schemas/auth.schema";
+import { useTranslation } from "@/lib/i18n/context";
 // zod schema for form validation of admin login 
 
 export default function ControlPanelForm() {
+    const { t } = useTranslation();
     //errors returned from the better-auth/client package goes in here
     const [error, setError] = useState(null);
     const router = useRouter();
@@ -37,12 +39,12 @@ export default function ControlPanelForm() {
             });
 
             if (error) {
-                setError(error.message || error.statusText || 'Login failed');
+                setError(error.message || error.statusText || t('admin.controlPanel.loginFailed'));
             } else {
                 router.push("/control-panel/dashboard");
             }
         } catch (err) {
-            setError(err?.message || 'An unexpected error occurred');
+            setError(err?.message || t('admin.controlPanel.unexpectedError'));
         }
     };
 
@@ -60,7 +62,7 @@ export default function ControlPanelForm() {
                     htmlFor="email"
                     className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                    E-mail
+                    {t('admin.controlPanel.emailLabel')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -83,7 +85,7 @@ export default function ControlPanelForm() {
                         disabled={isSubmitting}
                         id="email"
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('admin.controlPanel.emailPlaceholder')}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
                     />
                 </div>
@@ -102,7 +104,7 @@ export default function ControlPanelForm() {
                     htmlFor="password"
                     className="block text-sm font-semibold text-gray-700 mb-2"
                 >
-                    Password
+                    {t('admin.controlPanel.passwordLabel')}
                 </label>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -123,7 +125,7 @@ export default function ControlPanelForm() {
                     <input
                         {...register("password")}
                         disabled={isSubmitting}
-                        placeholder="Enter your password"
+                        placeholder={t('admin.controlPanel.passwordPlaceholder')}
                         id="password"
                         type="password"
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 outline-none"
@@ -144,7 +146,7 @@ export default function ControlPanelForm() {
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                Sign In
+                {t('admin.controlPanel.signIn')}
             </button>
         </form>
 

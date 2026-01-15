@@ -8,8 +8,10 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function UpdateOrderForm({ id }) {
+    const { t } = useTranslation();
     const router = useRouter();
     const { data: order, isLoading } = useOrder(id);
     const { handleSubmit, register, reset, watch, formState: { isSubmitting, isValid, isDirty, errors } } = useForm({
@@ -31,11 +33,11 @@ export default function UpdateOrderForm({ id }) {
         updateOrderAsync(data, {
             onSuccess: () => {
                 reset();
-                toast.success("Order updated successfully");
+                toast.success(t('admin.orders.orderUpdated'));
                 router.push('/control-panel/orders');
             },
             onError: (error) => {
-                toast.error(error.message ?? 'Failed to update order');
+                toast.error(error.message ?? t('admin.orders.updateFailed'));
             }
         });
     };
@@ -44,12 +46,12 @@ export default function UpdateOrderForm({ id }) {
     const currentStatus = watch('status');
 
     const orderStatusOptions = [
-        { value: OrderStatus.PENDING, label: "Pending", color: "gray", icon: "⏳" },
-        { value: OrderStatus.CONFIRMED, label: "Confirmed", color: "blue", icon: "✅" },
-        { value: OrderStatus.SHIPPED, label: "Shipped", color: "purple", icon: "🚚" },
-        { value: OrderStatus.DELIVERED, label: "Delivered", color: "green", icon: "📦" },
-        { value: OrderStatus.CANCELLED, label: "Cancelled", color: "red", icon: "❌" },
-        { value: OrderStatus.RETURNED, label: "Returned", color: "orange", icon: "↩️" },
+        { value: OrderStatus.PENDING, label: t('admin.orders.pendingLabel'), color: "gray", icon: "⏳" },
+        { value: OrderStatus.CONFIRMED, label: t('admin.orders.confirmedLabel'), color: "blue", icon: "✅" },
+        { value: OrderStatus.SHIPPED, label: t('admin.orders.shippedLabel'), color: "purple", icon: "🚚" },
+        { value: OrderStatus.DELIVERED, label: t('admin.orders.deliveredLabel'), color: "green", icon: "📦" },
+        { value: OrderStatus.CANCELLED, label: t('admin.orders.cancelledLabel'), color: "red", icon: "❌" },
+        { value: OrderStatus.RETURNED, label: t('admin.orders.returnedLabel'), color: "orange", icon: "↩️" },
     ];
 
     // Get status styling based on current selection
@@ -136,8 +138,8 @@ export default function UpdateOrderForm({ id }) {
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900">Order Status Update</h3>
-                                        <p className="text-gray-600 text-sm">Change the processing stage of this order</p>
+                                        <h3 className="text-xl font-bold text-gray-900">{t('admin.orders.orderStatusUpdate')}</h3>
+                                        <p className="text-gray-600 text-sm">{t('admin.orders.changeProcessingStage')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -149,10 +151,10 @@ export default function UpdateOrderForm({ id }) {
                                         <svg className="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                         </svg>
-                                        <span className="text-sm font-semibold text-gray-700">Order ID:</span>
+                                        <span className="text-sm font-semibold text-gray-700">{t('admin.orders.orderId')}:</span>
                                     </div>
                                     <span className="font-mono text-sm bg-white px-3 py-1 rounded-lg border border-gray-300 text-gray-900">
-                                        {order?.id?.slice(-8) || 'Loading...'}
+                                        {order?.id?.slice(-8) || t('admin.common.loading')}
                                     </span>
                                 </div>
                             </div>
@@ -163,7 +165,7 @@ export default function UpdateOrderForm({ id }) {
                                     <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    Order Status
+                                    {t('admin.orders.orderStatus')}
                                     <span className="text-red-500 ml-1">*</span>
                                 </label>
                                 <div className="relative">
@@ -207,7 +209,7 @@ export default function UpdateOrderForm({ id }) {
                                         <span className="mr-1">
                                             {orderStatusOptions.find(opt => opt.value === currentStatus)?.icon}
                                         </span>
-                                        Current status: {orderStatusOptions.find(opt => opt.value === currentStatus)?.label}
+                                        {t('admin.orders.currentStatus')}: {orderStatusOptions.find(opt => opt.value === currentStatus)?.label}
                                     </div>
                                 )}
                             </div>
@@ -224,8 +226,8 @@ export default function UpdateOrderForm({ id }) {
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900">Update Actions</h3>
-                                        <p className="text-gray-600 text-sm">Confirm the order status change</p>
+                                        <h3 className="text-xl font-bold text-gray-900">{t('admin.orders.updateActions')}</h3>
+                                        <p className="text-gray-600 text-sm">{t('admin.orders.confirmStatusChange')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -240,7 +242,7 @@ export default function UpdateOrderForm({ id }) {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                    <span>Cancel Changes</span>
+                                    <span>{t('admin.common.cancelChanges')}</span>
                                 </button>
                                 <button
                                     type="submit"
@@ -256,14 +258,14 @@ export default function UpdateOrderForm({ id }) {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            <span>Updating Order...</span>
+                                            <span>{t('admin.orders.updatingOrder')}</span>
                                         </>
                                     ) : (
                                         <>
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            <span>Update Order Status</span>
+                                            <span>{t('admin.orders.updateOrderStatus')}</span>
                                         </>
                                     )}
                                 </button>

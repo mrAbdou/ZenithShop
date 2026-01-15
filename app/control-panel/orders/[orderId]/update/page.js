@@ -20,6 +20,21 @@ import Link from "next/link";
 import { Role, OrderStatus } from "@prisma/client";
 // end prisma import ---------------------------------------------
 
+// start i18n import ---------------------------------------------
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
+// end i18n import -----------------------------------------------
+
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
+    return {
+        title: dictionary.admin.orders.pageTitle,
+        description: dictionary.admin.orders.pageDescription,
+    };
+}
+
 export default async function UpdateOrder({ params }) {
     const { orderId } = await params;
     const h = await headers();
@@ -27,6 +42,9 @@ export default async function UpdateOrder({ params }) {
     const session = await auth.api.getSession({
         headers: h
     });
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
     if (!session || session.user.role !== Role.ADMIN) {
         return redirect('/');
     }
@@ -42,23 +60,23 @@ export default async function UpdateOrder({ params }) {
                                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                Back to Order Details
+                                {dictionary.admin.orders.backToOrderDetails}
                             </Link>
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Update Order
+                                {dictionary.admin.orders.updateOrder}
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
-                                Modify order #{order.id.slice(-8)}
+                                {dictionary.admin.orders.modifyOrder} #{order.id.slice(-8)}
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Update the order status to reflect the current processing stage. Changes will be tracked and visible across the system.
+                                {dictionary.admin.orders.updateOrderDesc}
                             </p>
                         </div>
                         <div className="flex flex-col items-start md:items-end gap-4">
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-white mb-1">${order.total}</p>
-                                    <p className="text-blue-100 text-sm">Order Total</p>
+                                    <p className="text-blue-100 text-sm">{dictionary.admin.orders.orderTotal}</p>
                                 </div>
                             </div>
                             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">

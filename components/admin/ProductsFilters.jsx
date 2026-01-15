@@ -6,8 +6,10 @@ import { FilteringProductPaginationSchema } from "@/lib/schemas/product.schema";
 import { useProductContext } from "@/context/ProductContext";
 import { useEffect } from "react";
 import { useCategories } from "@/hooks/categories";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function ProductsFilters({ initialCategories, initialCategoryId }) {
+    const { t } = useTranslation();
     const { filters, setFilteringProps, setPaginationCurrentPage } = useProductContext();
     const { data: categories } = useCategories({}, initialCategories);
     const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -48,8 +50,8 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center justify-between border-b border-gray-200/80 pb-4">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Filter Products</h2>
-                        <p className="text-sm text-gray-500 mt-1">Search and filter your product inventory</p>
+                        <h2 className="text-2xl font-bold text-gray-900">{t('admin.products.filterProducts')}</h2>
+                        <p className="text-sm text-gray-500 mt-1">{t('admin.products.searchAndFilter')}</p>
                     </div>
                 </div>
 
@@ -57,7 +59,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                     {/* Search Input */}
                     <div className="space-y-2">
                         <label htmlFor="searchQuery" className="block text-sm font-semibold text-gray-700">
-                            Search Products
+                            {t('admin.products.searchProducts')}
                         </label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -69,7 +71,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                                 id="searchQuery"
                                 type="text"
                                 {...register("searchQuery")}
-                                placeholder="Search by name or ID..."
+                                placeholder={t('admin.products.searchByNameOrId')}
                                 className="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 placeholder:text-gray-400"
                             />
                         </div>
@@ -84,7 +86,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                     {/* Category */}
                     <div className="space-y-2">
                         <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-700">
-                            Category
+                            {t('admin.products.category')}
                         </label>
                         <div className="relative">
                             <select
@@ -92,7 +94,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                                 {...register("categoryId")}
                                 className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none bg-white cursor-pointer"
                             >
-                                <option value="">All Categories</option>
+                                <option value="">{t('products.allCategories')}</option>
                                 {categories?.map((category) => (
                                     <option key={category.id} value={category.id}>
                                         {category.name}
@@ -116,7 +118,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                     {/* Stock Status */}
                     <div className="space-y-2">
                         <label htmlFor="stock" className="block text-sm font-semibold text-gray-700">
-                            Stock Status
+                            {t('admin.products.stockStatus')}
                         </label>
                         <div className="relative">
                             <select
@@ -124,10 +126,10 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                                 {...register("stock")}
                                 className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-hidden focus:ring-3 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none bg-white cursor-pointer"
                             >
-                                <option value="">All Products</option>
-                                <option value="In Stock">✓ In Stock</option>
-                                <option value="Low Stock">⚠ Low Stock</option>
-                                <option value="Out Stock">✕ Out of Stock</option>
+                                <option value="">{t('admin.products.allProducts')}</option>
+                                <option value="In Stock">{t('admin.products.inStock')}</option>
+                                <option value="Low Stock">{t('admin.products.lowStock')}</option>
+                                <option value="Out Stock">{t('admin.products.outOfStock')}</option>
                             </select>
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,7 +148,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                     {/* Start Date */}
                     <div className="space-y-2">
                         <label htmlFor="startDate" className="block text-sm font-semibold text-gray-700">
-                            From Date
+                            {t('admin.products.fromDate')}
                         </label>
                         <div className="relative">
                             <input
@@ -167,7 +169,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                     {/* End Date */}
                     <div className="space-y-2">
                         <label htmlFor="endDate" className="block text-sm font-semibold text-gray-700">
-                            To Date
+                            {t('admin.products.toDate')}
                         </label>
                         <div className="relative">
                             <input
@@ -189,7 +191,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                 {/* Action Button */}
                 <div className="flex items-center justify-between pt-2 border-t border-gray-200/80">
                     <p className="text-sm text-gray-500">
-                        Apply filters to refine your product search
+                        {t('admin.products.refineSearch')}
                     </p>
                     <button
                         type="submit"
@@ -198,7 +200,7 @@ export default function ProductsFilters({ initialCategories, initialCategoryId }
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
-                        Apply Filters
+                        {t('admin.products.applyFilters')}
                     </button>
                 </div>
             </form>

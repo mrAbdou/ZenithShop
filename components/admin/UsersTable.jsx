@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useDeleteUser } from "@/hooks/users";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { useTranslation } from "@/lib/i18n/context";
 
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -18,6 +19,7 @@ const formatDate = (dateString) => {
 };
 
 export default function UsersTable({ initialData = [] }) {
+    const { t } = useTranslation();
     const { filters, setPaginationCurrentPage, setPaginationLimit, setSortingFilters } = useUserContext();
     const { data: users, error: usersError } = useUsers(filters, initialData);
     const { data: filteredUsersCount, error: usersCountError } = useCountFilteredUsers(filters);
@@ -41,7 +43,7 @@ export default function UsersTable({ initialData = [] }) {
         if (!userToDelete) return;
 
         deleteUser(userToDelete.id);
-        toast.success('User deleted successfully');
+        toast.success(t('admin.users.userDeleted'));
         closeDeleteModal();
     };
     const totalPages = useMemo(() => filteredUsersCount && filteredUsersCount > 0 ? Math.ceil(filteredUsersCount / filters.limit) : 1, [filteredUsersCount, filters.limit]);
@@ -115,7 +117,7 @@ export default function UsersTable({ initialData = [] }) {
 
     return (
         <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Users Management</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('admin.users.management')}</h2>
             {usersError && <div className='w-full bg-red-300 text-red-700 p-2'>
                 <h1>{`users: ${usersError?.message}`}</h1>
                 <ul>
@@ -137,22 +139,22 @@ export default function UsersTable({ initialData = [] }) {
                     <thead className="bg-gray-50">
                         <tr>
                             <th onClick={() => onHeaderClick('id')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('User ID', 'id')}
+                                {getHeaderText(t('admin.users.userId'), 'id')}
                             </th>
                             <th onClick={() => onHeaderClick('name')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Name', 'name')}
+                                {getHeaderText(t('admin.users.name'), 'name')}
                             </th>
                             <th onClick={() => onHeaderClick('email')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Email', 'email')}
+                                {getHeaderText(t('admin.users.email'), 'email')}
                             </th>
                             <th onClick={() => onHeaderClick('role')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Role', 'role')}
+                                {getHeaderText(t('admin.users.role'), 'role')}
                             </th>
                             <th onClick={() => onHeaderClick('createdAt')} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                                {getHeaderText('Created', 'createdAt')}
+                                {getHeaderText(t('admin.users.created'), 'createdAt')}
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
+                                {t('admin.users.actions')}
                             </th>
                         </tr>
                     </thead>
@@ -170,7 +172,7 @@ export default function UsersTable({ initialData = [] }) {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                                        {user.role}
+                                        {user.role === 'ADMIN' ? t('admin.users.admin') : t('admin.users.customer')}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -182,13 +184,20 @@ export default function UsersTable({ initialData = [] }) {
                                             href={`/control-panel/users/${user.id}`}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                                         >
-                                            View
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            {t('admin.common.view')}
                                         </Link>
                                         <button
                                             onClick={() => openDeleteModal(user)}
                                             className="inline-flex items-center px-3 py-1 text-xs font-medium text-red-700 bg-red-100 border border-red-300 rounded-full hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                                         >
-                                            Delete
+                                            <svg className="w-3 h-3 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            {t('admin.common.delete')}
                                         </button>
                                     </div>
                                 </td>
@@ -197,7 +206,7 @@ export default function UsersTable({ initialData = [] }) {
                         {(!users || users.length === 0) && (
                             <tr>
                                 <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                                    No users found
+                                    {t('admin.users.noUsersFound')}
                                 </td>
                             </tr>
                         )}
@@ -207,7 +216,7 @@ export default function UsersTable({ initialData = [] }) {
             {/* Pagination Controls */}
             <section className="mt-6 flex justify-between items-center">
                 <div className="text-sm text-gray-700">
-                    Showing {((filters.currentPage - 1) * filters.limit) + 1} to {Math.min(filters.currentPage * filters.limit, filteredUsersCount || 0)} of {filteredUsersCount || 0} users
+                    {t('admin.common.showing')} {((filters.currentPage - 1) * filters.limit) + 1} {t('admin.common.to')} {Math.min(filters.currentPage * filters.limit, filteredUsersCount || 0)} {t('admin.common.of')} {filteredUsersCount || 0} {t('admin.users.showingUsers')}
                 </div>
                 <div className="flex items-center gap-2">
                     <select onChange={onChangeLimit} className="block w-auto px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -221,7 +230,7 @@ export default function UsersTable({ initialData = [] }) {
                         disabled={filters.currentPage === 1}
                         onClick={() => setPaginationCurrentPage(filters.currentPage - 1)}
                     >
-                        Previous
+                        {t('admin.common.previous')}
                     </button>
                     {getVisiblePages(filters.currentPage, totalPages, 7).map((page, index) => (
                         page === '...' ? (
@@ -244,7 +253,7 @@ export default function UsersTable({ initialData = [] }) {
                         disabled={filters.currentPage === totalPages}
                         onClick={() => setPaginationCurrentPage(filters.currentPage + 1)}
                     >
-                        Next
+                        {t('admin.common.next')}
                     </button>
                 </div>
             </section>
@@ -260,25 +269,25 @@ export default function UsersTable({ initialData = [] }) {
                                 </svg>
                             </div>
                             <div className="ml-3">
-                                <h3 className="text-lg font-medium text-gray-900">Delete User</h3>
-                                <p className="text-sm text-gray-500">Are you sure you want to delete this user?</p>
+                                <h3 className="text-lg font-medium text-gray-900">{t('admin.users.deleteUser')}</h3>
+                                <p className="text-sm text-gray-500">{t('admin.users.deleteUserConfirm')}</p>
                             </div>
                         </div>
 
                         <div className="mb-4">
                             <p className="text-sm text-gray-700">
-                                User: <span className="font-semibold">{userToDelete.name}</span>
+                                {t('admin.common.user')}: <span className="font-semibold">{userToDelete.name}</span>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Email: <span className="font-semibold">{userToDelete.email}</span>
+                                {t('admin.users.email')}: <span className="font-semibold">{userToDelete.email}</span>
                             </p>
                             <p className="text-sm text-gray-700">
-                                Role: <span className={`px-2 py-1 text-xs font-semibold rounded-full ${userToDelete.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                                    {userToDelete.role}
+                                {t('admin.users.role')}: <span className={`px-2 py-1 text-xs font-semibold rounded-full ${userToDelete.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                    {userToDelete.role === 'ADMIN' ? t('admin.users.admin') : t('admin.users.customer')}
                                 </span>
                             </p>
                             <p className="text-xs text-red-600 mt-2">
-                                ⚠️ This action cannot be undone. All user data and associated orders will be permanently removed.
+                                {t('admin.users.userDataWillBeRemoved')}
                             </p>
                         </div>
 
@@ -287,7 +296,7 @@ export default function UsersTable({ initialData = [] }) {
                                 onClick={closeDeleteModal}
                                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
+                                {t('admin.common.cancel')}
                             </button>
                             <button
                                 onClick={handleDeleteUser}
@@ -296,7 +305,7 @@ export default function UsersTable({ initialData = [] }) {
                                 <svg className="w-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
-                                Delete User
+                                {t('admin.users.deleteUser')}
                             </button>
                         </div>
                     </div>

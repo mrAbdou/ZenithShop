@@ -3,13 +3,23 @@ import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import OrdersTable from "@/components/customer/OrdersTable";
-export const metadata = {
-    title: "Admin Control Panel | ZenithShop",
-    description: "Secure admin access for ZenithShop management. Login to manage products, orders, and content on the e-commerce platform.",
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
+
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
+    return {
+        title: dictionary.admin.controlPanel.pageTitle,
+        description: dictionary.admin.controlPanel.pageDescription,
+    };
 }
+
 export default async function ControlPanelPage() {
     const h = await headers();
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
 
     const session = await auth.api.getSession({
         headers: h
@@ -40,8 +50,8 @@ export default async function ControlPanelPage() {
                                 />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Control Panel</h1>
-                        <p className="text-blue-100 text-sm">Admin Access Only</p>
+                        <h1 className="text-3xl font-bold text-white mb-2">{dictionary.admin.controlPanel.title}</h1>
+                        <p className="text-blue-100 text-sm">{dictionary.admin.controlPanel.subtitle}</p>
                     </div>
 
                     {/* Form */}
@@ -62,7 +72,7 @@ export default async function ControlPanelPage() {
                                     />
                                 </svg>
                                 <p className="text-xs text-amber-800">
-                                    <strong className="font-semibold">Security Notice:</strong> This area is restricted to authorized personnel only. All access attempts are logged and monitored.
+                                    <strong className="font-semibold">{dictionary.admin.controlPanel.securityNoticeTitle}</strong> {dictionary.admin.controlPanel.securityNoticeText}
                                 </p>
                             </div>
                         </div>
@@ -71,7 +81,7 @@ export default async function ControlPanelPage() {
 
                 {/* Footer */}
                 <p className="text-center text-gray-500 text-sm mt-6">
-                    © 2025 E-Commerce Platform. All rights reserved.
+                    {dictionary.admin.controlPanel.footer}
                 </p>
             </div>
         </div>

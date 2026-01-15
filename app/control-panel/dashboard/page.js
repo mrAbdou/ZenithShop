@@ -21,15 +21,29 @@ import { headers } from "next/headers";
 import { fetchCustomersCount, fetchUsersCount } from "@/services/users.server";
 import { fetchAvailableProductsCount, fetchProductsCount } from "@/services/products.server";
 import { fetchActiveOrdersCount } from "@/services/orders.server";
+import { fetchCategoriesCount } from "@/services/categories.server";
 // end services import -------------------------------------------
-export const metadata = {
-    title: "Admin Dashboard | ZenithShop",
-    description: "Admin dashboard for ZenithShop management. Monitor business metrics, products, orders, and customer data in real-time.",
+
+// start i18n import ---------------------------------------------
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
+// end i18n import -----------------------------------------------
+export async function generateMetadata() {
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+
+    return {
+        title: dictionary.meta.adminDashboardTitle,
+        description: dictionary.meta.adminDashboardDesc,
+    };
 }
+
 export default async function ControlPanelDashboardPage() {
     const h = await headers();
     const cookieHeader = h.get("cookie");
     const session = await auth.api.getSession({ headers: h });
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
     if (!session || session?.user?.role !== Role.ADMIN) {
         redirect("/");
         return null;
@@ -41,12 +55,14 @@ export default async function ControlPanelDashboardPage() {
     let availableProductsCount = 0;
     let allUsersCount = 0;
     let allCustomersCount = 0;
+    let categoriesCount = 0;
     try {
         productsCount = await fetchProductsCount(cookieHeader);
         activeOrdersCount = await fetchActiveOrdersCount(cookieHeader);
         availableProductsCount = await fetchAvailableProductsCount(cookieHeader);
         allUsersCount = await fetchUsersCount(cookieHeader);
         allCustomersCount = await fetchCustomersCount(cookieHeader);
+        categoriesCount = await fetchCategoriesCount(cookieHeader);
     } catch (error) {
         console.log(JSON.stringify(error, null, 2));
     }
@@ -58,13 +74,13 @@ export default async function ControlPanelDashboardPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Welcome back, <span className="text-blue-100">{session?.user?.name}</span>
+                                {dictionary.admin.dashboard.title} <span className="text-blue-100">{session?.user?.name}</span>
                             </h1>
                             <p className="text-blue-100 text-lg font-medium mb-4">
                                 <DateTimeLive />
                             </p>
                             <p className="text-blue-50 max-w-2xl">
-                                Here's a summary of your business metrics and key performance indicators. Monitor your store activity in real-time.
+                                {dictionary.admin.dashboard.subtitle}
                             </p>
                         </div>
                         <div className="mt-4 md:mt-0">
@@ -79,6 +95,7 @@ export default async function ControlPanelDashboardPage() {
                 activeOrdersCount={activeOrdersCount}
                 usersCount={allUsersCount}
                 customersCount={allCustomersCount}
+                categoriesCount={categoriesCount}
             />
         </div>
     );

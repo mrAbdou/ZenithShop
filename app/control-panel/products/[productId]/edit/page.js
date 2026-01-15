@@ -5,6 +5,8 @@ import { fetchProduct } from "@/services/products.server";
 import UpdateProductForm from "@/components/admin/UpdateProductForm";
 import Link from "next/link";
 import { fetchCategories } from "@/services/categories.server";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { getLocale } from "@/lib/i18n/server";
 
 export default async function EditProduct({ params }) {
     const h = await headers();
@@ -24,6 +26,10 @@ export default async function EditProduct({ params }) {
         notFound();
     }
     const categories = await fetchCategories({}, cookieHeader);
+    
+    const locale = await getLocale();
+    const dictionary = await getDictionary(locale);
+    
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 p-6 md:p-10">
             {/* Modern Gradient Header */}
@@ -46,17 +52,17 @@ export default async function EditProduct({ params }) {
                                 <svg className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                Back to Product Details
+                                {dictionary.admin.common.backToList}
                             </Link>
 
                             <h1 className="text-4xl md:text-5xl font-bold mb-2">
-                                Edit Product
+                                {dictionary.admin.products.editProduct}
                             </h1>
                             <p className="text-orange-100 text-lg font-medium mb-4">
-                                Modify product information and settings
+                                {dictionary.admin.products.manageEfficiently}
                             </p>
                             <p className="text-orange-50 max-w-2xl">
-                                Update the product details, pricing, and inventory information. Changes will be reflected across your entire e-commerce platform.
+                                {dictionary.admin.products.viewAddUpdate}
                             </p>
                         </div>
 
@@ -70,7 +76,7 @@ export default async function EditProduct({ params }) {
                                         </svg>
                                         <p className="text-2xl font-bold text-white">{product.id.slice(-8)}</p>
                                     </div>
-                                    <p className="text-orange-100 text-sm">Product ID</p>
+                                    <p className="text-orange-100 text-sm">{dictionary.admin.products.productId}</p>
                                 </div>
                             </div>
 
@@ -81,7 +87,7 @@ export default async function EditProduct({ params }) {
                                         }`}></div>
                                     <div>
                                         <p className="text-white font-semibold">{product.qteInStock}</p>
-                                        <p className="text-orange-100 text-xs">Current Stock</p>
+                                        <p className="text-orange-100 text-xs">{dictionary.admin.products.stock}</p>
                                     </div>
                                 </div>
                             </div>

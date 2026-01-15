@@ -5,7 +5,11 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Role } from "@prisma/client";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "@/lib/i18n/context";
+
 export default function NavigationBar() {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const currentPath = usePathname();
     const { data: session, isPending } = authClient.useSession();
@@ -22,7 +26,7 @@ export default function NavigationBar() {
         navLinks = [
             {
                 href: "/",
-                label: "Home",
+                label: t('navigation.home'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -31,7 +35,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/customer-dashboard",
-                label: "Customer Dashboard",
+                label: t('navigation.customerDashboard'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -40,7 +44,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/products",
-                label: "Products",
+                label: t('navigation.products'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -49,7 +53,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/about",
-                label: "About",
+                label: t('navigation.about'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -58,7 +62,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/contact",
-                label: "Contact",
+                label: t('navigation.contact'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -67,7 +71,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/cart",
-                label: "Cart",
+                label: t('navigation.cart'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -76,7 +80,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/checkout/confirmation",
-                label: "Checkout",
+                label: t('navigation.checkout'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -88,7 +92,7 @@ export default function NavigationBar() {
         navLinks = [
             {
                 href: "/control-panel/dashboard",
-                label: "Dashboard",
+                label: t('navigation.dashboard'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -97,7 +101,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/control-panel/products",
-                label: "Products",
+                label: t('navigation.products'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -106,7 +110,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/control-panel/categories",
-                label: "Categories",
+                label: t('navigation.categories'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -115,7 +119,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/control-panel/orders",
-                label: "Orders",
+                label: t('navigation.orders'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -124,7 +128,7 @@ export default function NavigationBar() {
             },
             {
                 href: "/control-panel/users",
-                label: "Users",
+                label: t('navigation.users'),
                 icon: (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -139,7 +143,7 @@ export default function NavigationBar() {
             <button
                 onClick={toggleMenu}
                 className="lg:hidden fixed top-4 left-4 z-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 rounded-xl shadow-lg hover:shadow-2xl hover:from-blue-700 hover:to-indigo-700 transform hover:scale-110 transition-all duration-200"
-                aria-label="فتح القائمة"
+                aria-label={t('navigation.openMenu')}
             >
                 <svg
                     className="w-6 h-6"
@@ -179,7 +183,7 @@ export default function NavigationBar() {
                 <button
                     onClick={closeMenu}
                     className="lg:hidden absolute top-4 right-4 text-gray-300 hover:text-white bg-slate-700 hover:bg-slate-600 p-2 rounded-lg transition-all duration-200"
-                    aria-label="إغلاق القائمة"
+                    aria-label={t('navigation.closeMenu')}
                 >
                     <svg
                         className="w-5 h-5"
@@ -208,9 +212,12 @@ export default function NavigationBar() {
                         />
                     </div>
                     <h1 className="text-center text-white font-bold text-lg bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                        E-Commerce
+                        {t('navigation.eCommerce')}
                     </h1>
-                    <p className="text-center text-gray-400 text-xs mt-1">Premium Shopping</p>
+                    <p className="text-center text-gray-400 text-xs mt-1">{t('navigation.premiumShopping')}</p>
+                    <div className="flex justify-center mt-4">
+                        <LanguageSwitcher />
+                    </div>
                 </div>
 
                 {/* الروابط */}
@@ -259,8 +266,8 @@ export default function NavigationBar() {
                                 A
                             </div>
                             <div className="flex-1">
-                                <p className="text-white text-sm font-semibold">Admin</p>
-                                <p className="text-gray-400 text-xs">{session?.user?.role === Role.ADMIN ? "Online" : "Offline"}</p>
+                                <p className="text-white text-sm font-semibold">{t('navigation.admin')}</p>
+                                <p className="text-gray-400 text-xs">{session?.user?.role === Role.ADMIN ? t('navigation.online') : t('navigation.offline')}</p>
                             </div>
                             <div className={session?.user?.role === Role.ADMIN ? "w-2 h-2 bg-green-500 rounded-full animate-pulse" : "w-2 h-2 bg-red-500 rounded-full animate-pulse"}></div>
                         </div>
